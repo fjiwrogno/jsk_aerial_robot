@@ -1,3 +1,61 @@
+#environment
+.vscode
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Media
+.jpg
+.png
+.jpeg
+.avi
+.mp4
+
+# Executables
+*.exe
+*.out
+*.app
+bin
+build
+lib
+cache
+temp
+cmake-build-debug
+.idea
+
+# CMake
+Makefile
+cmake_install.cmake
+CMakeFiles/
+
+# others
+multimedia/
+
 #ignore the backup file with "~"
 *.~### https://raw.github.com/github/gitignore/cc542de017c606138a87ee4880e5f06b3a306def/Global/OSX.gitignore
 
