@@ -1,0 +1,5 @@
+- [ ] Real flight of bi-copter to realize stable hovering and circle trajectory
+- [ ] Add aerial-aquatic simulation based on Gazebo for bi-copter
+- [ ] Add underwater dynamics simulation for bi-copter and fish robot
+- [ ] Add new robot package for new aerial-aquatic robot
+- [ ] Add bi-copter simulation in IssacLab/AerialGym for reinforcement learning perpartion
