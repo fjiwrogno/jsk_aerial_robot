@@ -1,12 +1,24 @@
 <?xml version="1.0"?>
-<robot
-    xmlns:xacro="http://www.ros.org/wiki/xacro" name="gimbalrotor" >
+<robot name="gimbalrotor" xmlns:xacro="http://www.ros.org/wiki/xacro" >
   <xacro:arg name="robot_name" default="gimbalrotor" />
-
+  <!-- include the basic urdf -->
   <xacro:include filename="$(find gimbalrotor)/robots/bi/gimbalrotor.urdf.xacro" />
-
-  <!-- gazebo plugin for default controller and sensors -->
+  <!-- include hydrodynamics params -->
+  <xacro:include filename="$(find gimbalrotor)/urdf/bi/gimbalrotor_hydro.xacro" />
+  <!-- include spinal controller -->
   <xacro:include filename="$(find aerial_robot_simulation)/xacro/spinal.gazebo.xacro" />
   <xacro:gazebo_spinal robot_name="$(arg robot_name)" mag_frame="fc" />
-
+   <!-- underwater plugin -->
+  <xacro:gimbalrotor_default>
+    <gazebo>
+      <plugin name="uuv_plugin" filename="libuuv_underwater_object_ros_plugin.so">
+        <fluid_density>1028.0</fluid_density>
+        <flow_velocity_topic>hydrodynamics/current_velocity</flow_velocity_topic>
+        <debug>1</debug>
+        <verbose>true</verbose>
+        <!-- apply the hydronamic model -->
+        <xacro:gimbalrotor_hydro_model namespace="$(arg robot_name)" />
+      </plugin>
+    </gazebo>
+  </xacro:gimbalrotor_default>
 </robot>

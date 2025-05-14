@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find uuv_descriptions)/urdf/common.urdf.xacro"/>
+  <xacro:include filename="$(find uuv_sensor_ros_plugins)/urdf/sensor_snippets.xacro"/>
+  <xacro:include filename="$(find uuv_gazebo_ros_plugins)/urdf/snippets.xacro"/>
+  <!-- underwater dynamics params -->
+  <xacro:property name="cob" value="0.0 0.0 0.2"/>  <!-- 浮力中心 -->
+  <xacro:property name="volume" value="0.02"/>      <!-- 增加体积，使其具有更大浮力 -->
+  <xacro:property name="box_width" value="0.1"/>    <!-- 宽度 -->
+  <xacro:property name="box_length" value="0.708"/>   <!-- 长度 -->
+  <xacro:property name="box_height" value="0.256"/>   <!-- 高度 -->
+
+  <xacro:macro name="gimbalrotor_hydro_model" params="namespace">
+    <link name="${namespace}/root">
+      <neutrally_buoyant>0</neutrally_buoyant>  <!-- 0表示需要计算浮力，不是中性浮力 -->
+      <volume>${volume}</volume>
+      <box>
+        <width>${box_width}</width>
+        <length>${box_length}</length>
+        <height>${box_height}</height>
+      </box>
+      <center_of_buoyancy>${cob}</center_of_buoyancy>
+      <hydrodynamic_model>
+        <type>fossen</type>
+        <added_mass>
+          2.0 0 0 0 0 0
+          0 2.0 0 0 0 0
+          0 0 3.0 0 0 0
+          0 0 0 1.0 0 0
+          0 0 0 0 1.0 0
+          0 0 0 0 0 1.0
+        </added_mass>
+        <linear_damping>
+          5.0 5.0 8.0 1.0 1.0 1.0
+        </linear_damping>
+        <quadratic_damping>
+          8.0 8.0 10.0 1.0 1.0 1.0
+        </quadratic_damping>
+      </hydrodynamic_model>
+    </link>
+  </xacro:macro>
+</robot>

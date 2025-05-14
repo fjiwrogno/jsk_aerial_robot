@@ -37,6 +37,8 @@
   <run_depend>ros_controllers</run_depend>
   <run_depend>spinal</run_depend>
   <run_depend>tf</run_depend>
+  <run_depend>uuv_gazebo_ros_plugins</run_depend>
+
 
 
   <export>
