@@ -31,7 +31,9 @@ void DynamixelSerial::init(UART_HandleTypeDef* huart, osMutexId* mutex)
         /* rx */
   __HAL_UART_DISABLE_IT(huart, UART_IT_PE);
   __HAL_UART_DISABLE_IT(huart, UART_IT_ERR);
-  HAL_HalfDuplex_EnableReceiver(huart_);
+  #if DYNAMIXEL_BOARDLESS_CONTROL
+    HAL_HalfDuplex_EnableReceiver(huart_);
+  #endif
   HAL_UART_Receive_DMA(huart, rx_buf_, RX_BUFFER_SIZE);
   rd_ptr_ = 0;
   memset(rx_buf_, 0, sizeof(rx_buf_));
