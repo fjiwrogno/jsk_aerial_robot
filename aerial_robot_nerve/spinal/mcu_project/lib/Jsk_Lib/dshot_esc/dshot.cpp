@@ -5,22 +5,39 @@
 
 #include "dshot.h"
 
-void DShot::init(dshot_type_e dshot_type, TIM_HandleTypeDef* htim_motor_1, uint32_t channel_motor_1,
-                 TIM_HandleTypeDef* htim_motor_2, uint32_t channel_motor_2, TIM_HandleTypeDef* htim_motor_3,
-                 uint32_t channel_motor_3, TIM_HandleTypeDef* htim_motor_4, uint32_t channel_motor_4)
-{
-  htim_motor_1_ = htim_motor_1;
-  channel_motor_1_ = channel_motor_1;
-  htim_motor_2_ = htim_motor_2;
-  channel_motor_2_ = channel_motor_2;
-  htim_motor_3_ = htim_motor_3;
-  channel_motor_3_ = channel_motor_3;
-  htim_motor_4_ = htim_motor_4;
-  channel_motor_4_ = channel_motor_4;
 
-  dshot_set_timer(dshot_type);
-  dshot_put_tc_callback_function();
-  dshot_start_pwm();
+void DShot::init(esc_type_e esc_type, dshot_type_e dshot_type,
+                 TIM_HandleTypeDef* htim_motor_1, uint32_t channel_motor_1,
+                 TIM_HandleTypeDef* htim_motor_2, uint32_t channel_motor_2,
+                 TIM_HandleTypeDef* htim_motor_3, uint32_t channel_motor_3,
+                 TIM_HandleTypeDef* htim_motor_4, uint32_t channel_motor_4) {
+    htim_motor_1_ = htim_motor_1;
+    channel_motor_1_ = channel_motor_1;
+    htim_motor_2_ = htim_motor_2;
+    channel_motor_2_ = channel_motor_2;
+    htim_motor_3_ = htim_motor_3;
+    channel_motor_3_ = channel_motor_3;
+    htim_motor_4_ = htim_motor_4;
+    channel_motor_4_ = channel_motor_4;
+
+    switch (esc_type) {
+        case BEHELI:
+            if_init_esc_ = false;
+            init_duration_ = 0;
+            break;
+        case AM32:
+            if_init_esc_ = true;
+            init_duration_ = 5000; 
+            break;
+        default:
+            if_init_esc_ = false;
+            init_duration_ = 0;
+            break;
+    }
+
+    dshot_set_timer(dshot_type);
+    dshot_put_tc_callback_function();
+    dshot_start_pwm();
 }
 
 void DShot::initTelemetry(UART_HandleTypeDef* huart)
@@ -105,7 +122,8 @@ void DShot::dshot_set_timer(dshot_type_e dshot_type)
   uint32_t timer_clock = TIMER_CLOCK;  // all timer clock is same as SystemCoreClock in stm32f411
 
   // Calculate prescaler by dshot type
-  dshot_prescaler = lrintf((float)timer_clock / dshot_choose_type(dshot_type) + 0.01f) - 1;
+    dshot_prescaler =
+        lrintf((float)timer_clock / dshot_choose_type(dshot_type) + 0.01f) - 1;
 
   // motor1
   __HAL_TIM_SET_PRESCALER(htim_motor_1_, dshot_prescaler);
@@ -220,7 +238,8 @@ void DShot::dshot_dma_start()
                    (uint32_t)&htim_motor_1_->Instance->CCR1, DSHOT_DMA_BUFFER_SIZE);
   HAL_DMA_Start_IT(htim_motor_2_->hdma[TIM_DMA_ID_CC2], (uint32_t)motor2_dmabuffer_,
                    (uint32_t)&htim_motor_2_->Instance->CCR2, DSHOT_DMA_BUFFER_SIZE);
-  HAL_DMA_Start_IT(htim_motor_3_->hdma[TIM_DMA_ID_CC3], (uint32_t)motor3_dmabuffer_,
+    HAL_DMA_Start_IT(
+        htim_motor_3_->hdma[TIM_DMA_ID_CC3], (uint32_t)motor3_dmabuffer_,
                    (uint32_t)&htim_motor_3_->Instance->CCR3, DSHOT_DMA_BUFFER_SIZE);
   HAL_DMA_Start_IT(htim_motor_4_->hdma[TIM_DMA_ID_CC4], (uint32_t)motor4_dmabuffer_,
                    (uint32_t)&htim_motor_4_->Instance->CCR4, DSHOT_DMA_BUFFER_SIZE);
