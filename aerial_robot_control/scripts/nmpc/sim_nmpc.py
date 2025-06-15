@@ -3,6 +3,7 @@ from copy import deepcopy
 import time
 import numpy as np
 import argparse
+import csv
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/tilt_bi")
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/tilt_tri")
@@ -161,7 +162,7 @@ def main(args):
     else:
         t_rotor_sim = 0.0
 
-    ts_sim = 0.005  # or 0.001
+    ts_sim = 0.001  # or 0.001
 
     t_total_sim = 15.0
     if args.plot_type == 1:
@@ -286,6 +287,7 @@ def main(args):
                 ocp_solver.solver_options["nlp_solver_type"] = "SQP_RTI"
 
         # -------- Update solver --------
+        # ocp_solve is the hanlder of mpc controller
         comp_time_start = time.time()
 
         if t_ctl >= ts_ctrl:
@@ -375,6 +377,61 @@ def main(args):
             x=np.array(x_history),
             u=np.array(u_history)
         )
+    if args.save_csv: 
+        file_path_dir = args.file_path 
+        
+        os.makedirs(file_path_dir, exist_ok=True)
+
+        base_filename = f"nmpc_{type(nmpc).__name__}_model_{type(sim_nmpc).__name__}"
+        csv_filepath = os.path.join(file_path_dir, base_filename + ".csv")
+
+        # state (x): px, py, pz, vx, vy, vz, qw, qx, qy, qz, wx, wy, wz, a1, a2
+        # control (u): ft1c, ft2c, a1c, a2c
+        header = [
+            "time_step",
+            "pos_x", "pos_y", "pos_z",
+            "vel_x", "vel_y", "vel_z",
+            "q_w", "q_x", "q_y", "q_z",
+            "ang_vel_x", "ang_vel_y", "ang_vel_z",
+            "servo_angle_1", "servo_angle_2", 
+            "cmd_thrust_1", "cmd_thrust_2",
+            "cmd_servo_angle_1", "cmd_servo_angle_2"
+        ]
+        # nx_sim = x_history[0].shape[0] if x_history else 0
+        # nu = u_history[0].shape[0] if u_history else 0
+        
+        #safety check for x_history
+        if not x_history or not u_history:
+            print("Warning: No data in x_history or u_history. CSV file will be empty or have only header.")
+            with open(csv_filepath, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(header)
+            return np.array(x_history), np.array(u_history)
+
+
+        num_sim_steps = len(x_history)
+        combined_data = []
+        for i in range(num_sim_steps):
+            time_step_col = [i * ts_sim] 
+            # 确保 x_history[i] 和 u_history[i] 存在且是可迭代的
+            current_x = x_history[i] if i < len(x_history) and hasattr(x_history[i], '__iter__') else [float('nan')] * (len(header) - 1 - (len(u_history[i]) if i < len(u_history) and hasattr(u_history[i], '__iter__') else 0) )
+            current_u = u_history[i] if i < len(u_history) and hasattr(u_history[i], '__iter__') else [float('nan')] * (len(header) - 1 - len(current_x))
+
+            row = time_step_col + list(current_x) + list(current_u)
+            combined_data.append(row)
+
+        # check data legth
+        if combined_data and len(header) != len(combined_data[0]):
+            print(f"Warning: Header length ({len(header)}) does not match data columns ({len(combined_data[0])}). Adjust header definition.")
+            
+        try:
+            with open(csv_filepath, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(header) # write header
+                writer.writerows(combined_data) # write data
+            print(f"Successfully saved data to {csv_filepath}")
+        except Exception as e:
+            print(f"Error saving data to CSV: {e}")
 
     return np.array(x_history), np.array(u_history)
 
@@ -433,6 +490,12 @@ if __name__ == "__main__":
         "--save_data",
         action="store_true",
         help="Save simulation x and u data to file"
+    )
+    
+    parser.add_argument(
+        "--save_csv",
+        action="store_true",
+        help="Save simulation x and u data to a CSV file with headers."
     )
 
     parser.add_argument(
