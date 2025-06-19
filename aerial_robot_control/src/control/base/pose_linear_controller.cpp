@@ -198,9 +198,11 @@ namespace aerial_robot_control
 
   bool PoseLinearController::update()
   {
+    // waiting for navigator_->getNaviState
     if(!ControlBase::update()) return false;
-
+    // run the controller
     controlCore();
+    // send the gimbal control command and 
     sendCmd();
 
     return true;
@@ -223,7 +225,8 @@ namespace aerial_robot_control
 
     omega_ = estimator_->getAngularVel(Frame::COG, estimate_mode_);
     target_rpy_ = navigator_->getTargetRPY();
-    tf::Matrix3x3 target_rot; target_rot.setRPY(target_rpy_.x(), target_rpy_.y(), target_rpy_.z());
+    tf::Matrix3x3 target_rot; 
+    target_rot.setRPY(target_rpy_.x(), target_rpy_.y(), target_rpy_.z());
     tf::Vector3 target_omega = navigator_->getTargetOmega(); // w.r.t. target cog frame
     target_omega_ = cog_rot.inverse() * target_rot * target_omega; // w.r.t. current cog frame
     target_ang_acc_ = navigator_->getTargetAngAcc();

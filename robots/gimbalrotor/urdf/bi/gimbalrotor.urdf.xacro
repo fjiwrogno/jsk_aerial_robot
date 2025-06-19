@@ -18,15 +18,18 @@
     #### base link ####
     <link name="base_link">
       <inertial>
-        <origin xyz="0 0 -0.134417" rpy="0 0 0"/>
-        <mass value="0.942442"/>
+      <!-- origin xyz is the xyz of cog of this link -->
+      <!-- so the root of this system should be aligned with geometry center of your design? -->
+      <!-- for base_link, the origin may should be aligned with the cog? so that we can get the inertial of co -->
+        <origin xyz="0 0 -0.0369" rpy="0 0 0"/>
+        <mass value="0.859"/>
         <inertia
-            ixx="0.015351" iyy="0.002766" izz="0.013177"
-            ixy="-0.000002" ixz="-0.000024" iyz="0.000002"/>
+            ixx="0.014901" iyy="0.002396" izz="0.013177"
+            ixy="-0.00002" ixz="-0.00085" iyz="0.000003"/>
       </inertial>
       <visual>
         <geometry>
-          <mesh filename="package://gimbalrotor/urdf/bi/mesh/kxr_flight_unit_base_link.dae" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://gimbalrotor/urdf/bi/mesh/base_link.dae"/>
           <origin xyz="0 0 0" rpy="0 0 0"/>
         </geometry>
       </visual>
@@ -91,7 +94,9 @@
     <joint name="rotor_coord_joint${child1}" type="fixed">
       <parent link="base_link" />
       <child link="rotor_arm${child1}"/>
+      <!-- from base_link to rotor_arm cord -->
       <origin xyz="0 0.154 0.051" rpy="0 0 ${pi/2}"/>
+      <!-- axis的意思是此joint的可動關節的方向，也就是自由度的方向 -->
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -108,6 +113,7 @@
       <parent link="rotor_arm${child1}"/>
       <child link="gimbal_link${child1}"/>
       <origin xyz="0 0 0" rpy="0 0 0"/>
+      <!-- after the rotation of cord, the dof right now exists in x axis -->
       <axis xyz="1 0 0"/>
       <dynamics damping="0.8" friction="0.0"/>
     </joint>
@@ -155,11 +161,12 @@
         <origin xyz="0.0835 0 0" rpy="0 0 0"/>
         <mass value="0.250950"/>
         <inertia
-            ixx="0.001920" iyy="0.000249" izz="0.013177"
-            ixy="0.000002" ixz="-0.000024" iyz="0.000002"/>
+            ixx="0.000378" iyy="0.000226" izz="0.000503"
+            ixy="0.00000" ixz="-0.00000" iyz="0.00000"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
+        <!-- existence of scale is because of the unit of export(mm or m)   -->
         <geometry>
           <mesh filename="package://gimbalrotor/urdf/bi/mesh/thrust_link_left_straight.dae" scale="0.001 0.001 0.001"/>
         </geometry>

@@ -54,13 +54,15 @@ namespace aerial_robot_control
 
   bool GimbalrotorController::update()
   {
+    // 1. update the gimbalrotor's state to getting current inertial
     sendGimbalCommand();
     if(gimbal_calc_in_fc_){
       std_msgs::UInt8 msg;
       msg.data = gimbal_dof_;
       gimbal_dof_pub_.publish(msg);
     }
-
+    // 2. run the controller and send command
+    // here the 
     return PoseLinearController::update();
   }
 
@@ -136,7 +138,8 @@ namespace aerial_robot_control
     std::vector<KDL::Rotation> thrust_coords_rot = gimbalrotor_robot_model_->getThrustCoordRot<KDL::Rotation>();
     std::vector<Eigen::MatrixXd> masked_rot;
     for(int i = 0; i < motor_num_; i++){
-      tf::Quaternion r;  tf::quaternionKDLToTF(thrust_coords_rot.at(i), r);
+      tf::Quaternion r;  
+      tf::quaternionKDLToTF(thrust_coords_rot.at(i), r);
       Eigen::Matrix3d conv_cog_from_thrust; tf::matrixTFToEigen(tf::Matrix3x3(r),conv_cog_from_thrust);
       if(gimbal_dof_ == 1)
         {
@@ -291,7 +294,10 @@ namespace aerial_robot_control
 
     flight_cmd_pub_.publish(flight_command_data);
   }
-
+/**
+ * @brief Update gimbals' state for updating relevant params
+ * @author Chen Chen (chenchen7464@gmail.com)
+ */
   void GimbalrotorController::sendGimbalCommand()
   {
     sensor_msgs::JointState gimbal_state_msg;
@@ -313,6 +319,7 @@ namespace aerial_robot_control
         gimbal_state_msg.name.push_back(gimbal_pitch_name);
       }
     }
+    // for kondo, there is no angle feedback
     // gimbal_state_pub_.publish(gimbal_state_msg);
 
   }
