@@ -152,7 +152,7 @@ void BaseNavigator::poseCallback(const geometry_msgs::PoseStampedConstPtr & msg)
     {
       ROS_DEBUG("traj_generator_ptr_ is null");
     }
-
+  // auto generate minmum jerk trajaectory between two points 
   generateNewTrajectory(*msg);
 }
 
@@ -165,6 +165,7 @@ void BaseNavigator::simpleMoveBaseGoalCallback(const geometry_msgs::PoseStampedC
       ROS_DEBUG("traj_generator_ptr_ is null");
     }
   geometry_msgs::PoseStamped target_pose = *msg;
+  // maintain the z position(height), only navigate in xy 2 dimension plate
   target_pose.pose.position.z = getTargetPos().z();
   generateNewTrajectory(target_pose);
 }

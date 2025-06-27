@@ -69,14 +69,18 @@ namespace aerial_robot_control
   void GimbalrotorController::controlCore()
   {
     PoseLinearController::controlCore();
+
     tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
+    // get the linear acceleration
+    // but for other control method, we can just 
     tf::Vector3 target_acc_w(pid_controllers_.at(X).result(),
                              pid_controllers_.at(Y).result(),
                              pid_controllers_.at(Z).result());
     tf::Vector3 target_acc_dash = (tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z()))).inverse() * target_acc_w;
+    // convert to boady frame
     tf::Vector3 target_acc_cog = uav_rot.inverse() * target_acc_w;
     Eigen::VectorXd target_wrench_acc_cog = Eigen::VectorXd::Zero(6);
-
+ 
     if(underactuate_) target_wrench_acc_cog.head(3) = Eigen::Vector3d(target_acc_dash.x(), target_acc_dash.y(), target_acc_dash.z());
     else target_wrench_acc_cog.head(3) = Eigen::Vector3d(target_acc_cog.x(), target_acc_cog.y(), target_acc_cog.z());
 
@@ -86,6 +90,7 @@ namespace aerial_robot_control
     Eigen::Matrix3d inertia = gimbalrotor_robot_model_->getInertia<Eigen::Matrix3d>();
     Eigen::Vector3d omega;
     tf::vectorTFToEigen(omega_, omega);
+    // inertial item
     Eigen::Vector3d gyro = omega.cross(inertia * omega);
 
     if(gimbal_calc_in_fc_)
