@@ -21,20 +21,20 @@
       <!-- origin xyz is the xyz of cog of this link -->
       <!-- so the root of this system should be aligned with geometry center of your design? -->
       <!-- for base_link, the origin may should be aligned with the cog? so that we can get the inertial of co -->
-        <origin xyz="0 0 -0.0369" rpy="0 0 0"/>
-        <mass value="0.859"/>
+        <origin xyz="-0.001881 -0.000360 -0.034200" rpy="0 0 0"/>
+        <mass value="0.856021"/>
         <inertia
-            ixx="0.014901" iyy="0.002396" izz="0.013177"
-            ixy="-0.00002" ixz="-0.00085" iyz="0.000003"/>
+            ixx="0.013681" iyy="0.002270" izz="0.013685"
+            ixy="-0.00001" ixz="-0.00074" iyz="-0.000003"/>
       </inertial>
       <visual>
         <geometry>
-          <mesh filename="package://gimbalrotor/urdf/bi/mesh/base_link.dae"/>
+          <mesh filename="package://gimbalrotor/urdf/bi/mesh/BaseLinkNew.dae"/>
           <origin xyz="0 0 0" rpy="0 0 0"/>
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0 0.0369" rpy="0 0 0"/>
+        <origin xyz="0 0 -0.5369" rpy="0 0 0"/>
         <geometry>
           <box size="0.1 0.3 0.21"/>
         </geometry>
@@ -86,7 +86,7 @@
     <joint name="fc_joint" type="fixed">
       <parent link="base_link"/>
       <child link="fc"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0.025 -0.02598 0.0438" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -96,7 +96,6 @@
       <child link="rotor_arm${child1}"/>
       <!-- from base_link to rotor_arm cord -->
       <origin xyz="0 0.154 0.051" rpy="0 0 ${pi/2}"/>
-      <!-- axis的意思是此joint的可動關節的方向，也就是自由度的方向 -->
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -113,7 +112,6 @@
       <parent link="rotor_arm${child1}"/>
       <child link="gimbal_link${child1}"/>
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <!-- after the rotation of cord, the dof right now exists in x axis -->
       <axis xyz="1 0 0"/>
       <dynamics damping="0.8" friction="0.0"/>
     </joint>

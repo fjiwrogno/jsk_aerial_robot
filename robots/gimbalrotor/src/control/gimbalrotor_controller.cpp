@@ -72,7 +72,7 @@ namespace aerial_robot_control
 
     tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
     // get the linear acceleration
-    // but for other control method, we can just 
+    // but for other control method, we can just start from here
     tf::Vector3 target_acc_w(pid_controllers_.at(X).result(),
                              pid_controllers_.at(Y).result(),
                              pid_controllers_.at(Z).result());
@@ -117,7 +117,7 @@ namespace aerial_robot_control
 
     Eigen::MatrixXd full_q_mat = Eigen::MatrixXd::Zero(6, 3 * motor_num_);
 
-    double mass_inv = 1 / gimbalrotor_robot_model_->getMass();
+    double mass_inv = 1.0 / gimbalrotor_robot_model_->getMass();
 
     Eigen::Matrix3d inertia_inv = inertia.inverse();
 
@@ -145,7 +145,8 @@ namespace aerial_robot_control
     for(int i = 0; i < motor_num_; i++){
       tf::Quaternion r;  
       tf::quaternionKDLToTF(thrust_coords_rot.at(i), r);
-      Eigen::Matrix3d conv_cog_from_thrust; tf::matrixTFToEigen(tf::Matrix3x3(r),conv_cog_from_thrust);
+      Eigen::Matrix3d conv_cog_from_thrust; 
+      tf::matrixTFToEigen(tf::Matrix3x3(r),conv_cog_from_thrust);
       if(gimbal_dof_ == 1)
         {
           Eigen::MatrixXd mask(3, 2);

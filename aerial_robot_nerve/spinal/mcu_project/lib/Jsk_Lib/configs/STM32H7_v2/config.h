@@ -48,8 +48,8 @@
 #define GPS_FLAG 0
 //2.1.3 Direct Servo Control
 #define SERVO_FLAG 1
-#define DYNAMIXEL 1
-#define KONDO 0
+#define DYNAMIXEL 0
+#define KONDO 1
 
 //2.2 State Estimate
 //2.2.1 Attitude Estimate
