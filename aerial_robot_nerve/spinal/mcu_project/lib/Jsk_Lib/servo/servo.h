@@ -11,6 +11,7 @@ includes ------------------------------------------------------------------*/
 
 #include "drivers/Dynamixel/dynamixel_serial.h"
 #include "drivers/kondo_servo/kondo_servo.h"
+#include "drivers/GX3240MGV1/gx_pwm_servo_handler.h"
 #include <ros.h>
 #include <spinal/ServoControlCmd.h>
 #include <spinal/ServoStates.h>
@@ -47,15 +48,19 @@ public:
   }
   ~DirectServo(){}
 
-  void init(UART_HandleTypeDef* huart, ros::NodeHandle* nh, osMutexId* mutex);
+  // pwm servo motor
+  void init(TIM_HandleTypeDef* htim, const std::vector<uint32_t>& channels, ros::NodeHandle* nh, osMutexId* mutex = NULL);
+  void init(UART_HandleTypeDef* huart, ros::NodeHandle* nh, osMutexId* mutex = NULL);
   void update();
   void sendData(bool flag_send_asap);
   void torqueEnable(const std::map<uint8_t, float>& servo_map);
   void setGoalAngle(const std::map<uint8_t, float>& servo_map, uint8_t value_type = 0);
 #if KONDO
   KondoServo& getServoHnadler() {return servo_handler_;}
-#else DYNAMIXEL
-  DynamixelSerial& getServoHnadler() {return servo_handler_;}  
+#elif DYNAMIXEL
+  DynamixelSerial& getServoHnadler() {return servo_handler_;}
+#elif GX_PWM_SERVO
+  GXPwmServoHandler& getServoHnadler() {return servo_handler_;}
 #endif
 
   uint32_t rad2Pos(float angle, float scale, uint32_t zero_point_pos){
@@ -110,8 +115,10 @@ private:
 
 #if KONDO
   KondoServo servo_handler_;
-#else DYNAMIXEL
+#elif DYNAMIXEL
   DynamixelSerial servo_handler_;
+#elif GX_PWM_SERVO
+  GXPwmServoHandler servo_handler_; 
 #endif
   friend class Initializer;
 };
