@@ -278,7 +278,11 @@ int main(void)
 
   DirectServo* servoptr = nullptr;
 #if SERVO_FLAG
-  servo_.init(&huart2, &nh_, NULL);
+  #if GX_PWM_SERVO
+    servo_.init(&htim4 ,&nh_, &flightControlMutexHandle);
+  #else
+    servo_.init(&huart2, &nh_, &flightControlMutexHandle);
+  #endif  
   servoptr = &servo_;
 #elif NERVE_COMM
   Spine::init(&hfdcan1, &nh_, &estimator_, LED1_GPIO_Port, LED1_Pin);
