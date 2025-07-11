@@ -22,6 +22,7 @@ public:
 	uint8_t id_;
   	int32_t present_position_;
 	int32_t goal_position_;
+        float goal_position_rad_;
         int32_t calib_value_;
 	int32_t homing_offset_;
         int32_t internal_offset_;
@@ -48,7 +49,9 @@ public:
 	void setPresentPosition(int32_t present_position) {present_position_ = present_position + internal_offset_;}
 	int32_t getPresentPosition() const {return present_position_;}
 	void setGoalPosition(int32_t goal_position) {goal_position_ = resolution_ratio_ * goal_position - internal_offset_;}
+        void setGoalPositionRad(float goal_position_rad){goal_position_rad_ = goal_position_rad;}
         int32_t getGoalPosition() const {return goal_position_;}
+        float getGoalPositionRad() const {return goal_position_rad_;}
         float getAngleScale() const {return angle_scale_;}
         uint16_t getZeroPointOffset() const {return zero_point_offset_;}
   
