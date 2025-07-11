@@ -10,8 +10,7 @@
 #define SERVO_PUB_INTERVAL 20           // 50Hz
 #define SERVO_TORQUE_PUB_INTERVAL 1000  // 1Hz
 
-void DirectServo::init(UART_HandleTypeDef* huart, ros::NodeHandle* nh,
-                       osMutexId* mutex = NULL)  // TODO: support encoder
+void DirectServo::init(UART_HandleTypeDef* huart, ros::NodeHandle* nh,osMutexId* mutex)  // TODO: support encoder
 {
     /*setup pin configuration*/
 #if !STM32H7_V2
@@ -47,23 +46,21 @@ void DirectServo::init(UART_HandleTypeDef* huart, ros::NodeHandle* nh,
     board_info_res_.boards_length = 1;
     board_info_res_.boards = new spinal::BoardInfo[1];
     board_info_res_.boards[0].servos_length = servo_handler_.getServoNum();
-    board_info_res_.boards[0].servos =
-        new spinal::ServoInfo[servo_handler_.getServoNum()];
+    board_info_res_.boards[0].servos = new spinal::ServoInfo[servo_handler_.getServoNum()];
 }
-// init function for underwater servo controlled by pwm
-void DirectServo::init(TIM_HandleTypeDef* htim,
-                       const std::vector<uint32_t>& channels,
-                       ros::NodeHandle* nh, osMutexId* mutex) {
+
+void DirectServo::init(TIM_HandleTypeDef* htim, ros::NodeHandle* nh, osMutexId* mutex) {
     nh_ = nh;
     nh_->subscribe(servo_ctrl_sub_);
     nh_->subscribe(servo_torque_ctrl_sub_);
     nh_->subscribe(joint_profiles_sub_);
     nh_->advertise(servo_state_pub_);
     nh_->advertise(servo_torque_state_pub_);
-    nh_->advertise(board_info_srv_);
+    nh_->advertiseService(board_info_srv_);
 
 #if GX_PWM_SERVO
-    servo_handler_.init(htim, channels);
+    //hardcoding for only using 2 motors 
+    servo_handler_.init(htim, 2);
 
     unsigned int actual_servo_num = servo_handler_.getServoNum();
     servo_state_msg_.servos_length = actual_servo_num;
@@ -77,8 +74,7 @@ void DirectServo::init(TIM_HandleTypeDef* htim,
     board_info_res_.boards_length = 1;
     board_info_res_.boards = new spinal::BoardInfo[1];
     board_info_res_.boards[0].servos_length = servo_handler_.getServoNum();
-    board_info_res_.boards[0].servos =
-        new spinal::ServoInfo[servo_handler_.getServoNum()];
+    board_info_res_.boards[0].servos = new spinal::ServoInfo[servo_handler_.getServoNum()];
 #endif
 }
 
@@ -90,9 +86,7 @@ void DirectServo::update() {
 void DirectServo::sendData(bool flag_send_asap) {
     uint32_t now_time = HAL_GetTick();
 
-    if (flag_send_asap &&
-        servo_handler_.getROSCommFlag() ==
-            true)  // This setting will ignore the setting of SERVO_PUB_INTERVAL
+    if (flag_send_asap && servo_handler_.getROSCommFlag() == true)  // This setting will ignore the setting of SERVO_PUB_INTERVAL
                    // and pub the information once the measurement is updated.
     {
         servo_state_msg_.stamp = nh_->now();
@@ -101,10 +95,22 @@ void DirectServo::sendData(bool flag_send_asap) {
             if (s.send_data_flag_ != 0) {
                 spinal::ServoState servo;
                 servo.index = i;
+#if defined(GX_PWM_SERVO)
+                // PWM servos do not provide feedback (present position, temp, load).
+                // As a substitute, we publish the goal position to the state topic.
+                // The float radian value is scaled to an integer for the message.
+                const float PWM_RAD_TO_INT_SCALE = 10000.0f / 3.14159265f;
+                servo.angle = static_cast<int16_t>(s.getGoalPositionRad() * PWM_RAD_TO_INT_SCALE);
+                servo.temp = 0;
+                servo.load = 0;
+                servo.error = 0;
+#else
+                // For servos with feedback, publish the actual measured states.
                 servo.angle = s.present_position_;
                 servo.temp = s.present_temp_;
                 servo.load = s.present_current_;
                 servo.error = s.hardware_error_status_;
+#endif
                 servo_state_msg_.servos[i] = servo;
             }
         }
@@ -120,10 +126,22 @@ void DirectServo::sendData(bool flag_send_asap) {
                 if (s.send_data_flag_ != 0) {
                     spinal::ServoState servo;
                     servo.index = i;
+#if defined(GX_PWM_SERVO)
+                    // PWM servos do not provide feedback (present position, temp, load).
+                    // As a substitute, we publish the goal position to the state topic.
+                    // The float radian value is scaled to an integer for the message.
+                    const float PWM_RAD_TO_INT_SCALE = 10000.0f / 3.14159265f;
+                    servo.angle = static_cast<int16_t>(s.getGoalPositionRad() * PWM_RAD_TO_INT_SCALE);
+                    servo.temp = 0;
+                    servo.load = 0;
+                    servo.error = 0;
+#else
+                    // For servos with feedback, publish the actual measured states.
                     servo.angle = s.present_position_;
                     servo.temp = s.present_temp_;
                     servo.load = s.present_current_;
                     servo.error = s.hardware_error_status_;
+#endif
                     servo_state_msg_.servos[i] = servo;
                 }
             }
@@ -163,26 +181,38 @@ void DirectServo::torqueEnable(const std::map<uint8_t, float>& servo_map) {
     }
 }
 
-void DirectServo::setGoalAngle(const std::map<uint8_t, float>& servo_map,
-                               uint8_t value_type) {
+void DirectServo::setGoalAngle(const std::map<uint8_t, float>& servo_map, uint8_t value_type) {
     for (auto servo : servo_map) {
-        JointProf joint_prof = joint_profiles_[servo.first];
-        int32_t goal_pos;
-        if (value_type = ValueType::BIT) {
-            goal_pos = static_cast<int32_t>(servo.second);
-        } else if (value_type = ValueType::RADIAN) {
-            goal_pos = static_cast<int32_t>(
-                servo.second * joint_prof.angle_sgn / joint_prof.angle_scale +
-                joint_prof.zero_point_offset);
-        }
-
         uint8_t index = servo.first;
+        JointProf joint_prof = joint_profiles_[index];
         if (index >= servo_handler_.getServoNum()) {
             nh_->logerror("Invalid Servo ID!");
             return;
         }
+
         ServoData& s = servo_handler_.getServo()[index];
+
+#if defined(GX_PWM_SERVO)
+        float goal_angle_rad = 0.0;
+        if (value_type == ValueType::BIT) { 
+            goal_angle_rad = static_cast<int32_t>(servo.second);
+        } else if (value_type == ValueType::RADIAN) { 
+            goal_angle_rad = static_cast<float>(servo.second * joint_prof.angle_sgn / joint_prof.angle_scale + joint_prof.zero_point_offset);
+        }
+        else if (value_type == ValueType::DEG) {
+             goal_angle_rad = servo.second * M_PI / 180.0;
+        }
+        s.setGoalPositionRad(goal_angle_rad);
+#else
+        int32_t goal_pos = 0;
+        if (value_type == ValueType::BIT) { 
+            goal_pos = static_cast<int32_t>(servo.second);
+        } else if (value_type == ValueType::RADIAN) { 
+            goal_pos = static_cast<int32_t>(servo.second * joint_prof.angle_sgn / joint_prof.angle_scale + joint_prof.zero_point_offset);
+        }
         s.setGoalPosition(goal_pos);
+#endif
+
         if (!s.torque_enable_) {
             s.torque_enable_ = true;
             servo_handler_.setTorque(index);
@@ -190,8 +220,7 @@ void DirectServo::setGoalAngle(const std::map<uint8_t, float>& servo_map,
     }
 }
 
-void DirectServo::servoControlCallback(
-    const spinal::ServoControlCmd& control_msg) {
+void DirectServo::servoControlCallback(const spinal::ServoControlCmd& control_msg) {
     if (control_msg.index_length != control_msg.angles_length) return;
     for (unsigned int i = 0; i < control_msg.index_length; i++) {
         uint8_t index = control_msg.index[i];
@@ -200,18 +229,20 @@ void DirectServo::servoControlCallback(
             return;
         }
 
-#if GX_PWM_SERVO
-        servo_handler_.setGoalPosition(index, control_msg.angles[i]);
-        servo_handler_.setTorque(index, true);
-#else
         ServoData& s = servo_handler_.getServo()[index];
+
+#if GX_PWM_SERVO
+// hardcoding for only enable inout in deg format
+        float goal_pos_rad = static_cast<float>(control_msg.angles[i]) * static_cast<float>(M_PI) / 180.0f;        
+        s.setGoalPositionRad(goal_pos_rad);
+#else
         int32_t goal_pos = static_cast<int32_t>(control_msg.angles[i]);
         s.setGoalPosition(goal_pos);
+#endif
         if (!s.torque_enable_) {
             s.torque_enable_ = true;
             servo_handler_.setTorque(index);
         }
-#endif
     }
 }
 
@@ -224,13 +255,9 @@ void DirectServo::servoTorqueControlCallback(
             nh_->logerror("Invalid Servo ID!");
             return;
         }
-#if GX_PWM_SERVO
-        servo_handler_.setTorque(id, control_msg.torque_enable[i]);
-#else
-        ServoData& s = servo_handler_.getServo()[index];
-        s.torque_enable_ = (control_msg.torque_enable[i] != 0) ? true : false;
-        servo_handler_.setTorqueFromPresetnPos(index);
-#endif
+    ServoData& s = servo_handler_.getServo()[index];
+    s.torque_enable_ = (control_msg.torque_enable[i] != 0) ? true : false;
+    servo_handler_.setTorqueFromPresetnPos(index);
     }
 }
 
