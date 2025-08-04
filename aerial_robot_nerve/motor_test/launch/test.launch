@@ -9,7 +9,7 @@
   <!-- parameters for oneshot -->
   <arg name="raise_duration" default="2.0" />
   <arg name="brake_duration" default="4.0" />
-  <arg name="has_dshot_telemetry" default="false" />
+  <arg name="has_dshot_telemetry" default="true" />
 
   <arg name="force_sensor" default="PFS055YA501U6" /> <!-- other sensor: PFS055YA501U6 -->
 

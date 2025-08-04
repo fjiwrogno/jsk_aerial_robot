@@ -225,11 +225,12 @@ void AttitudeController::pwmsControl(void)
     }
     
     // ESC init
-    if ((dshot_->init_count_ < dshot_->init_duration_) && (motor_v == DSHOT_MIN_THROTTLE))
+    if ((dshot_->init_count_ < dshot_->init_duration_) && (motor_v < 60))
     {
 
       motor_v = 0;
       dshot_->init_count_ ++;
+
 
     }
     

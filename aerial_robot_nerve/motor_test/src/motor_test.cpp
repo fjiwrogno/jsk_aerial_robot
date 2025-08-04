@@ -123,6 +123,7 @@ private:
     ROS_INFO("start pwm test");
     start_flag_ = true;
   }
+        print(f"{data1[i][0]:.0f}\t{data1[i][3]:.4f}\t{data1[i][8]:.4f}\t{filtered_rpm:.0f}")
 
   void escTelemCallback(const spinal::ESCTelemetryArrayConstPtr & msg)
   {

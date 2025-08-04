@@ -1,0 +1,2280 @@
+
+
+*******************************************************************************
+Thu Jul 24 19:15:33 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:2
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f1(x)
+	f1(x) = a1*x*x + b1*x + c1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a1            b1            c1           
+   0 4.8643679552e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 2.6172761966e+02  -2.23e-04  1.00e-04    4.407144e-05  -8.401192e-02   3.990765e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 261.728
+rel. change during last iteration : -2.23401e-09
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.403945
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.163172
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a1              = 4.40714e-05      +/- 6.892e-07    (1.564%)
+b1              = -0.0840119       +/- 0.001794     (2.135%)
+c1              = 39.9077          +/- 1.158        (2.901%)
+
+correlation matrix of the fit parameters:
+                a1     b1     c1     
+a1              1.000 
+b1             -0.999  1.000 
+c1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:15:33 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:2
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f2(x)
+	f2(x) = a2*x*x + b2*x + c2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a2            b2            c2           
+   0 1.3772946139e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 4.2089007581e+03  -4.41e-04  9.27e-05   -4.015612e-05   7.198113e-02  -3.086814e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 4208.9
+rel. change during last iteration : -4.40775e-09
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 2.81804
+variance of residuals (reduced chisquare) = WSSR/ndf   : 7.94132
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a2              = -4.01561e-05     +/- 1.15e-05     (28.65%)
+b2              = 0.0719811        +/- 0.02877      (39.97%)
+c2              = -30.8681         +/- 17.84        (57.8%)
+
+correlation matrix of the fit parameters:
+                a2     b2     c2     
+a2              1.000 
+b2             -0.999  1.000 
+c2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:15:33 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:3
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g1(x)
+	g1(x) = d1*x*x + e1*x + f1_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d1            e1            f1_c         
+   0 4.8643751235e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.2501070494e+01  -2.64e-03  1.00e-04    5.669158e-05  -1.218362e-01   6.635875e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 62.5011
+rel. change during last iteration : -2.63979e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.197397
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.0389658
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d1              = 5.66916e-05      +/- 3.368e-07    (0.5941%)
+e1              = -0.121836        +/- 0.0008765    (0.7194%)
+f1_c            = 66.3588          +/- 0.5658       (0.8526%)
+
+correlation matrix of the fit parameters:
+                d1     e1     f1_c   
+d1              1.000 
+e1             -0.999  1.000 
+f1_c            0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:15:33 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:3
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g2(x)
+	g2(x) = d2*x*x + e2*x + f2_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d2            e2            f2_c         
+   0 1.3772777012e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  11 8.1550180918e-01  -2.90e-08  9.27e-06    9.096807e-05  -1.955727e-01   1.053586e+02
+
+After 11 iterations the fit converged.
+final sum of squares of residuals : 0.815502
+rel. change during last iteration : -2.90114e-13
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.039226
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00153868
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d2              = 9.09681e-05      +/- 1.601e-07    (0.176%)
+e2              = -0.195573        +/- 0.0004005    (0.2048%)
+f2_c            = 105.359          +/- 0.2484       (0.2357%)
+
+correlation matrix of the fit parameters:
+                d2     e2     f2_c   
+d2              1.000 
+e2             -0.999  1.000 
+f2_c            0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:15:33 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:4
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h1(x)
+	h1(x) = g1_r*x*x + h1_r*x + i1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g1_r          h1_r          i1           
+   0 4.8280009841e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.5855720437e+06  -3.20e-03  1.00e-04   -4.454560e-03   2.859396e+01  -2.334752e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 6.58557e+06
+rel. change during last iteration : -3.19707e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 64.0759
+variance of residuals (reduced chisquare) = WSSR/ndf   : 4105.72
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g1_r            = -0.00445456      +/- 0.0001093    (2.454%)
+h1_r            = 28.594           +/- 0.2845       (0.995%)
+i1              = -23347.5         +/- 183.6        (0.7866%)
+
+correlation matrix of the fit parameters:
+                g1_r   h1_r   i1     
+g1_r            1.000 
+h1_r           -0.999  1.000 
+i1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:15:33 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:4
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h2(x)
+	h2(x) = g2_r*x*x + h2_r*x + i2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g2_r          h2_r          i2           
+   0 1.3662086091e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 1.8115401958e+09  -1.56e-03  9.27e-05   -9.024702e-03   4.767389e+01  -3.934390e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 1.81154e+09
+rel. change during last iteration : -1.56115e-08
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1848.78
+variance of residuals (reduced chisquare) = WSSR/ndf   : 3.418e+06
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g2_r            = -0.0090247       +/- 0.007546     (83.62%)
+h2_r            = 47.6739          +/- 18.88        (39.59%)
+i2              = -39343.9         +/- 1.171e+04    (29.75%)
+
+correlation matrix of the fit parameters:
+                g2_r   h2_r   i2     
+g2_r            1.000 
+h2_r           -0.999  1.000 
+i2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:18:13 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:2
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f1(x)
+	f1(x) = a1*x*x + b1*x + c1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a1            b1            c1           
+   0 4.8643679552e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 2.6172761966e+02  -2.23e-04  1.00e-04    4.407144e-05  -8.401192e-02   3.990765e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 261.728
+rel. change during last iteration : -2.23401e-09
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.403945
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.163172
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a1              = 4.40714e-05      +/- 6.892e-07    (1.564%)
+b1              = -0.0840119       +/- 0.001794     (2.135%)
+c1              = 39.9077          +/- 1.158        (2.901%)
+
+correlation matrix of the fit parameters:
+                a1     b1     c1     
+a1              1.000 
+b1             -0.999  1.000 
+c1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:18:13 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:2
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f2(x)
+	f2(x) = a2*x*x + b2*x + c2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a2            b2            c2           
+   0 1.3772781053e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 4.2089007581e+03  -3.87e-04  9.27e-05    4.015612e-05  -7.198113e-02   3.086814e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 4208.9
+rel. change during last iteration : -3.87268e-09
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 2.81804
+variance of residuals (reduced chisquare) = WSSR/ndf   : 7.94132
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a2              = 4.01561e-05      +/- 1.15e-05     (28.65%)
+b2              = -0.0719811       +/- 0.02877      (39.97%)
+c2              = 30.8681          +/- 17.84        (57.8%)
+
+correlation matrix of the fit parameters:
+                a2     b2     c2     
+a2              1.000 
+b2             -0.999  1.000 
+c2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:18:13 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:3
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g1(x)
+	g1(x) = d1*x*x + e1*x + f1_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d1            e1            f1_c         
+   0 4.8643751235e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.2501070494e+01  -2.64e-03  1.00e-04    5.669158e-05  -1.218362e-01   6.635875e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 62.5011
+rel. change during last iteration : -2.63979e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.197397
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.0389658
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d1              = 5.66916e-05      +/- 3.368e-07    (0.5941%)
+e1              = -0.121836        +/- 0.0008765    (0.7194%)
+f1_c            = 66.3588          +/- 0.5658       (0.8526%)
+
+correlation matrix of the fit parameters:
+                d1     e1     f1_c   
+d1              1.000 
+e1             -0.999  1.000 
+f1_c            0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:18:14 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:3
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g2(x)
+	g2(x) = d2*x*x + e2*x + f2_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d2            e2            f2_c         
+   0 1.3772777012e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  11 8.1550180918e-01  -2.90e-08  9.27e-06    9.096807e-05  -1.955727e-01   1.053586e+02
+
+After 11 iterations the fit converged.
+final sum of squares of residuals : 0.815502
+rel. change during last iteration : -2.90114e-13
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.039226
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00153868
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d2              = 9.09681e-05      +/- 1.601e-07    (0.176%)
+e2              = -0.195573        +/- 0.0004005    (0.2048%)
+f2_c            = 105.359          +/- 0.2484       (0.2357%)
+
+correlation matrix of the fit parameters:
+                d2     e2     f2_c   
+d2              1.000 
+e2             -0.999  1.000 
+f2_c            0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:18:14 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:4
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h1(x)
+	h1(x) = g1_r*x*x + h1_r*x + i1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g1_r          h1_r          i1           
+   0 4.8280009841e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.5855720437e+06  -3.20e-03  1.00e-04   -4.454560e-03   2.859396e+01  -2.334752e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 6.58557e+06
+rel. change during last iteration : -3.19707e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 64.0759
+variance of residuals (reduced chisquare) = WSSR/ndf   : 4105.72
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g1_r            = -0.00445456      +/- 0.0001093    (2.454%)
+h1_r            = 28.594           +/- 0.2845       (0.995%)
+i1              = -23347.5         +/- 183.6        (0.7866%)
+
+correlation matrix of the fit parameters:
+                g1_r   h1_r   i1     
+g1_r            1.000 
+h1_r           -0.999  1.000 
+i1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:18:14 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:4
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h2(x)
+	h2(x) = g2_r*x*x + h2_r*x + i2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g2_r          h2_r          i2           
+   0 1.3662086091e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 1.8115401958e+09  -1.56e-03  9.27e-05   -9.024702e-03   4.767389e+01  -3.934390e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 1.81154e+09
+rel. change during last iteration : -1.56115e-08
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1848.78
+variance of residuals (reduced chisquare) = WSSR/ndf   : 3.418e+06
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g2_r            = -0.0090247       +/- 0.007546     (83.62%)
+h2_r            = 47.6739          +/- 18.88        (39.59%)
+i2              = -39343.9         +/- 1.171e+04    (29.75%)
+
+correlation matrix of the fit parameters:
+                g2_r   h2_r   i2     
+g2_r            1.000 
+h2_r           -0.999  1.000 
+i2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:27:08 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:2
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f1(x)
+	f1(x) = a1*x*x + b1*x + c1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a1            b1            c1           
+   0 4.8643679552e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 2.6172761966e+02  -2.23e-04  1.00e-04    4.407144e-05  -8.401192e-02   3.990765e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 261.728
+rel. change during last iteration : -2.23401e-09
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.403945
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.163172
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a1              = 4.40714e-05      +/- 6.892e-07    (1.564%)
+b1              = -0.0840119       +/- 0.001794     (2.135%)
+c1              = 39.9077          +/- 1.158        (2.901%)
+
+correlation matrix of the fit parameters:
+                a1     b1     c1     
+a1              1.000 
+b1             -0.999  1.000 
+c1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:27:08 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:2
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f2(x)
+	f2(x) = a2*x*x + b2*x + c2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a2            b2            c2           
+   0 1.3772781053e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 4.2089007581e+03  -3.87e-04  9.27e-05    4.015612e-05  -7.198113e-02   3.086814e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 4208.9
+rel. change during last iteration : -3.87268e-09
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 2.81804
+variance of residuals (reduced chisquare) = WSSR/ndf   : 7.94132
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a2              = 4.01561e-05      +/- 1.15e-05     (28.65%)
+b2              = -0.0719811       +/- 0.02877      (39.97%)
+c2              = 30.8681          +/- 17.84        (57.8%)
+
+correlation matrix of the fit parameters:
+                a2     b2     c2     
+a2              1.000 
+b2             -0.999  1.000 
+c2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:27:08 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:3
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g1(x)
+	g1(x) = d1*x*x + e1*x + f1_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d1            e1            f1_c         
+   0 4.8643751235e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.2501070494e+01  -2.64e-03  1.00e-04    5.669158e-05  -1.218362e-01   6.635875e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 62.5011
+rel. change during last iteration : -2.63979e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.197397
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.0389658
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d1              = 5.66916e-05      +/- 3.368e-07    (0.5941%)
+e1              = -0.121836        +/- 0.0008765    (0.7194%)
+f1_c            = 66.3588          +/- 0.5658       (0.8526%)
+
+correlation matrix of the fit parameters:
+                d1     e1     f1_c   
+d1              1.000 
+e1             -0.999  1.000 
+f1_c            0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:27:08 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:3
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g2(x)
+	g2(x) = d2*x*x + e2*x + f2_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d2            e2            f2_c         
+   0 1.3772777012e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  11 8.1550180918e-01  -2.90e-08  9.27e-06    9.096807e-05  -1.955727e-01   1.053586e+02
+
+After 11 iterations the fit converged.
+final sum of squares of residuals : 0.815502
+rel. change during last iteration : -2.90114e-13
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.039226
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00153868
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d2              = 9.09681e-05      +/- 1.601e-07    (0.176%)
+e2              = -0.195573        +/- 0.0004005    (0.2048%)
+f2_c            = 105.359          +/- 0.2484       (0.2357%)
+
+correlation matrix of the fit parameters:
+                d2     e2     f2_c   
+d2              1.000 
+e2             -0.999  1.000 
+f2_c            0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:27:08 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:4
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h1(x)
+	h1(x) = g1_r*x*x + h1_r*x + i1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g1_r          h1_r          i1           
+   0 4.8280009841e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.5855720437e+06  -3.20e-03  1.00e-04   -4.454560e-03   2.859396e+01  -2.334752e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 6.58557e+06
+rel. change during last iteration : -3.19707e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 64.0759
+variance of residuals (reduced chisquare) = WSSR/ndf   : 4105.72
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g1_r            = -0.00445456      +/- 0.0001093    (2.454%)
+h1_r            = 28.594           +/- 0.2845       (0.995%)
+i1              = -23347.5         +/- 183.6        (0.7866%)
+
+correlation matrix of the fit parameters:
+                g1_r   h1_r   i1     
+g1_r            1.000 
+h1_r           -0.999  1.000 
+i1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:27:08 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:4
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h2(x)
+	h2(x) = g2_r*x*x + h2_r*x + i2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g2_r          h2_r          i2           
+   0 1.3662086091e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 1.8115401958e+09  -1.56e-03  9.27e-05   -9.024702e-03   4.767389e+01  -3.934390e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 1.81154e+09
+rel. change during last iteration : -1.56115e-08
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1848.78
+variance of residuals (reduced chisquare) = WSSR/ndf   : 3.418e+06
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g2_r            = -0.0090247       +/- 0.007546     (83.62%)
+h2_r            = 47.6739          +/- 18.88        (39.59%)
+i2              = -39343.9         +/- 1.171e+04    (29.75%)
+
+correlation matrix of the fit parameters:
+                g2_r   h2_r   i2     
+g2_r            1.000 
+h2_r           -0.999  1.000 
+i2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:33:13 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:2
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f1(x)
+	f1(x) = a1*x*x + b1*x + c1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a1            b1            c1           
+   0 4.8643679552e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 2.6172761966e+02  -2.23e-04  1.00e-04    4.407144e-05  -8.401192e-02   3.990765e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 261.728
+rel. change during last iteration : -2.23401e-09
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.403945
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.163172
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a1              = 4.40714e-05      +/- 6.892e-07    (1.564%)
+b1              = -0.0840119       +/- 0.001794     (2.135%)
+c1              = 39.9077          +/- 1.158        (2.901%)
+
+correlation matrix of the fit parameters:
+                a1     b1     c1     
+a1              1.000 
+b1             -0.999  1.000 
+c1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:33:13 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:2
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f2(x)
+	f2(x) = a2*x*x + b2*x + c2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a2            b2            c2           
+   0 1.3772781053e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 4.2089007581e+03  -3.87e-04  9.27e-05    4.015612e-05  -7.198113e-02   3.086814e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 4208.9
+rel. change during last iteration : -3.87268e-09
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 2.81804
+variance of residuals (reduced chisquare) = WSSR/ndf   : 7.94132
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a2              = 4.01561e-05      +/- 1.15e-05     (28.65%)
+b2              = -0.0719811       +/- 0.02877      (39.97%)
+c2              = 30.8681          +/- 17.84        (57.8%)
+
+correlation matrix of the fit parameters:
+                a2     b2     c2     
+a2              1.000 
+b2             -0.999  1.000 
+c2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:33:13 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:3
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g1(x)
+	g1(x) = d1*x*x + e1*x + f1_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d1            e1            f1_c         
+   0 4.8643751235e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.2501070494e+01  -2.64e-03  1.00e-04    5.669158e-05  -1.218362e-01   6.635875e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 62.5011
+rel. change during last iteration : -2.63979e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.197397
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.0389658
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d1              = 5.66916e-05      +/- 3.368e-07    (0.5941%)
+e1              = -0.121836        +/- 0.0008765    (0.7194%)
+f1_c            = 66.3588          +/- 0.5658       (0.8526%)
+
+correlation matrix of the fit parameters:
+                d1     e1     f1_c   
+d1              1.000 
+e1             -0.999  1.000 
+f1_c            0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:33:13 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:3
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g2(x)
+	g2(x) = d2*x*x + e2*x + f2_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d2            e2            f2_c         
+   0 1.3772777012e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  11 8.1550180918e-01  -2.90e-08  9.27e-06    9.096807e-05  -1.955727e-01   1.053586e+02
+
+After 11 iterations the fit converged.
+final sum of squares of residuals : 0.815502
+rel. change during last iteration : -2.90114e-13
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.039226
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00153868
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d2              = 9.09681e-05      +/- 1.601e-07    (0.176%)
+e2              = -0.195573        +/- 0.0004005    (0.2048%)
+f2_c            = 105.359          +/- 0.2484       (0.2357%)
+
+correlation matrix of the fit parameters:
+                d2     e2     f2_c   
+d2              1.000 
+e2             -0.999  1.000 
+f2_c            0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:33:13 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:4
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h1(x)
+	h1(x) = g1_r*x*x + h1_r*x + i1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g1_r          h1_r          i1           
+   0 4.8280009841e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.5855720437e+06  -3.20e-03  1.00e-04   -4.454560e-03   2.859396e+01  -2.334752e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 6.58557e+06
+rel. change during last iteration : -3.19707e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 64.0759
+variance of residuals (reduced chisquare) = WSSR/ndf   : 4105.72
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g1_r            = -0.00445456      +/- 0.0001093    (2.454%)
+h1_r            = 28.594           +/- 0.2845       (0.995%)
+i1              = -23347.5         +/- 183.6        (0.7866%)
+
+correlation matrix of the fit parameters:
+                g1_r   h1_r   i1     
+g1_r            1.000 
+h1_r           -0.999  1.000 
+i1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:33:13 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:4
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h2(x)
+	h2(x) = g2_r*x*x + h2_r*x + i2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g2_r          h2_r          i2           
+   0 1.3662086091e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 1.8115401958e+09  -1.56e-03  9.27e-05   -9.024702e-03   4.767389e+01  -3.934390e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 1.81154e+09
+rel. change during last iteration : -1.56115e-08
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1848.78
+variance of residuals (reduced chisquare) = WSSR/ndf   : 3.418e+06
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g2_r            = -0.0090247       +/- 0.007546     (83.62%)
+h2_r            = 47.6739          +/- 18.88        (39.59%)
+i2              = -39343.9         +/- 1.171e+04    (29.75%)
+
+correlation matrix of the fit parameters:
+                g2_r   h2_r   i2     
+g2_r            1.000 
+h2_r           -0.999  1.000 
+i2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:34:04 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:2
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f1(x)
+	f1(x) = a1*x*x + b1*x + c1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a1            b1            c1           
+   0 4.8643679552e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 2.6172761966e+02  -2.23e-04  1.00e-04    4.407144e-05  -8.401192e-02   3.990765e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 261.728
+rel. change during last iteration : -2.23401e-09
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.403945
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.163172
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a1              = 4.40714e-05      +/- 6.892e-07    (1.564%)
+b1              = -0.0840119       +/- 0.001794     (2.135%)
+c1              = 39.9077          +/- 1.158        (2.901%)
+
+correlation matrix of the fit parameters:
+                a1     b1     c1     
+a1              1.000 
+b1             -0.999  1.000 
+c1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:34:04 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:2
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f2(x)
+	f2(x) = a2*x*x + b2*x + c2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a2            b2            c2           
+   0 1.3772781053e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 4.2089007581e+03  -3.87e-04  9.27e-05    4.015612e-05  -7.198113e-02   3.086814e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 4208.9
+rel. change during last iteration : -3.87268e-09
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 2.81804
+variance of residuals (reduced chisquare) = WSSR/ndf   : 7.94132
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a2              = 4.01561e-05      +/- 1.15e-05     (28.65%)
+b2              = -0.0719811       +/- 0.02877      (39.97%)
+c2              = 30.8681          +/- 17.84        (57.8%)
+
+correlation matrix of the fit parameters:
+                a2     b2     c2     
+a2              1.000 
+b2             -0.999  1.000 
+c2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:34:04 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:3
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g1(x)
+	g1(x) = d1*x*x + e1*x + f1_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d1            e1            f1_c         
+   0 4.8643751235e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.2501070494e+01  -2.64e-03  1.00e-04    5.669158e-05  -1.218362e-01   6.635875e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 62.5011
+rel. change during last iteration : -2.63979e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.197397
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.0389658
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d1              = 5.66916e-05      +/- 3.368e-07    (0.5941%)
+e1              = -0.121836        +/- 0.0008765    (0.7194%)
+f1_c            = 66.3588          +/- 0.5658       (0.8526%)
+
+correlation matrix of the fit parameters:
+                d1     e1     f1_c   
+d1              1.000 
+e1             -0.999  1.000 
+f1_c            0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:34:04 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:3
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g2(x)
+	g2(x) = d2*x*x + e2*x + f2_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d2            e2            f2_c         
+   0 1.3772777012e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  11 8.1550180918e-01  -2.90e-08  9.27e-06    9.096807e-05  -1.955727e-01   1.053586e+02
+
+After 11 iterations the fit converged.
+final sum of squares of residuals : 0.815502
+rel. change during last iteration : -2.90114e-13
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.039226
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00153868
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d2              = 9.09681e-05      +/- 1.601e-07    (0.176%)
+e2              = -0.195573        +/- 0.0004005    (0.2048%)
+f2_c            = 105.359          +/- 0.2484       (0.2357%)
+
+correlation matrix of the fit parameters:
+                d2     e2     f2_c   
+d2              1.000 
+e2             -0.999  1.000 
+f2_c            0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:34:04 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:4
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h1(x)
+	h1(x) = g1_r*x*x + h1_r*x + i1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g1_r          h1_r          i1           
+   0 4.8280009841e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.5855720437e+06  -3.20e-03  1.00e-04   -4.454560e-03   2.859396e+01  -2.334752e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 6.58557e+06
+rel. change during last iteration : -3.19707e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 64.0759
+variance of residuals (reduced chisquare) = WSSR/ndf   : 4105.72
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g1_r            = -0.00445456      +/- 0.0001093    (2.454%)
+h1_r            = 28.594           +/- 0.2845       (0.995%)
+i1              = -23347.5         +/- 183.6        (0.7866%)
+
+correlation matrix of the fit parameters:
+                g1_r   h1_r   i1     
+g1_r            1.000 
+h1_r           -0.999  1.000 
+i1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:34:04 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:4
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h2(x)
+	h2(x) = g2_r*x*x + h2_r*x + i2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g2_r          h2_r          i2           
+   0 1.3662086091e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 1.8115401958e+09  -1.56e-03  9.27e-05   -9.024702e-03   4.767389e+01  -3.934390e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 1.81154e+09
+rel. change during last iteration : -1.56115e-08
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1848.78
+variance of residuals (reduced chisquare) = WSSR/ndf   : 3.418e+06
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g2_r            = -0.0090247       +/- 0.007546     (83.62%)
+h2_r            = 47.6739          +/- 18.88        (39.59%)
+i2              = -39343.9         +/- 1.171e+04    (29.75%)
+
+correlation matrix of the fit parameters:
+                g2_r   h2_r   i2     
+g2_r            1.000 
+h2_r           -0.999  1.000 
+i2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:35:19 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:2
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f1(x)
+	f1(x) = a1*x*x + b1*x + c1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a1            b1            c1           
+   0 4.8643679552e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 2.6172761966e+02  -2.23e-04  1.00e-04    4.407144e-05  -8.401192e-02   3.990765e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 261.728
+rel. change during last iteration : -2.23401e-09
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.403945
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.163172
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a1              = 4.40714e-05      +/- 6.892e-07    (1.564%)
+b1              = -0.0840119       +/- 0.001794     (2.135%)
+c1              = 39.9077          +/- 1.158        (2.901%)
+
+correlation matrix of the fit parameters:
+                a1     b1     c1     
+a1              1.000 
+b1             -0.999  1.000 
+c1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:35:19 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:2
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f2(x)
+	f2(x) = a2*x*x + b2*x + c2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a2            b2            c2           
+   0 1.3772781053e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 4.2089007581e+03  -3.87e-04  9.27e-05    4.015612e-05  -7.198113e-02   3.086814e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 4208.9
+rel. change during last iteration : -3.87268e-09
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 2.81804
+variance of residuals (reduced chisquare) = WSSR/ndf   : 7.94132
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a2              = 4.01561e-05      +/- 1.15e-05     (28.65%)
+b2              = -0.0719811       +/- 0.02877      (39.97%)
+c2              = 30.8681          +/- 17.84        (57.8%)
+
+correlation matrix of the fit parameters:
+                a2     b2     c2     
+a2              1.000 
+b2             -0.999  1.000 
+c2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:35:19 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:3
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g1(x)
+	g1(x) = d1*x*x + e1*x + f1_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d1            e1            f1_c         
+   0 4.8643751235e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.2501070494e+01  -2.64e-03  1.00e-04    5.669158e-05  -1.218362e-01   6.635875e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 62.5011
+rel. change during last iteration : -2.63979e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.197397
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.0389658
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d1              = 5.66916e-05      +/- 3.368e-07    (0.5941%)
+e1              = -0.121836        +/- 0.0008765    (0.7194%)
+f1_c            = 66.3588          +/- 0.5658       (0.8526%)
+
+correlation matrix of the fit parameters:
+                d1     e1     f1_c   
+d1              1.000 
+e1             -0.999  1.000 
+f1_c            0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:35:19 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:3
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g2(x)
+	g2(x) = d2*x*x + e2*x + f2_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d2            e2            f2_c         
+   0 1.3772777012e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  11 8.1550180918e-01  -2.90e-08  9.27e-06    9.096807e-05  -1.955727e-01   1.053586e+02
+
+After 11 iterations the fit converged.
+final sum of squares of residuals : 0.815502
+rel. change during last iteration : -2.90114e-13
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.039226
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00153868
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d2              = 9.09681e-05      +/- 1.601e-07    (0.176%)
+e2              = -0.195573        +/- 0.0004005    (0.2048%)
+f2_c            = 105.359          +/- 0.2484       (0.2357%)
+
+correlation matrix of the fit parameters:
+                d2     e2     f2_c   
+d2              1.000 
+e2             -0.999  1.000 
+f2_c            0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:35:19 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:4
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h1(x)
+	h1(x) = g1_r*x*x + h1_r*x + i1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g1_r          h1_r          i1           
+   0 4.8280009841e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.5855720437e+06  -3.20e-03  1.00e-04   -4.454560e-03   2.859396e+01  -2.334752e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 6.58557e+06
+rel. change during last iteration : -3.19707e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 64.0759
+variance of residuals (reduced chisquare) = WSSR/ndf   : 4105.72
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g1_r            = -0.00445456      +/- 0.0001093    (2.454%)
+h1_r            = 28.594           +/- 0.2845       (0.995%)
+i1              = -23347.5         +/- 183.6        (0.7866%)
+
+correlation matrix of the fit parameters:
+                g1_r   h1_r   i1     
+g1_r            1.000 
+h1_r           -0.999  1.000 
+i1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:35:19 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:4
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h2(x)
+	h2(x) = g2_r*x*x + h2_r*x + i2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g2_r          h2_r          i2           
+   0 1.3662086091e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 1.8115401958e+09  -1.56e-03  9.27e-05   -9.024702e-03   4.767389e+01  -3.934390e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 1.81154e+09
+rel. change during last iteration : -1.56115e-08
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1848.78
+variance of residuals (reduced chisquare) = WSSR/ndf   : 3.418e+06
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g2_r            = -0.0090247       +/- 0.007546     (83.62%)
+h2_r            = 47.6739          +/- 18.88        (39.59%)
+i2              = -39343.9         +/- 1.171e+04    (29.75%)
+
+correlation matrix of the fit parameters:
+                g2_r   h2_r   i2     
+g2_r            1.000 
+h2_r           -0.999  1.000 
+i2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:37:07 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:2
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f1(x)
+	f1(x) = a1*x*x + b1*x + c1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a1            b1            c1           
+   0 4.8643679552e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 2.6172761966e+02  -2.23e-04  1.00e-04    4.407144e-05  -8.401192e-02   3.990765e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 261.728
+rel. change during last iteration : -2.23401e-09
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.403945
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.163172
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a1              = 4.40714e-05      +/- 6.892e-07    (1.564%)
+b1              = -0.0840119       +/- 0.001794     (2.135%)
+c1              = 39.9077          +/- 1.158        (2.901%)
+
+correlation matrix of the fit parameters:
+                a1     b1     c1     
+a1              1.000 
+b1             -0.999  1.000 
+c1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:37:07 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:2
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f2(x)
+	f2(x) = a2*x*x + b2*x + c2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a2            b2            c2           
+   0 1.3772781053e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 4.2089007581e+03  -3.87e-04  9.27e-05    4.015612e-05  -7.198113e-02   3.086814e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 4208.9
+rel. change during last iteration : -3.87268e-09
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 2.81804
+variance of residuals (reduced chisquare) = WSSR/ndf   : 7.94132
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a2              = 4.01561e-05      +/- 1.15e-05     (28.65%)
+b2              = -0.0719811       +/- 0.02877      (39.97%)
+c2              = 30.8681          +/- 17.84        (57.8%)
+
+correlation matrix of the fit parameters:
+                a2     b2     c2     
+a2              1.000 
+b2             -0.999  1.000 
+c2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:37:07 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:3
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g1(x)
+	g1(x) = d1*x*x + e1*x + f1_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d1            e1            f1_c         
+   0 4.8643751235e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.2501070494e+01  -2.64e-03  1.00e-04    5.669158e-05  -1.218362e-01   6.635875e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 62.5011
+rel. change during last iteration : -2.63979e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.197397
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.0389658
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d1              = 5.66916e-05      +/- 3.368e-07    (0.5941%)
+e1              = -0.121836        +/- 0.0008765    (0.7194%)
+f1_c            = 66.3588          +/- 0.5658       (0.8526%)
+
+correlation matrix of the fit parameters:
+                d1     e1     f1_c   
+d1              1.000 
+e1             -0.999  1.000 
+f1_c            0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:37:07 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:3
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g2(x)
+	g2(x) = d2*x*x + e2*x + f2_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d2            e2            f2_c         
+   0 1.3772777012e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  11 8.1550180918e-01  -2.90e-08  9.27e-06    9.096807e-05  -1.955727e-01   1.053586e+02
+
+After 11 iterations the fit converged.
+final sum of squares of residuals : 0.815502
+rel. change during last iteration : -2.90114e-13
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.039226
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00153868
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d2              = 9.09681e-05      +/- 1.601e-07    (0.176%)
+e2              = -0.195573        +/- 0.0004005    (0.2048%)
+f2_c            = 105.359          +/- 0.2484       (0.2357%)
+
+correlation matrix of the fit parameters:
+                d2     e2     f2_c   
+d2              1.000 
+e2             -0.999  1.000 
+f2_c            0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:37:07 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:4
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h1(x)
+	h1(x) = g1_r*x*x + h1_r*x + i1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g1_r          h1_r          i1           
+   0 4.8280009841e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.5855720437e+06  -3.20e-03  1.00e-04   -4.454560e-03   2.859396e+01  -2.334752e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 6.58557e+06
+rel. change during last iteration : -3.19707e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 64.0759
+variance of residuals (reduced chisquare) = WSSR/ndf   : 4105.72
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g1_r            = -0.00445456      +/- 0.0001093    (2.454%)
+h1_r            = 28.594           +/- 0.2845       (0.995%)
+i1              = -23347.5         +/- 183.6        (0.7866%)
+
+correlation matrix of the fit parameters:
+                g1_r   h1_r   i1     
+g1_r            1.000 
+h1_r           -0.999  1.000 
+i1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 19:37:07 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:4
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h2(x)
+	h2(x) = g2_r*x*x + h2_r*x + i2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g2_r          h2_r          i2           
+   0 1.3662086091e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 1.8115401958e+09  -1.56e-03  9.27e-05   -9.024702e-03   4.767389e+01  -3.934390e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 1.81154e+09
+rel. change during last iteration : -1.56115e-08
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1848.78
+variance of residuals (reduced chisquare) = WSSR/ndf   : 3.418e+06
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g2_r            = -0.0090247       +/- 0.007546     (83.62%)
+h2_r            = 47.6739          +/- 18.88        (39.59%)
+i2              = -39343.9         +/- 1.171e+04    (29.75%)
+
+correlation matrix of the fit parameters:
+                g2_r   h2_r   i2     
+g2_r            1.000 
+h2_r           -0.999  1.000 
+i2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 20:04:12 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:2
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f1(x)
+	f1(x) = a1*x*x + b1*x + c1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a1            b1            c1           
+   0 4.8643679552e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 2.6172761966e+02  -2.23e-04  1.00e-04    4.407144e-05  -8.401192e-02   3.990765e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 261.728
+rel. change during last iteration : -2.23401e-09
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.403945
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.163172
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a1              = 4.40714e-05      +/- 6.892e-07    (1.564%)
+b1              = -0.0840119       +/- 0.001794     (2.135%)
+c1              = 39.9077          +/- 1.158        (2.901%)
+
+correlation matrix of the fit parameters:
+                a1     b1     c1     
+a1              1.000 
+b1             -0.999  1.000 
+c1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 20:04:12 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:2
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f2(x)
+	f2(x) = a2*x*x + b2*x + c2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a2            b2            c2           
+   0 1.3772781053e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 4.2089007581e+03  -3.87e-04  9.27e-05    4.015612e-05  -7.198113e-02   3.086814e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 4208.9
+rel. change during last iteration : -3.87268e-09
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 2.81804
+variance of residuals (reduced chisquare) = WSSR/ndf   : 7.94132
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a2              = 4.01561e-05      +/- 1.15e-05     (28.65%)
+b2              = -0.0719811       +/- 0.02877      (39.97%)
+c2              = 30.8681          +/- 17.84        (57.8%)
+
+correlation matrix of the fit parameters:
+                a2     b2     c2     
+a2              1.000 
+b2             -0.999  1.000 
+c2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 20:04:12 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:3
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g1(x)
+	g1(x) = d1*x*x + e1*x + f1_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d1            e1            f1_c         
+   0 4.8643751235e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.2501070494e+01  -2.64e-03  1.00e-04    5.669158e-05  -1.218362e-01   6.635875e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 62.5011
+rel. change during last iteration : -2.63979e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.197397
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.0389658
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d1              = 5.66916e-05      +/- 3.368e-07    (0.5941%)
+e1              = -0.121836        +/- 0.0008765    (0.7194%)
+f1_c            = 66.3588          +/- 0.5658       (0.8526%)
+
+correlation matrix of the fit parameters:
+                d1     e1     f1_c   
+d1              1.000 
+e1             -0.999  1.000 
+f1_c            0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 20:04:12 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:3
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g2(x)
+	g2(x) = d2*x*x + e2*x + f2_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d2            e2            f2_c         
+   0 1.3772777012e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  11 8.1550180918e-01  -2.90e-08  9.27e-06    9.096807e-05  -1.955727e-01   1.053586e+02
+
+After 11 iterations the fit converged.
+final sum of squares of residuals : 0.815502
+rel. change during last iteration : -2.90114e-13
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.039226
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00153868
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d2              = 9.09681e-05      +/- 1.601e-07    (0.176%)
+e2              = -0.195573        +/- 0.0004005    (0.2048%)
+f2_c            = 105.359          +/- 0.2484       (0.2357%)
+
+correlation matrix of the fit parameters:
+                d2     e2     f2_c   
+d2              1.000 
+e2             -0.999  1.000 
+f2_c            0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 20:04:12 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:4
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h1(x)
+	h1(x) = g1_r*x*x + h1_r*x + i1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g1_r          h1_r          i1           
+   0 4.8280009841e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.5855720437e+06  -3.20e-03  1.00e-04   -4.454560e-03   2.859396e+01  -2.334752e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 6.58557e+06
+rel. change during last iteration : -3.19707e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 64.0759
+variance of residuals (reduced chisquare) = WSSR/ndf   : 4105.72
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g1_r            = -0.00445456      +/- 0.0001093    (2.454%)
+h1_r            = 28.594           +/- 0.2845       (0.995%)
+i1              = -23347.5         +/- 183.6        (0.7866%)
+
+correlation matrix of the fit parameters:
+                g1_r   h1_r   i1     
+g1_r            1.000 
+h1_r           -0.999  1.000 
+i1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 20:04:12 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:4
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h2(x)
+	h2(x) = g2_r*x*x + h2_r*x + i2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g2_r          h2_r          i2           
+   0 1.3662086091e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 1.8115401958e+09  -1.56e-03  9.27e-05   -9.024702e-03   4.767389e+01  -3.934390e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 1.81154e+09
+rel. change during last iteration : -1.56115e-08
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1848.78
+variance of residuals (reduced chisquare) = WSSR/ndf   : 3.418e+06
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g2_r            = -0.0090247       +/- 0.007546     (83.62%)
+h2_r            = 47.6739          +/- 18.88        (39.59%)
+i2              = -39343.9         +/- 1.171e+04    (29.75%)
+
+correlation matrix of the fit parameters:
+                g2_r   h2_r   i2     
+g2_r            1.000 
+h2_r           -0.999  1.000 
+i2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 21:26:06 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:2
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f1(x)
+	f1(x) = a1*x*x + b1*x + c1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a1            b1            c1           
+   0 4.8643679552e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 2.6172761966e+02  -2.23e-04  1.00e-04    4.407144e-05  -8.401192e-02   3.990765e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 261.728
+rel. change during last iteration : -2.23401e-09
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.403945
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.163172
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a1              = 4.40714e-05      +/- 6.892e-07    (1.564%)
+b1              = -0.0840119       +/- 0.001794     (2.135%)
+c1              = 39.9077          +/- 1.158        (2.901%)
+
+correlation matrix of the fit parameters:
+                a1     b1     c1     
+a1              1.000 
+b1             -0.999  1.000 
+c1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 21:26:06 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:2
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f2(x)
+	f2(x) = a2*x*x + b2*x + c2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a2            b2            c2           
+   0 1.3772781053e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 4.2089007581e+03  -3.87e-04  9.27e-05    4.015612e-05  -7.198113e-02   3.086814e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 4208.9
+rel. change during last iteration : -3.87268e-09
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 2.81804
+variance of residuals (reduced chisquare) = WSSR/ndf   : 7.94132
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a2              = 4.01561e-05      +/- 1.15e-05     (28.65%)
+b2              = -0.0719811       +/- 0.02877      (39.97%)
+c2              = 30.8681          +/- 17.84        (57.8%)
+
+correlation matrix of the fit parameters:
+                a2     b2     c2     
+a2              1.000 
+b2             -0.999  1.000 
+c2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 21:26:06 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:3
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g1(x)
+	g1(x) = d1*x*x + e1*x + f1_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d1            e1            f1_c         
+   0 4.8643751235e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.2501070494e+01  -2.64e-03  1.00e-04    5.669158e-05  -1.218362e-01   6.635875e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 62.5011
+rel. change during last iteration : -2.63979e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.197397
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.0389658
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d1              = 5.66916e-05      +/- 3.368e-07    (0.5941%)
+e1              = -0.121836        +/- 0.0008765    (0.7194%)
+f1_c            = 66.3588          +/- 0.5658       (0.8526%)
+
+correlation matrix of the fit parameters:
+                d1     e1     f1_c   
+d1              1.000 
+e1             -0.999  1.000 
+f1_c            0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 21:26:06 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:3
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g2(x)
+	g2(x) = d2*x*x + e2*x + f2_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d2            e2            f2_c         
+   0 1.3772777012e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  11 8.1550180918e-01  -2.90e-08  9.27e-06    9.096807e-05  -1.955727e-01   1.053586e+02
+
+After 11 iterations the fit converged.
+final sum of squares of residuals : 0.815502
+rel. change during last iteration : -2.90114e-13
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.039226
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00153868
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d2              = 9.09681e-05      +/- 1.601e-07    (0.176%)
+e2              = -0.195573        +/- 0.0004005    (0.2048%)
+f2_c            = 105.359          +/- 0.2484       (0.2357%)
+
+correlation matrix of the fit parameters:
+                d2     e2     f2_c   
+d2              1.000 
+e2             -0.999  1.000 
+f2_c            0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 21:26:06 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:4
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h1(x)
+	h1(x) = g1_r*x*x + h1_r*x + i1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g1_r          h1_r          i1           
+   0 4.8280009841e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.5855720437e+06  -3.20e-03  1.00e-04   -4.454560e-03   2.859396e+01  -2.334752e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 6.58557e+06
+rel. change during last iteration : -3.19707e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 64.0759
+variance of residuals (reduced chisquare) = WSSR/ndf   : 4105.72
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g1_r            = -0.00445456      +/- 0.0001093    (2.454%)
+h1_r            = 28.594           +/- 0.2845       (0.995%)
+i1              = -23347.5         +/- 183.6        (0.7866%)
+
+correlation matrix of the fit parameters:
+                g1_r   h1_r   i1     
+g1_r            1.000 
+h1_r           -0.999  1.000 
+i1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 21:26:06 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:4
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h2(x)
+	h2(x) = g2_r*x*x + h2_r*x + i2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g2_r          h2_r          i2           
+   0 1.3662086091e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 1.8115401958e+09  -1.56e-03  9.27e-05   -9.024702e-03   4.767389e+01  -3.934390e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 1.81154e+09
+rel. change during last iteration : -1.56115e-08
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 1848.78
+variance of residuals (reduced chisquare) = WSSR/ndf   : 3.418e+06
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g2_r            = -0.0090247       +/- 0.007546     (83.62%)
+h2_r            = 47.6739          +/- 18.88        (39.59%)
+i2              = -39343.9         +/- 1.171e+04    (29.75%)
+
+correlation matrix of the fit parameters:
+                g2_r   h2_r   i2     
+g2_r            1.000 
+h2_r           -0.999  1.000 
+i2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 21:30:25 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:2
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f1(x)
+	f1(x) = a1*x*x + b1*x + c1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a1            b1            c1           
+   0 4.8643679552e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 2.6172761966e+02  -2.23e-04  1.00e-04    4.407144e-05  -8.401192e-02   3.990765e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 261.728
+rel. change during last iteration : -2.23401e-09
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.403945
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.163172
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a1              = 4.40714e-05      +/- 6.892e-07    (1.564%)
+b1              = -0.0840119       +/- 0.001794     (2.135%)
+c1              = 39.9077          +/- 1.158        (2.901%)
+
+correlation matrix of the fit parameters:
+                a1     b1     c1     
+a1              1.000 
+b1             -0.999  1.000 
+c1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 21:30:25 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:2
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f2(x)
+	f2(x) = a2*x*x + b2*x + c2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a2            b2            c2           
+   0 1.3772781053e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 4.2089007581e+03  -3.87e-04  9.27e-05    4.015612e-05  -7.198113e-02   3.086814e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 4208.9
+rel. change during last iteration : -3.87268e-09
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 2.81804
+variance of residuals (reduced chisquare) = WSSR/ndf   : 7.94132
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a2              = 4.01561e-05      +/- 1.15e-05     (28.65%)
+b2              = -0.0719811       +/- 0.02877      (39.97%)
+c2              = 30.8681          +/- 17.84        (57.8%)
+
+correlation matrix of the fit parameters:
+                a2     b2     c2     
+a2              1.000 
+b2             -0.999  1.000 
+c2              0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 21:30:25 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:3
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g1(x)
+	g1(x) = d1*x*x + e1*x + f1_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d1            e1            f1_c         
+   0 4.8643751235e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.2501070494e+01  -2.64e-03  1.00e-04    5.669158e-05  -1.218362e-01   6.635875e+01
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 62.5011
+rel. change during last iteration : -2.63979e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.197397
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.0389658
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d1              = 5.66916e-05      +/- 3.368e-07    (0.5941%)
+e1              = -0.121836        +/- 0.0008765    (0.7194%)
+f1_c            = 66.3588          +/- 0.5658       (0.8526%)
+
+correlation matrix of the fit parameters:
+                d1     e1     f1_c   
+d1              1.000 
+e1             -0.999  1.000 
+f1_c            0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 21:30:25 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:3
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: g2(x)
+	g2(x) = d2*x*x + e2*x + f2_c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   d2            e2            f2_c         
+   0 1.3772777012e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  11 8.1550180918e-01  -2.90e-08  9.27e-06    9.096807e-05  -1.955727e-01   1.053586e+02
+
+After 11 iterations the fit converged.
+final sum of squares of residuals : 0.815502
+rel. change during last iteration : -2.90114e-13
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.039226
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00153868
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+d2              = 9.09681e-05      +/- 1.601e-07    (0.176%)
+e2              = -0.195573        +/- 0.0004005    (0.2048%)
+f2_c            = 105.359          +/- 0.2484       (0.2357%)
+
+correlation matrix of the fit parameters:
+                d2     e2     f2_c   
+d2              1.000 
+e2             -0.999  1.000 
+f2_c            0.998 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 21:30:25 2025
+
+
+FIT:    data read from 'rotor_data.txt' using 1:4
+        format = x:z
+        #datapoints = 1607
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h1(x)
+	h1(x) = g1_r*x*x + h1_r*x + i1
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g1_r          h1_r          i1           
+   0 4.8280009841e+15   0.00e+00  1.00e+06    1.000000e+00   1.000000e+00   1.000000e+00
+  10 6.5855720437e+06  -3.20e-03  1.00e-04   -4.454560e-03   2.859396e+01  -2.334752e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 6.58557e+06
+rel. change during last iteration : -3.19707e-08
+
+degrees of freedom    (FIT_NDF)                        : 1604
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 64.0759
+variance of residuals (reduced chisquare) = WSSR/ndf   : 4105.72
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g1_r            = -0.00445456      +/- 0.0001093    (2.454%)
+h1_r            = 28.594           +/- 0.2845       (0.995%)
+i1              = -23347.5         +/- 183.6        (0.7866%)
+
+correlation matrix of the fit parameters:
+                g1_r   h1_r   i1     
+g1_r            1.000 
+h1_r           -0.999  1.000 
+i1              0.996 -0.999  1.000 
+
+
+*******************************************************************************
+Thu Jul 24 21:30:25 2025
+
+
+FIT:    data read from 'rotor_with_unit_data.txt' using 1:4
+        format = x:z
+        #datapoints = 533
+        residuals are weighted equally (unit weight)
+
+function used for fitting: h2(x)
+	h2(x) = g2_r*x*x + h2_r*x + i2
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   g2_r          h2_r          i2           
+   0 1.3664302369e+15   0.00e+00  9.27e+05    1.000000e+00   1.000000e+00   1.000000e+00
+  10 9.6753452702e+07  -4.57e-02  9.27e-05   -1.620775e-02   6.455406e+01  -4.922060e+04
+
+After 10 iterations the fit converged.
+final sum of squares of residuals : 9.67535e+07
+rel. change during last iteration : -4.57467e-07
+
+degrees of freedom    (FIT_NDF)                        : 530
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 427.263
+variance of residuals (reduced chisquare) = WSSR/ndf   : 182554
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+g2_r            = -0.0162078       +/- 0.001744     (10.76%)
+h2_r            = 64.5541          +/- 4.362        (6.758%)
+i2              = -49220.6         +/- 2705         (5.496%)
+
+correlation matrix of the fit parameters:
+                g2_r   h2_r   i2     
+g2_r            1.000 
+h2_r           -0.999  1.000 
+i2              0.998 -0.999  1.000 
