@@ -7,9 +7,13 @@ bool GxPwmServo::init(TIM_HandleTypeDef* htim, uint8_t servo_num) {
     // pwm config
     htim_ = htim;
     htim_->Instance = TIM4;
-    htim_->Init.Prescaler = 36;
+    // Configure for 300Hz PWM, based on a 200MHz timer kernel clock.
+    // Timer clock = 200MHz. Prescaler = 19 => Tick Freq = 200M / 20 = 10MHz.
+    // Tick time = 0.1us. Period = 33332 => PWM Period = (33332+1) * 0.1us =
+    // 3333.3us => ~300Hz.
+    htim_->Init.Prescaler = 19;
     htim_->Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim_->Init.Period = 3075;
+    htim_->Init.Period = 33332;
     htim_->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim_->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
@@ -44,7 +48,6 @@ void GxPwmServo::update() {
     }
 }
 
-
 void GxPwmServo::setTorque(uint8_t servo_index) {
     if (!initialized_ || servo_index >= servo_num_) return;
 
@@ -68,23 +71,22 @@ void GxPwmServo::setAndSaveInitPosition(uint8_t id, float angle_rad) {
 }
 
 float GxPwmServo::angleToPulseWidth(float angle_rad) const {
-    float pulse_width_us =
-        MIN_PULSE_WIDTH_US + (angle_rad / ANGLE_RANGE_RAD) *
-                                 (MAX_PULSE_WIDTH_US - MIN_PULSE_WIDTH_US);
+    float pulse_width_us = MIN_PULSE_WIDTH_US + (angle_rad / ANGLE_RANGE_RAD) * (MAX_PULSE_WIDTH_US - MIN_PULSE_WIDTH_US);
+    
     if (pulse_width_us < MIN_PULSE_WIDTH_US)
+    {
         pulse_width_us = MIN_PULSE_WIDTH_US;
+    }
     if (pulse_width_us > MAX_PULSE_WIDTH_US)
+    {
         pulse_width_us = MAX_PULSE_WIDTH_US;
+    }
+
     return pulse_width_us;
 }
 
 void GxPwmServo::setCCR(uint32_t channel, float pulse_us) {
-    if (htim_== nullptr) return;
-    uint32_t max_pwm_count = __HAL_TIM_GET_AUTORELOAD(htim_);
-    float pwm_period_us = (float)(max_pwm_count + 1) *
-                          (float)(htim_->Init.Prescaler + 1) /
-                          (float)(HAL_RCC_GetPCLK1Freq() / 1000000.0f);
-    if (pwm_period_us < 1.0f) pwm_period_us = 3030.0f;
-    uint32_t ccr_value = static_cast<uint32_t>((pulse_us / pwm_period_us) * max_pwm_count);
+    if (htim_ == nullptr) return;
+    uint32_t ccr_value = static_cast<uint32_t>(pulse_us / 0.1f);
     __HAL_TIM_SET_COMPARE(htim_, channel, ccr_value);
 }
