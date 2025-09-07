@@ -28,8 +28,8 @@
 #define GPIO_H(port, pin) HAL_GPIO_WritePin(port, pin, GPIO_PIN_SET)
 #define GPIO_L(port, pin) HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET)
 
-//0. Comm Type
-#define NERVE_COMM 1
+//0. Comm Type  
+#define NERVE_COMM 0
 
 //1. Specials board options
 #define STM32H7_V2 1
@@ -48,9 +48,9 @@
 #define GPS_FLAG 0
 //2.1.3 Direct Servo Control
 #define SERVO_FLAG 1
-#define DYNAMIXEL 0
+#define DYNAMIXEL 1
 #define KONDO 0
-#define GX_PWM_SERVO 1
+#define GX_PWM_SERVO 0
 //2.1.3.1 Dynamixel Servo Control without external convertor board
 #define DYNAMIXEL_BOARDLESS_CONTROL 0
 //2.2 State Estimate
