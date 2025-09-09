@@ -1,0 +1,5 @@
+<library path="lib/libflamingo_controller">
+  <class name="aerial_robot_control/flamingo_controller" type="aerial_robot_control::FlamingoController" base_class_type="aerial_robot_control::ControlBase">
+    <description>plugin for flamingo control </description>
+  </class>
+</library>
