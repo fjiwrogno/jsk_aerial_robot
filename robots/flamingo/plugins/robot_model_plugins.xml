@@ -1,0 +1,5 @@
+<library path="lib/libflamingo_robot_model">
+  <class name="flamingo_robot_model" type="FlamingoRobotModel" base_class_type="aerial_robot_model::RobotModel">
+    <description>plugin for flamingo robot model </description>
+  </class>
+</library>

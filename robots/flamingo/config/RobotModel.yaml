@@ -1,0 +1,6 @@
+# robot model plugin
+robot_model_plugin_name: flamingo_robot_model # multirotor_robot_model
+#  TODO add underwater dynamics
+
+
+wrench_mat_det_thre: 0
