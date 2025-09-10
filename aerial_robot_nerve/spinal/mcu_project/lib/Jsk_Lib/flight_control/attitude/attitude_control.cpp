@@ -846,6 +846,13 @@ void AttitudeController::pwmTestCallback(const spinal::PwmTest& pwm_msg)
       {
         pwm_test_value_[i] = pwm_msg.pwms[0];
       }
+      else if ((i > 1) && pwm_msg.pwms[0] >= 0 && pwm_msg.pwms[0] <= MAX_PWM)
+      {
+        // hardcoding to enable pwm test for bi-directional rotor usage
+        // right now only the 3th and 4th rotor(2,3) are enabled
+        // throttle range for bi-directional rotor: 0.5-0:reverse 0.5-1.0:
+        pwm_test_value_[i] = pwm_msg.pwms[0];
+      }
       else
       {
         nh_->logwarn("FAIL SAFE!  Invaild PWM value for motors");

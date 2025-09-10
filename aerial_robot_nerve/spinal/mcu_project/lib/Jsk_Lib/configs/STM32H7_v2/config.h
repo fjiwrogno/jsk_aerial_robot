@@ -30,7 +30,8 @@
 #define GPIO_L(port, pin) HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET)
 
 // 0. Comm Type
-#define NERVE_COMM 0
+#define NERVE_COMM 1
+///TODO nerve_comm = 0 + gx_pwm_servo = , there is a bug that the pc cann't connnect with spinal
 
 // 1. Specials board options
 #define STM32H7_V2 1
@@ -52,6 +53,7 @@
 #define DYNAMIXEL 0
 #define KONDO 0
 #define GX_PWM_SERVO 1
+
 // 2.1.3.1 Dynamixel Servo Control without external convertor board
 #define DYNAMIXEL_BOARDLESS_CONTROL 0
 // 2.2 State Estimate
