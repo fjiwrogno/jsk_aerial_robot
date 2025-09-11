@@ -28,7 +28,7 @@ bool GxPwmServo::init(TIM_HandleTypeDef* htim, uint8_t servo_num)
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
 
-  // --- Configure Channels 3 & 4 for bidirectional neutral throttle
+  // --- Configure Channels 3 & 4 for bidirectional neTural throttle
   // (1.5ms) ---
   sConfigOC.Pulse = 1500;
   while (HAL_TIM_PWM_ConfigChannel(htim_, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
@@ -124,7 +124,9 @@ float GxPwmServo::angleToPulseWidth(float angle_rad) const
 void GxPwmServo::setCCR(uint32_t channel, float pulse_us)
 {
   if (htim_ == nullptr)
+  {
     return;
-  uint32_t ccr_value = static_cast<uint32_t>(pulse_us / 0.1f);
+  }
+  uint32_t ccr_value = static_cast<uint32_t>(pulse_us);
   __HAL_TIM_SET_COMPARE(htim_, channel, ccr_value);
 }
