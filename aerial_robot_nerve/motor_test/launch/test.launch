@@ -3,13 +3,14 @@
   <!-- general parameters -->
   <arg name="test_mode" default="1" /> <!-- 0: STEP; 1: ONESHOT -->
   <arg name="run_duration" default="2.0" />
-  <arg name="pwm_incremental_value" default="25" />
-  <arg name="min_pwm_value" default="1200" />
-  <arg name="max_pwm_value" default="1700" />
+  <arg name="pwm_incremental_value" default="50" />
+  <arg name="min_pwm_value" default="200" />
+  <arg name="max_pwm_value" default="1800" />
   <!-- parameters for oneshot -->
   <arg name="raise_duration" default="2.0" />
-  <arg name="brake_duration" default="4.0" />
-  <arg name="force_sensor" default="CFS034CA301U" /> <!-- other sensor: PFS055YA501U6 -->
+  <arg name="brake_duration" default="3.0" />
+  <arg name="voltage" default="25.2" />
+  <arg name="force_sensor" default="PFS055YA501U6" /> <!-- other sensor: PFS055YA501U6 -->
 
   <node name="power_node"  pkg="takasako_sps" type="scpi_tcp_client_node" output="screen" />
 

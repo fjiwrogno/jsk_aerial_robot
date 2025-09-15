@@ -29,6 +29,8 @@ public:
 
     nhp_.param("stop_pwm_value", stop_pwm_value_, 1000);
     nhp_.param("pwm_range", pwm_range_, 2000.0);
+    nhp_.param("voltage", voltage_, 25.2);
+
 
     /* one-shot mode */
     nhp_.param("raise_duration", raise_duration_, 1.0);
@@ -90,13 +92,15 @@ private:
   double pwm_range_;
 
   float currency_ = 0.0;
+  double voltage_ = 25.2;
   ros::Time init_time_;
 
   std::ofstream ofs_;
 
   void startCallback(const std_msgs::EmptyConstPtr & msg)
   {
-    std::string file_name  = std::string("motor_test_") + std::to_string((int)ros::Time::now().toSec()) + std::string(".txt");
+    std::string file_name  = std::string("/home/chen/Research/jsk_aerial_robot/src/jsk_aerial_robot_dev/aerial_robot_nerve/motor_test/data/") 
+    + std::to_string((double)voltage_) + std::string("motor_test_") + std::to_string((int)ros::Time::now().toSec()) + std::string(".txt");
     ofs_.open(file_name, std::ios::out);
 
     pwm_value_ = min_pwm_value_;
@@ -118,6 +122,9 @@ private:
   {
     if(!start_flag_) return;
 
+    ROS_WARN("STOP");
+
+
     double force_norm = sqrt(msg->wrench.force.x * msg->wrench.force.x +
                              msg->wrench.force.y * msg->wrench.force.y +
                              msg->wrench.force.z * msg->wrench.force.z);
@@ -130,6 +137,7 @@ private:
         << msg->wrench.torque.x << " "
         << msg->wrench.torque.y << " "
         << msg->wrench.torque.z << " "
+        << voltage_ << " "
         << currency_;
 
     if(test_mode_ == Mode::ONESHOT)
