@@ -236,7 +236,7 @@
       <parent link="rotor_parent${self}"/>
       <child link="thrust${self + 2}"/>
       <!-- modify this position -->
-      <origin rpy="0 0 0" xyz="0 0 -0.05"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.02"/>
       <axis xyz="0 0 ${rotor_direction}"/>
     </joint>
 
