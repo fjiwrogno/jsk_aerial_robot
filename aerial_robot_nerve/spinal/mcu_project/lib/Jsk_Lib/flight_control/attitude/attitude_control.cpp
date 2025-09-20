@@ -282,6 +282,8 @@ void AttitudeController::pwmsControl(void)
     // Translates a logical PWM [0.0, 1.0] to a physical pulse [1000us, 2000us].
     for (int i = 2; i < 4; ++i)
     {
+      // 2000 * target_pwm_[i]: 0.5 ~1
+      // 1800~0.9~1900 -> 0.95
       float pulse_bi = 1000.0f + target_pwm_[i] * 1000.0f;
 
       if (pulse_bi < 1000.0f)
@@ -492,22 +494,52 @@ void AttitudeController::reset(void)
 {
   for (int i = 0; i < MAX_MOTOR_NUMBER; i++)
   {
-    target_thrust_[i] = 0;
-    target_pwm_[i] = IDLE_DUTY;
-    pwm_test_value_[i] = IDLE_DUTY;
-
-    base_thrust_term_[i] = 0;
-    roll_pitch_term_[i] = 0;
-    yaw_term_[i] = 0;
-    extra_yaw_pi_term_[i] = 0;
-
-    for (int j = 0; j < 3; j++)
+    // aerial motor: 0 ~ 1  
+    if (i < 2 && i > 3)
     {
-      thrust_p_gain_[i][j] = 0;
-      thrust_i_gain_[i][j] = 0;
-      thrust_d_gain_[i][j] = 0;
-      torque_allocation_matrix_inv_[i][j] = 0.0;
+
+      target_thrust_[i] = 0;
+      target_pwm_[i] = IDLE_DUTY;
+      pwm_test_value_[i] = IDLE_DUTY;
+
+      base_thrust_term_[i] = 0;
+      roll_pitch_term_[i] = 0;
+      yaw_term_[i] = 0;
+      extra_yaw_pi_term_[i] = 0;
+
+      for (int j = 0; j < 3; j++)
+      {
+        thrust_p_gain_[i][j] = 0;
+        thrust_i_gain_[i][j] = 0;
+        thrust_d_gain_[i][j] = 0;
+        torque_allocation_matrix_inv_[i][j] = 0.0;
+      }      
+    
     }
+    else
+    {
+      // aquatic motor: 2 ~ 3
+
+      target_thrust_[i] = 0;
+      target_pwm_[i] = 0.0;
+      pwm_test_value_[i] = 0.0;
+
+      base_thrust_term_[i] = 0;
+      roll_pitch_term_[i] = 0;
+      yaw_term_[i] = 0;
+      extra_yaw_pi_term_[i] = 0;
+
+      for (int j = 0; j < 3; j++)
+      {
+        thrust_p_gain_[i][j] = 0;
+        thrust_i_gain_[i][j] = 0;
+        thrust_d_gain_[i][j] = 0;
+        torque_allocation_matrix_inv_[i][j] = 0.0;
+      }
+
+    }
+    
+    
   }
 
   for (int i = 0; i < 3; i++)
