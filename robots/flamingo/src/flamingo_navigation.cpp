@@ -18,12 +18,46 @@ void FlamingoNavigator::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   /* initialize the flight control */
   BaseNavigator::initialize(nh, nhp, robot_model, estimator, loop_du);
 
+  robot_mode_pub_ = nh_.advertise<std_msgs::UInt8>("robot_mode", 1);
+  robot_mode_ = ROBOT_MODE::AERIAL_MODE;
   target_baselink_rpy_pub_ = nh_.advertise<spinal::DesireCoord>("desire_coordinate", 1);  // to spinal
   final_target_baselink_rot_sub_ =
       nh_.subscribe("final_target_baselink_rot", 1, &FlamingoNavigator::targetBaselinkRotCallback, this);
   final_target_baselink_rpy_sub_ =
       nh_.subscribe("final_target_baselink_rpy", 1, &FlamingoNavigator::targetBaselinkRPYCallback, this);
   prev_rotation_stamp_ = ros::Time::now().toSec();
+}
+
+void FlamingoNavigator::joyStickControl(const sensor_msgs::JoyConstPtr& joy_msg)
+{
+  BaseNavigator::joyStickControl(joy_msg);
+
+  sensor_msgs::Joy joy_cmd = joyParse(*joy_msg);
+  if (joy_cmd.buttons.size() == 0)
+    return;
+
+  if (joy_cmd.buttons[JOY_BUTTON_REAR_LEFT_1] == 1 && joy_cmd.buttons[JOY_BUTTON_REAR_RIGHT_1] == 1)
+  {
+    switchRobotMode();
+  }
+}
+
+void FlamingoNavigator::switchRobotMode()
+{
+  if (robot_mode_ == ROBOT_MODE::AERIAL_MODE)
+  {
+    robot_mode_ = ROBOT_MODE::UNDERWATER_MODE;
+    ROS_INFO("Switch to UNDERWATER Mode");
+  }
+  else
+  {
+    robot_mode_ = ROBOT_MODE::AERIAL_MODE;
+    ROS_INFO("Switch to Air Mode");
+  }
+
+  std_msgs::UInt8 msg;
+  msg.data = robot_mode_;
+  robot_mode_pub_.publish(msg);
 }
 
 void FlamingoNavigator::update()
