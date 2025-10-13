@@ -496,6 +496,13 @@ void AttitudeController::reset(void)
     target_pwm_[i] = IDLE_DUTY;
     pwm_test_value_[i] = IDLE_DUTY;
 
+    if (i == 2 || i == 3)
+    {
+      // reset the intial value of motor pwm
+      target_pwm_[i] = 0;
+      pwm_test_value_[i] = 0;
+    }
+
     base_thrust_term_[i] = 0;
     roll_pitch_term_[i] = 0;
     yaw_term_[i] = 0;
