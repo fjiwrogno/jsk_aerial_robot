@@ -21,6 +21,10 @@ void FlamingoController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
 
   rotor_coef_ = gimbal_dof_ + 1;  // number of virtual rotors in each rotor arm
 
+  motor_num_ = 2;
+
+  ROS_ERROR("flamingo controller's motor_num is: %d", flamingo_robot_model_->getRotorNum());
+
   target_base_thrust_.resize(motor_num_ * rotor_coef_);
   target_full_thrust_.resize(motor_num_);
   target_gimbal_angles_.resize(motor_num_ * gimbal_dof_, 0);
@@ -111,7 +115,7 @@ void FlamingoController::controlCore()
 
   Eigen::MatrixXd full_q_mat = Eigen::MatrixXd::Zero(6, 3 * motor_num_);
 
-  double mass_inv = 1 / flamingo_robot_model_->getMass();
+  double mass_inv = 1.0 / flamingo_robot_model_->getMass();
 
   Eigen::Matrix3d inertia_inv = inertia.inverse();
 
@@ -299,14 +303,54 @@ void FlamingoController::sendFourAxisCommand()
   flight_command_data.angles[0] = target_roll_;
   flight_command_data.angles[1] = target_pitch_;
 
+  // to the correct physical PWM indices (0,1 for air; 2,3 for water).
+
+  // Get the robot_mode from the model, where it's now stored.
+  std::string robot_mode = flamingo_robot_model_->getRobotMode(); // We need to add this getter to the model
+
+  // Initialize a thrust vector for ALL physical motors with safe values (0 for thrust).
+  std::vector<float> physical_thrusts(flamingo_robot_model_->getFullRotorNum(), 0.0f);
+
   if (gimbal_calc_in_fc_)
   {
     flight_command_data.base_thrust = target_base_thrust_;
     flight_command_data.angles[2] = candidate_yaw_term_;
+
+    if (robot_mode == "air")
+    {
+      // For air mode, logical motors 0,1 map to physical motors 0,1
+      if (target_base_thrust_.size() >= 2) {
+        physical_thrusts[0] = target_base_thrust_.at(0);
+        physical_thrusts[1] = target_base_thrust_.at(1);
+      }
+    }
+    else if (robot_mode == "water")
+    {
+      // For water mode, logicrotor_coef_al motors 0,1 map to physical motors 2,3
+      if (target_base_thrust_.size() >= 2) {
+        physical_thrusts[2] = target_base_thrust_.at(0);
+        physical_thrusts[3] = target_base_thrust_.at(1);
+      }
+    }
+    flight_command_data.base_thrust = physical_thrusts;
   }
   else
   {
-    flight_command_data.base_thrust = target_full_thrust_;
+    if (robot_mode == "air")
+    {
+      if (target_full_thrust_.size() >= 2) {
+        physical_thrusts[0] = target_full_thrust_.at(0);
+        physical_thrusts[1] = target_full_thrust_.at(1);
+      }
+    }
+    else if (robot_mode == "water")
+    {
+      if (target_full_thrust_.size() >= 2) {
+        physical_thrusts[2] = target_full_thrust_.at(0);
+        physical_thrusts[3] = target_full_thrust_.at(1);
+      }
+    }
+    flight_command_data.base_thrust = physical_thrusts;
   }
 
   flight_cmd_pub_.publish(flight_command_data);

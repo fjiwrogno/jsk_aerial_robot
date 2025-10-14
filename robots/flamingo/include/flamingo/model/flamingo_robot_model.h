@@ -13,6 +13,10 @@ public:
                      double epsilon = 10);
   virtual ~FlamingoRobotModel() = default;
 
+  int getRotorNum() const { return active_rotor_num_; }; 
+  std::string getRobotMode() const { return robot_mode_; }
+  int getFullRotorNum() const { return full_rotor_num_; }
+
   template <class T>
   std::vector<T> getLinksRotationFromCog();
   template <class T>
@@ -26,6 +30,10 @@ private:
   std::vector<KDL::Rotation> thrust_coords_rot_;
   std::mutex links_rotation_mutex_;
   std::mutex thrust_rotation_mutex_;
+
+  std::string robot_mode_;
+  int full_rotor_num_;
+  int active_rotor_num_;
 };
 
 template <>
