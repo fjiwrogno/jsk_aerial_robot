@@ -3,14 +3,15 @@
 FlamingoRobotModel::FlamingoRobotModel(bool init_with_rosparam, bool verbose, double fc_t_min_thre, double epsilon)
   : RobotModel(init_with_rosparam, verbose, fc_t_min_thre, epsilon)
 {
-  ros::NodeHandle nhp("~"); // Private node handle
+  ros::NodeHandle nhp("~");  // Private node handle
   nhp.param("robot_mode", robot_mode_, std::string("air"));
 
   full_rotor_num_ = RobotModel::getRotorNum();
   active_rotor_num_ = 2;
+  active_rotor_indices_ = { 1, 2 };
   if (full_rotor_num_ != 4)
   {
-      ROS_WARN("[FlamingoRobotModel] Expected 4 rotors from URDF, but found %d.", full_rotor_num_);
+    ROS_WARN("[FlamingoRobotModel] Expected 4 rotors from URDF, but found %d.", full_rotor_num_);
   }
 
   links_rotation_from_cog_.resize(getRotorNum());
@@ -26,43 +27,49 @@ void FlamingoRobotModel::updateRobotModelImpl(const KDL::JntArray& joint_positio
 
   transformable::RobotModel::updateRobotModelImpl(joint_positions);
 
+  if (full_rotors_origin_from_cog_.empty() || full_rotors_origin_from_cog_.size() != full_rotor_num_)
+  {
+    full_rotors_origin_from_cog_ = RobotModel::getRotorsOriginFromCog<std::vector<KDL::Vector>>();
+    full_rotors_normal_from_cog_ = RobotModel::getRotorsNormalFromCog<std::vector<KDL::Vector>>();
+    full_rotor_direction_ = RobotModel::getRotorDirection();
+  }
+
   // 1. Define the mapping from active rotor index (0, 1) to physical rotor index (0-3)
-  std::vector<int> active_rotor_indices;
-  ///TODO automative read the index from the yaml file
+  active_rotor_indices_.clear();
+  /// TODO automative read the index from the yaml file
   if (robot_mode_ == "air")
   {
-    active_rotor_indices = {1, 2}; // Use physical rotors 1 and 2
+    active_rotor_indices_ = { 1, 2 };  // Use physical rotors 1 and 2
   }
   else if (robot_mode_ == "water")
   {
-    active_rotor_indices = {3, 4}; // Use physical rotors 3 and 4
+    active_rotor_indices_ = { 3, 4 };  // Use physical rotors 3 and 4
   }
   else
   {
-    for(int i = 0; i < full_rotor_num_; ++i) active_rotor_indices.push_back(i);
+    for (int i = 0; i < full_rotor_num_; ++i)
+      active_rotor_indices_.push_back(i);
   }
-
-  const std::vector<KDL::Vector> all_rotors_origin = RobotModel::getRotorsOriginFromCog<KDL::Vector>();
-  const std::vector<KDL::Vector> all_rotors_normal = RobotModel::getRotorsNormalFromCog<KDL::Vector>();
+  active_rotor_num_ = active_rotor_indices_.size();
 
   std::vector<KDL::Vector> active_rotors_origin, active_rotors_normal;
-  for (int index : active_rotor_indices)
+  for (size_t i = 0; i < active_rotor_indices_.size(); ++i)
   {
-    if (index < all_rotors_origin.size()) {
-        active_rotors_origin.push_back(all_rotors_origin.at(index));
-        active_rotors_normal.push_back(all_rotors_normal.at(index));
+    int physical_index = active_rotor_indices_[i] - 1;
+    if (physical_index < full_rotors_origin_from_cog_.size())
+    {
+      active_rotors_origin.push_back(full_rotors_origin_from_cog_.at(physical_index));
+      active_rotors_normal.push_back(full_rotors_normal_from_cog_.at(physical_index));
+      active_rotor_direction[i] = full_rotor_direction_.at(physical_index);
     }
-  }    
-  
-  active_rotor_num_ = active_rotors_origin.size();
+  }
+
   setRotorsOriginFromCog(active_rotors_origin);
   setRotorsNormalFromCog(active_rotors_normal);
 
-
   for (int i = 0; i < getRotorNum(); ++i)
   {
-    int physical_rotor_index = active_rotor_indices.at(i);
-    std::string thrust = "rotor_arm" + std::to_string(physical_rotor_index + 1);
+    std::string thrust = "rotor_arm" + std::to_string(active_rotor_indices_.at(i));
 
     KDL::Frame f;
     fk_solver.JntToCart(joint_positions, f, thrust);
