@@ -16,7 +16,8 @@ public:
   int getRotorNum() const
   {
     return active_rotor_num_;
-  };
+  }
+
   std::string getRobotMode() const
   {
     return robot_mode_;
@@ -28,6 +29,16 @@ public:
   const std::vector<int>& getActiveRotorIndices() const
   {
     return active_rotor_indices_;
+  }
+
+  const std::map<int, int>& getRotorDirection()
+  {
+    return active_rotor_direction_;
+  }
+
+  void setRobotMode(const std::string& mode)
+  {
+    robot_mode_ = mode;
   }
 
   template <class T>
@@ -44,13 +55,11 @@ private:
   std::mutex links_rotation_mutex_;
   std::mutex thrust_rotation_mutex_;
   std::vector<int> active_rotor_indices_;
-  std::vector<KDL::Vector> full_rotors_origin_from_cog_;
-  std::vector<KDL::Vector> full_rotors_normal_from_cog_;
-  std::map<int, int> full_rotor_direction_;
-
+  std::vector<KDL::Vector> full_rotors_origin_from_cog_, full_rotors_normal_from_cog_;
+  std::map<int, int> full_rotor_direction_, active_rotor_direction_;
+  /// TODO use enum to replace robt_mode_
+  int full_rotor_num_, active_rotor_num_;
   std::string robot_mode_;
-  int full_rotor_num_;
-  int active_rotor_num_;
 };
 
 template <>

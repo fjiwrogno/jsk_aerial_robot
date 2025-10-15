@@ -18,14 +18,18 @@ void FlamingoNavigator::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   /* initialize the flight control */
   BaseNavigator::initialize(nh, nhp, robot_model, estimator, loop_du);
 
-  robot_mode_pub_ = nh_.advertise<std_msgs::UInt8>("robot_mode", 1);
+  flamingo_robot_model_ = boost::dynamic_pointer_cast<FlamingoRobotModel>(robot_model);
   robot_mode_ = ROBOT_MODE::AERIAL_MODE;
+  robot_mode_pub_ = nh_.advertise<std_msgs::UInt8>("robot_mode", 1);
+  robot_mode_sub_ = nh_.subscribe("robot_mode", 1, &FlamingoNavigator::robotModeCallback, this);
+
   target_baselink_rpy_pub_ = nh_.advertise<spinal::DesireCoord>("desire_coordinate", 1);  // to spinal
   final_target_baselink_rot_sub_ =
       nh_.subscribe("final_target_baselink_rot", 1, &FlamingoNavigator::targetBaselinkRotCallback, this);
   final_target_baselink_rpy_sub_ =
       nh_.subscribe("final_target_baselink_rpy", 1, &FlamingoNavigator::targetBaselinkRPYCallback, this);
   prev_rotation_stamp_ = ros::Time::now().toSec();
+  updateRobotMode();
 }
 
 void FlamingoNavigator::joyStickControl(const sensor_msgs::JoyConstPtr& joy_msg)
@@ -44,17 +48,29 @@ void FlamingoNavigator::joyStickControl(const sensor_msgs::JoyConstPtr& joy_msg)
 
 void FlamingoNavigator::switchRobotMode()
 {
-  if (robot_mode_ == ROBOT_MODE::AERIAL_MODE)
+  switch (robot_mode_)
   {
-    robot_mode_ = ROBOT_MODE::UNDERWATER_MODE;
-    ROS_INFO("Switch to UNDERWATER Mode");
+    case ROBOT_MODE::AERIAL_MODE: {
+      robot_mode_ = ROBOT_MODE::UNDERWATER_MODE;
+      ROS_INFO("Switch to UNDERWATER Mode");
+      break;
+    }
+    case ROBOT_MODE::UNDERWATER_MODE: {
+      robot_mode_ = ROBOT_MODE::UNDERWATER_MODE;
+      ROS_INFO("Switch to UNDERWATER Mode");
+      break;
+    }
+    default: {
+      robot_mode_ = ROBOT_MODE::UNDERWATER_MODE;
+      ROS_INFO("Switch to UNDERWATER Mode");
+      break;
+    }
   }
-  else
-  {
-    robot_mode_ = ROBOT_MODE::AERIAL_MODE;
-    ROS_INFO("Switch to Air Mode");
-  }
+  updateRobotMode();
+}
 
+void FlamingoNavigator::updateRobotMode()
+{
   std_msgs::UInt8 msg;
   msg.data = robot_mode_;
   robot_mode_pub_.publish(msg);
@@ -64,6 +80,18 @@ void FlamingoNavigator::update()
 {
   BaseNavigator::update();
   baselinkRotationProcess();
+}
+
+void FlamingoNavigator::robotModeCallback(const std_msgs::UInt8ConstPtr& msg)
+{
+  if (msg->data == ROBOT_MODE::AERIAL_MODE)
+  {
+    flamingo_robot_model_->setRobotMode("air");
+  }
+  else if (msg->data == ROBOT_MODE::UNDERWATER_MODE)
+  {
+    flamingo_robot_model_->setRobotMode("water");
+  }
 }
 
 void FlamingoNavigator::reset()

@@ -9,6 +9,8 @@ FlamingoRobotModel::FlamingoRobotModel(bool init_with_rosparam, bool verbose, do
   full_rotor_num_ = RobotModel::getRotorNum();
   active_rotor_num_ = 2;
   active_rotor_indices_ = { 1, 2 };
+  active_rotor_direction_ = { { 1, 1 }, { 2, -1 } };
+
   if (full_rotor_num_ != 4)
   {
     ROS_WARN("[FlamingoRobotModel] Expected 4 rotors from URDF, but found %d.", full_rotor_num_);
@@ -29,38 +31,37 @@ void FlamingoRobotModel::updateRobotModelImpl(const KDL::JntArray& joint_positio
 
   if (full_rotors_origin_from_cog_.empty() || full_rotors_origin_from_cog_.size() != full_rotor_num_)
   {
-    full_rotors_origin_from_cog_ = RobotModel::getRotorsOriginFromCog<std::vector<KDL::Vector>>();
-    full_rotors_normal_from_cog_ = RobotModel::getRotorsNormalFromCog<std::vector<KDL::Vector>>();
+    full_rotors_origin_from_cog_ = RobotModel::getRotorsOriginFromCog<KDL::Vector>();
+    full_rotors_normal_from_cog_ = RobotModel::getRotorsNormalFromCog<KDL::Vector>();
     full_rotor_direction_ = RobotModel::getRotorDirection();
   }
 
   // 1. Define the mapping from active rotor index (0, 1) to physical rotor index (0-3)
   active_rotor_indices_.clear();
+  active_rotor_direction_.clear();
   /// TODO automative read the index from the yaml file
-  if (robot_mode_ == "air")
-  {
-    active_rotor_indices_ = { 1, 2 };  // Use physical rotors 1 and 2
-  }
-  else if (robot_mode_ == "water")
+  // manually set the value of active rotor index assigned with index from urdf
+  if (robot_mode_ == "water")
   {
     active_rotor_indices_ = { 3, 4 };  // Use physical rotors 3 and 4
   }
-  else
+  else  // Default to "air" mode
   {
-    for (int i = 0; i < full_rotor_num_; ++i)
-      active_rotor_indices_.push_back(i);
+    active_rotor_indices_ = { 1, 2 };  // Use physical rotors 1 and 2
   }
   active_rotor_num_ = active_rotor_indices_.size();
 
   std::vector<KDL::Vector> active_rotors_origin, active_rotors_normal;
   for (size_t i = 0; i < active_rotor_indices_.size(); ++i)
   {
-    int physical_index = active_rotor_indices_[i] - 1;
-    if (physical_index < full_rotors_origin_from_cog_.size())
+    int physical_index = active_rotor_indices_[i];
+    if (physical_index <= full_rotors_origin_from_cog_.size())
     {
-      active_rotors_origin.push_back(full_rotors_origin_from_cog_.at(physical_index));
-      active_rotors_normal.push_back(full_rotors_normal_from_cog_.at(physical_index));
-      active_rotor_direction[i] = full_rotor_direction_.at(physical_index);
+      active_rotors_origin.push_back(full_rotors_origin_from_cog_.at(physical_index - 1));
+      active_rotors_normal.push_back(full_rotors_normal_from_cog_.at(physical_index - 1));
+      active_rotor_direction_[i + 1] = full_rotor_direction_.at(physical_index);
+      ROS_WARN("active_rotor_direction[%d] is: %d and physical index is %d", i + 1, active_rotor_direction_[i + 1],
+               physical_index);
     }
   }
 

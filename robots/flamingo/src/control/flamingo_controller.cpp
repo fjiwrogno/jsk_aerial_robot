@@ -241,20 +241,41 @@ void FlamingoController::controlCore()
     Eigen::VectorXd f_i_integrated = target_vectoring_f_rot_.segment(last_col, rotor_coef_) +
                                      target_vectoring_f_trans_.segment(last_col, rotor_coef_);
     target_full_thrust_.at(i) = f_i_integrated.norm();
-    if (gimbal_dof_ == 1)
-    {
-      target_gimbal_angles_.at(i) = atan2(-f_i_integrated[0], f_i_integrated[1]);
-    }
-    else if (gimbal_dof_ == 2)
-    {
-      if (f_i_integrated[0] == 0 || f_i_integrated[2] == 0)
-        continue;
 
-      double gimbal_roll = atan2(-f_i_integrated[1], f_i_integrated[2]);
-      double gimbal_pitch =
-          atan2(f_i_integrated[0], -f_i_integrated[1] * sin(gimbal_roll) + f_i_integrated[2] * cos(gimbal_roll));
-      target_gimbal_angles_.at(2 * i) = gimbal_roll;
-      target_gimbal_angles_.at(2 * i + 1) = gimbal_pitch;
+    // protected zone
+    if (target_full_thrust_.at(i) > 0.01)
+    {
+      if (gimbal_dof_ == 1)
+      {
+        target_gimbal_angles_.at(i) = atan2(-f_i_integrated[0], f_i_integrated[1]);
+      }
+      else if (gimbal_dof_ == 2)
+      {
+        if (f_i_integrated[2] != 0 || f_i_integrated[1] != 0)
+        {
+          double gimbal_roll = atan2(-f_i_integrated[1], f_i_integrated[2]);
+          double gimbal_pitch_denominator =
+              -f_i_integrated[1] * sin(gimbal_roll) + f_i_integrated[2] * cos(gimbal_roll);
+          if (abs(gimbal_pitch_denominator) > 1e-6)  // 避免除以零
+          {
+            double gimbal_pitch = atan2(f_i_integrated[0], gimbal_pitch_denominator);
+            target_gimbal_angles_.at(2 * i) = gimbal_roll;
+            target_gimbal_angles_.at(2 * i + 1) = gimbal_pitch;
+          }
+        }
+      }
+    }
+    else
+    {
+      if (gimbal_dof_ == 1)
+      {
+        target_gimbal_angles_.at(i) = 0.0;
+      }
+      else if (gimbal_dof_ == 2)
+      {
+        target_gimbal_angles_.at(2 * i) = 0.0;
+        target_gimbal_angles_.at(2 * i + 1) = 0.0;
+      }
     }
     last_col += rotor_coef_;
   }
@@ -307,7 +328,6 @@ void FlamingoController::sendFourAxisCommand()
 
   // to the correct physical PWM indices (0,1 for air; 2,3 for water).
 
-  // Get the robot_mode from the model, where it's now stored.
   std::string robot_mode = flamingo_robot_model_->getRobotMode();
 
   // Initialize a thrust vector for ALL physical motors with safe values (0 for thrust).
@@ -321,20 +341,14 @@ void FlamingoController::sendFourAxisCommand()
     if (robot_mode == "air")
     {
       // For air mode, logical motors 0,1 map to physical motors 0,1
-      if (target_base_thrust_.size() >= 2)
-      {
-        physical_thrusts[0] = target_base_thrust_.at(0);
-        physical_thrusts[1] = target_base_thrust_.at(1);
-      }
+      physical_thrusts[0] = target_base_thrust_.at(0);
+      physical_thrusts[1] = target_base_thrust_.at(1);
     }
     else if (robot_mode == "water")
     {
       // For water mode, logicrotor_coef_al motors 0,1 map to physical motors 2,3
-      if (target_base_thrust_.size() >= 2)
-      {
-        physical_thrusts[2] = target_base_thrust_.at(0);
-        physical_thrusts[3] = target_base_thrust_.at(1);
-      }
+      physical_thrusts[2] = target_base_thrust_.at(0);
+      physical_thrusts[3] = target_base_thrust_.at(1);
     }
     flight_command_data.base_thrust = physical_thrusts;
   }
@@ -342,19 +356,13 @@ void FlamingoController::sendFourAxisCommand()
   {
     if (robot_mode == "air")
     {
-      if (target_full_thrust_.size() >= 2)
-      {
-        physical_thrusts[0] = target_full_thrust_.at(0);
-        physical_thrusts[1] = target_full_thrust_.at(1);
-      }
+      physical_thrusts[0] = target_full_thrust_.at(0);
+      physical_thrusts[1] = target_full_thrust_.at(1);
     }
     else if (robot_mode == "water")
     {
-      if (target_full_thrust_.size() >= 2)
-      {
-        physical_thrusts[2] = target_full_thrust_.at(0);
-        physical_thrusts[3] = target_full_thrust_.at(1);
-      }
+      physical_thrusts[2] = target_full_thrust_.at(0);
+      physical_thrusts[3] = target_full_thrust_.at(1);
     }
     flight_command_data.base_thrust = physical_thrusts;
   }

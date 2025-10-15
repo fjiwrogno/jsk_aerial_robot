@@ -7,6 +7,7 @@
 #include <geometry_msgs/QuaternionStamped.h>
 #include <spinal/DesireCoord.h>
 #include "aerial_robot_control/util/joy_parser.h"
+#include <flamingo/model/flamingo_robot_model.h>
 
 namespace aerial_robot_navigation
 {
@@ -33,16 +34,21 @@ public:
 private:
   ros::Publisher target_baselink_rpy_pub_;
   ros::Subscriber final_target_baselink_rot_sub_, final_target_baselink_rpy_sub_;
+  ros::Subscriber robot_mode_sub_;
   ros::Publisher robot_mode_pub_;
 
   void switchRobotMode();
+  void updateRobotMode();
   void baselinkRotationProcess();
   void rosParamInit() override;
   void targetBaselinkRotCallback(const geometry_msgs::QuaternionStampedConstPtr& msg);
   void targetBaselinkRPYCallback(const geometry_msgs::Vector3StampedConstPtr& msg);
   void naviCallback(const aerial_robot_msgs::FlightNavConstPtr& msg) override;
+  void robotModeCallback(const std_msgs::UInt8ConstPtr& msg);
 
   void reset() override;
+
+  boost::shared_ptr<FlamingoRobotModel> flamingo_robot_model_;
 
   /* target baselink rotation */
   double prev_rotation_stamp_;
