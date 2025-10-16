@@ -278,9 +278,8 @@ void AttitudeController::pwmsControl(void)
   }
   else
   {
-    // --- Channels 3 & 4: Bi-directional Thrusters ---
-    // Translates a logical PWM [0.0, 1.0] to a physical pulse [1000us, 2000us].
-    for (int i = 2; i < 4; ++i)
+#if DEBUG_WATER_MODE
+    for (int i = 0; i < 2; ++i)
     {
       // 0.0~1.0 -> but 1000 ~ 2000 -> single direction
       // 0.0 ~ 0.5 / 0.5 ~ 1.0 -> abnormal -> only half thrust, double direction
@@ -295,7 +294,7 @@ void AttitudeController::pwmsControl(void)
         pulse_bi = 2000.0f;
       }
 
-      if (i == 2)
+      if (i == 0)
       {
         pwm_htim2_->Instance->CCR3 = (uint32_t)pulse_bi;
       }
@@ -304,13 +303,44 @@ void AttitudeController::pwmsControl(void)
         pwm_htim2_->Instance->CCR4 = (uint32_t)pulse_bi;
       }
     }
-    // pwm command for single-direction aerial motor
-    //  hardcoding for enable target_pwm1&2 for aerial motor
-    pwm_htim1_->Instance->CCR1 = (uint32_t)(target_pwm_[0] * pwm_htim1_->Init.Period);
-    pwm_htim1_->Instance->CCR2 = (uint32_t)(target_pwm_[1] * pwm_htim1_->Init.Period);
-    // pwm_htim1_->Instance->CCR3 = (uint32_t)(target_pwm_[2] * pwm_htim1_->Init.Period);
-    // pwm_htim1_->Instance->CCR4 = (uint32_t)(target_pwm_[3] * pwm_htim1_->Init.Period);
+#else
+    {
+      // --- Channels 3 & 4: auqatic Thrusters ---
+      // Translates a logical PWM [0.0, 1.0] to a physical pulse [1000us, 2000us].
+      for (int i = 2; i < 4; ++i)
+      {
+        // 0.0~1.0 -> but 1000 ~ 2000 -> single direction
+        // 0.0 ~ 0.5 / 0.5 ~ 1.0 -> abnormal -> only half thrust, double direction
+        float pulse_bi = 1000.0f + target_pwm_[i] * 1000.0f;
+
+        if (pulse_bi < 1000.0f)
+        {
+          pulse_bi = 1000.0f;
+        }
+        if (pulse_bi > 2000.0f)
+        {
+          pulse_bi = 2000.0f;
+        }
+
+        if (i == 2)
+        {
+          pwm_htim2_->Instance->CCR3 = (uint32_t)pulse_bi;
+        }
+        else
+        {
+          pwm_htim2_->Instance->CCR4 = (uint32_t)pulse_bi;
+        }
+      }
+      // pwm command for single-direction aerial motor
+      //  hardcoding for enable target_pwm1&2 for aerial motor
+      pwm_htim1_->Instance->CCR1 = (uint32_t)(target_pwm_[0] * pwm_htim1_->Init.Period);
+      pwm_htim1_->Instance->CCR2 = (uint32_t)(target_pwm_[1] * pwm_htim1_->Init.Period);
+      // pwm_htim1_->Instance->CCR3 = (uint32_t)(target_pwm_[2] * pwm_htim1_->Init.Period);
+      // pwm_htim1_->Instance->CCR4 = (uint32_t)(target_pwm_[3] * pwm_htim1_->Init.Period);
+    }
+#endif
   }
+
 #if !GX_PWM_SERVO
   pwm_htim2_->Instance->CCR1 = (uint32_t)(target_pwm_[4] * pwm_htim2_->Init.Period);
   pwm_htim2_->Instance->CCR2 = (uint32_t)(target_pwm_[5] * pwm_htim2_->Init.Period);
