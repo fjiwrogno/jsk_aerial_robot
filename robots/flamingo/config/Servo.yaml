@@ -6,7 +6,7 @@ servo_controller:
     # zero_point_offset: 7500
   # gx waterproof servo
     angle_sgn: -1
-    angle_scale: 1
+    angle_scale: 1.0
     zero_point_offset: 0
 
     controller1:

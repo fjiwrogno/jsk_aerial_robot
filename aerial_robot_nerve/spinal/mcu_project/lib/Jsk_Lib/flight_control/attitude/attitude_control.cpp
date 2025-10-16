@@ -282,6 +282,8 @@ void AttitudeController::pwmsControl(void)
     // Translates a logical PWM [0.0, 1.0] to a physical pulse [1000us, 2000us].
     for (int i = 2; i < 4; ++i)
     {
+      // 0.0~1.0 -> but 1000 ~ 2000 -> single direction
+      // 0.0 ~ 0.5 / 0.5 ~ 1.0 -> abnormal -> only half thrust, double direction
       float pulse_bi = 1000.0f + target_pwm_[i] * 1000.0f;
 
       if (pulse_bi < 1000.0f)

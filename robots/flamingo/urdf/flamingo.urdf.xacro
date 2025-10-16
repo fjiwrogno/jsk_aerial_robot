@@ -18,18 +18,16 @@
     #### base link ####
     <link name="base_link">
       <inertial>
-      <!-- the relative pos of cog compared to the origin of this link  -->
-      <!-- because right now the origin of base_link has been configured to  the base_link of solidworks-->
-        <origin xyz="-0.0612563 -0.0010330 -0.1010610" rpy="0 0 0"/>
-        <mass value="2.76613"/>
+        <origin xyz="-0.0609995 -0.0010416 -0.1022045" rpy="0 0 0"/>
+        <mass value="2.9380827"/>
         <inertia
-            ixx="0.0132295" iyy="0.0505483" izz="0.042343"
-            ixy="-0.0000062" ixz="0.0001472" iyz="0.0000005"/>
+            ixx="0.0134198" iyy="0.0930810" izz="0.0542620"
+            ixy=" 0.0001751" ixz="0.0184499" iyz="0.0003133"/>
       </inertial>
       <visual>
         <geometry>
           <mesh filename="package://flamingo/urdf/mesh/base_link.dae" scale="1 1 1"/>
-          <origin xyz="0.0 -0.00 0.0" rpy="0 0 0"/>
+          <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
         </geometry>
       </visual>
       <collision>
@@ -200,7 +198,7 @@
     <xacro:damping_factor link="thrust${self}"/>
 
     #### thrust link (virtual) for aquatic motor####
-  <!-- aquatic motor -->
+  <!-- aquatic motor
     <link name="thrust${self + 2}">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -210,7 +208,7 @@
             ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
       </inertial>
     </link>
-    <xacro:damping_factor link="thrust${self + 2}"/>
+    <xacro:damping_factor link="thrust${self + 2}"/> -->
 
     ## joints ##
     #### rotor parent link joint (virtual) ####
@@ -231,14 +229,14 @@
     </joint>
 
     #### rotor joint (virtual) for aquatic rotor####
-    <joint name="rotor${self + 2}" type="continuous">
-      <limit effort="100.0" lower="${water_min_force}" upper="${water_max_force}" velocity="0.5"/>
-      <parent link="rotor_parent${self}"/>
-      <child link="thrust${self + 2}"/>
+    <!-- <joint name="rotor${self + 2}" type="continuous"> -->
+      <!-- <limit effort="100.0" lower="${water_min_force}" upper="${water_max_force}" velocity="0.5"/> -->
+      <!-- <parent link="rotor_parent${self}"/> -->
+      <!-- <child link="thrust${self + 2}"/> -->
       <!-- modify this position -->
-      <origin rpy="0 0 0" xyz="0 0 -0.05"/>
-      <axis xyz="0 0 ${rotor_direction}"/>
-    </joint>
+      <!-- <origin rpy="0 0 0" xyz="0 0 -0.05"/> -->
+      <!-- <axis xyz="0 0 ${rotor_direction}"/> -->
+    <!-- </joint> -->
 
     #### hardware interface ####
     <transmission name="rotor_tran${self}">
@@ -252,7 +250,7 @@
       </actuator>
     </transmission>
 
-       #### hardware interface ####
+       <!-- #### hardware interface ####
     <transmission name="rotor_tran${self + 2}">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="rotor${self + 2}">
@@ -262,7 +260,7 @@
         <hardwareInterface>RotorInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
       </actuator>
-    </transmission>
+    </transmission> -->
 
   </xacro:macro>
 </robot>
