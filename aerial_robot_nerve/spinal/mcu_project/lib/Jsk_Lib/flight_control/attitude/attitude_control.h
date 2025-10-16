@@ -53,7 +53,7 @@
 #include <spinal/PMatrixPseudoInverseWithInertia.h>
 #include <spinal/TorqueAllocationMatrixInv.h>
 
-#define IDLE_DUTY 0.5f
+#define IDLE_DUTY 0.0f
 #define FORCE_LANDING_INTEGRAL 0.0025f // 500Hz * 0.0025 = 1.25 N / sec
 
 #define MAX_MOTOR_NUMBER 10

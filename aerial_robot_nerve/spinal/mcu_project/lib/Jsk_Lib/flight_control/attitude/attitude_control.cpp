@@ -655,7 +655,11 @@ void AttitudeController::pwmInfoCallback(const spinal::PwmInfo& info_msg)
 
   force_landing_thrust_ = info_msg.force_landing_thrust;
 
+#if DEBUG_WATER_MODE
+  min_duty_ = 0;
+#else
   min_duty_ = info_msg.min_pwm;
+#endif
   max_duty_ = info_msg.max_pwm;
   pwm_conversion_mode_ = info_msg.pwm_conversion_mode;
 
