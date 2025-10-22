@@ -303,6 +303,8 @@ void AttitudeController::pwmsControl(void)
         pwm_htim2_->Instance->CCR4 = (uint32_t)pulse_bi;
       }
     }
+    pwm_htim1_->Instance->CCR1 = (uint32_t)(0.5 * pwm_htim1_->Init.Period);
+    pwm_htim1_->Instance->CCR2 = (uint32_t)(0.5 * pwm_htim1_->Init.Period);
 #else
     {
       // --- Channels 3 & 4: auqatic Thrusters ---
