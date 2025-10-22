@@ -9,38 +9,22 @@ bool GxPwmServo::init(TIM_HandleTypeDef* htim, uint8_t servo_num)
   // pwm config
   htim_ = htim;
   htim_->Instance = TIM4;
+  // Configure for 300Hz PWM, based on a 200MHz timer kernel clock.
+  // Timer clock = 200MHz. Prescaler = 19 => Tick Freq = 200M / 20 = 10MHz.
+  // Tick time = 0.1us. Period = 33332 => PWM Period = (33332+1) * 0.1us =
+  // 3333.3us => ~300Hz.
+  htim_->Init.Prescaler = 19;
+  htim_->Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim_->Init.Period = 33332;
+  htim_->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim_->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
 
-  HAL_TIM_PWM_Stop(htim_, TIM_CHANNEL_1);
-  HAL_TIM_Base_Stop(htim_);
   HAL_TIM_Base_DeInit(htim_);
-
-  htim_->Init.Prescaler = 199;
-  htim_->Init.CounterMode = TIM_COUNTERMODE_UP;  // Use standard UP mode
-  htim_->Init.Period = 3029;
-
-  while (HAL_TIM_Base_Init(htim_) != HAL_OK)
-    ;
-  while (HAL_TIM_PWM_Init(htim_) != HAL_OK)
-    ;
-
-  TIM_OC_InitTypeDef sConfigOC = { 0 };
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-
-  // --- Configure Channels 3 & 4 for bidirectional neutral throttle
-  // (1.5ms) ---
-  sConfigOC.Pulse = 1500;
-  while (HAL_TIM_PWM_ConfigChannel(htim_, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
-    ;
-  while (HAL_TIM_PWM_ConfigChannel(htim_, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
-    ;
-
-  HAL_TIM_Base_Start(htim_);
+  HAL_TIM_Base_Init(htim_);
+  HAL_TIM_PWM_Init(htim_);
 
   for (uint8_t i = 0; i < servo_num; ++i)
   {
-    init_positions_[i] = M_PI;
     FlashMemory::addValue(&init_positions_[i], sizeof(float));
   }
   FlashMemory::read();
@@ -50,13 +34,8 @@ bool GxPwmServo::init(TIM_HandleTypeDef* htim, uint8_t servo_num)
     servo_[i] = ServoData(i + 1);
     servo_[i].setGoalPositionRad(init_positions_[i]);
     servo_[i].torque_enable_ = true;
+    HAL_TIM_PWM_Start(htim_, channels[i]);
   }
-
-  HAL_TIM_PWM_Start(htim_, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(htim_, TIM_CHANNEL_2);
-  HAL_TIM_PWM_Start(htim_, TIM_CHANNEL_3);
-  HAL_TIM_PWM_Start(htim_, TIM_CHANNEL_4);
-
   servo_num_ = servo_num;
   initialized_ = true;
 
