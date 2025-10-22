@@ -9,7 +9,7 @@
 #include "flashmemory/flashmemory.h"
 #include "servo/drivers/servo_base_driver.h"
 #include "stm32h7xx_hal.h"  // Add this include for HAL types
-
+#include "main.h"
 constexpr float MIN_PULSE_WIDTH_US = 500.0f;
 constexpr float MAX_PULSE_WIDTH_US = 2500.0f;
 constexpr float ANGLE_RANGE_RAD = 357.0f * M_PI / 180.0f;

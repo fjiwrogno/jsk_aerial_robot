@@ -55,7 +55,7 @@ bool GxPwmServo::init(TIM_HandleTypeDef* htim, uint8_t servo_num)
 
   uint32_t pclk1_freq = HAL_RCC_GetPCLK1Freq();
 
-  if ((RCC->CFGR & RCC_CFGR_PPRE1) == 0)
+  if ((RCC->D2CFGR & RCC_D2CFGR_D2PPRE1) == 0)
   {
     timer_kernel_clock_ = pclk1_freq;
   }
