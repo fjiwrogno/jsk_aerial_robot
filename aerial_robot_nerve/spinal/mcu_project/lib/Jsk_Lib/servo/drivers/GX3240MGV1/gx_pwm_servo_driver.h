@@ -51,6 +51,7 @@ class GxPwmServo : public ServoBase {
 
     TIM_HandleTypeDef* htim_ = nullptr;
     std::array<float, MAX_SERVO_NUM> init_positions_;
+    float tick_time_us_,timer_kernel_clock_;
     bool initialized_ = false;
 };
 

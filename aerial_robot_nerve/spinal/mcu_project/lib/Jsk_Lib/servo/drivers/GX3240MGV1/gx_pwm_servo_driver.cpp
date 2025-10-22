@@ -18,10 +18,8 @@ bool GxPwmServo::init(TIM_HandleTypeDef* htim, uint8_t servo_num)
   htim_->Init.CounterMode = TIM_COUNTERMODE_UP;  // Use standard UP mode
   htim_->Init.Period = 3029;
 
-  while (HAL_TIM_Base_Init(htim_) != HAL_OK)
-    ;
-  while (HAL_TIM_PWM_Init(htim_) != HAL_OK)
-    ;
+  while (HAL_TIM_Base_Init(htim_) != HAL_OK);
+  while (HAL_TIM_PWM_Init(htim_) != HAL_OK);
 
   TIM_OC_InitTypeDef sConfigOC = { 0 };
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
@@ -31,10 +29,8 @@ bool GxPwmServo::init(TIM_HandleTypeDef* htim, uint8_t servo_num)
   // --- Configure Channels 3 & 4 for bidirectional neutral throttle
   // (1.5ms) ---
   sConfigOC.Pulse = 1500;
-  while (HAL_TIM_PWM_ConfigChannel(htim_, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
-    ;
-  while (HAL_TIM_PWM_ConfigChannel(htim_, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
-    ;
+  while (HAL_TIM_PWM_ConfigChannel(htim_, &sConfigOC, TIM_CHANNEL_3) != HAL_OK);
+  while (HAL_TIM_PWM_ConfigChannel(htim_, &sConfigOC, TIM_CHANNEL_4) != HAL_OK);
 
   HAL_TIM_Base_Start(htim_);
 
@@ -56,6 +52,19 @@ bool GxPwmServo::init(TIM_HandleTypeDef* htim, uint8_t servo_num)
   HAL_TIM_PWM_Start(htim_, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(htim_, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(htim_, TIM_CHANNEL_4);
+
+  uint32_t pclk1_freq = HAL_RCC_GetPCLK1Freq();
+
+  if ((RCC->CFGR & RCC_CFGR_PPRE1) == 0)
+  {
+    timer_kernel_clock_ = pclk1_freq;
+  }
+  else
+  {
+    timer_kernel_clock_ = 2 * pclk1_freq;
+  }
+
+  tick_time_us_ = static_cast<float>(htim_->Init.Prescaler + 1) / (static_cast<float>(timer_kernel_clock_) / 1000000.0f);
 
   servo_num_ = servo_num;
   initialized_ = true;
@@ -125,6 +134,7 @@ void GxPwmServo::setCCR(uint32_t channel, float pulse_us)
 {
   if (htim_ == nullptr)
     return;
-  uint32_t ccr_value = static_cast<uint32_t>(pulse_us / 0.1f);
+ 
+  uint32_t ccr_value = static_cast<uint32_t>(pulse_us / tick_time_us_);
   __HAL_TIM_SET_COMPARE(htim_, channel, ccr_value);
 }
