@@ -43,7 +43,8 @@ namespace aerial_robot_navigation
       TAKEOFF_STATE,
       LAND_STATE,
       HOVER_STATE,
-      STOP_STATE
+      STOP_STATE,
+      UNDERWATER_DEBUG_STATE  
     };
 
   class BaseNavigator
@@ -261,6 +262,7 @@ namespace aerial_robot_navigation
     bool param_verbose_;
 
     uint8_t navi_state_;
+    bool debug_mode_flag_;
 
     int  xy_control_mode_;
     int  prev_xy_control_mode_;

@@ -26,7 +26,8 @@ BaseNavigator::BaseNavigator():
   joy_stick_heart_beat_(false),
   joy_stick_prev_time_(0),
   teleop_flag_(true),
-  land_check_start_time_(0)
+  land_check_start_time_(0),
+  debug_mode_flag_(false)
 {
   setNaviState(ARM_OFF_STATE);
 }
@@ -356,6 +357,52 @@ void BaseNavigator::joyStickControl(const sensor_msgs::JoyConstPtr & joy_msg)
   if(!joy_stick_heart_beat_) joy_stick_heart_beat_ = true;
   joy_stick_prev_time_ = ros::Time::now().toSec();
 
+  /* ===== DEBUG MODE ===== */
+  if(joy_cmd.buttons[JOY_BUTTON_REAR_LEFT_1] && joy_cmd.buttons[JOY_BUTTON_REAR_RIGHT_1])
+    {
+      static double debug_toggle_time = 0;
+      if(ros::Time::now().toSec() - debug_toggle_time > 0.5)  
+        {
+          debug_mode_flag_ = !debug_mode_flag_;
+          debug_toggle_time = ros::Time::now().toSec();
+          
+          if(debug_mode_flag_)
+            {
+              ROS_WARN("========== ENTER DEBUG MODE ==========");
+              ROS_WARN("L1 + R1: toggle debug mode");
+              ROS_WARN("START: arm motors");
+              ROS_WARN("STOP: emergency stop");
+              setNaviState(UNDERWATER_DEBUG_STATE);
+            }
+          else
+            {
+              ROS_WARN("========== EXIT DEBUG MODE ==========");
+              setNaviState(ARM_OFF_STATE);
+            }
+        }
+      return;
+    }
+
+  /* ===== DEBUG MODE: ===== */
+  if(debug_mode_flag_ && getNaviState() == UNDERWATER_DEBUG_STATE)
+    {
+      /* 启动电机 */
+      if(joy_cmd.buttons[JOY_BUTTON_START] == 1)
+        {
+          ROS_INFO("Debug Mode: Motors armed");
+          return;
+        }
+
+      /* 紧急停止 */
+      if(joy_cmd.buttons[JOY_BUTTON_STOP] == 1)
+        {
+          ROS_ERROR("Debug Mode: EMERGENCY STOP!");
+          return;
+        }
+
+      return;
+    }
+  
   /* common command */
   /* start */
   if(joy_cmd.buttons[JOY_BUTTON_START] == 1 && getNaviState() == ARM_OFF_STATE)
@@ -583,6 +630,24 @@ void BaseNavigator::joyStickControl(const sensor_msgs::JoyConstPtr & joy_msg)
 
 void BaseNavigator::update()
 {
+  /* ===== DEBUG MODE 更新 ===== */
+  if(debug_mode_flag_)
+    {
+      if(getNaviState() != UNDERWATER_DEBUG_STATE)
+        {
+          debug_mode_flag_ = false;
+          setNaviState(ARM_OFF_STATE);
+        }
+      
+      /* 发布状态 */
+      std_msgs::UInt8 state_msg;
+      state_msg.data = getNaviState();
+      flight_state_pub_.publish(state_msg);
+      
+      return;
+    }
+
+
   if(force_att_control_flag_)
     {
       if(getNaviState() == LAND_STATE)
