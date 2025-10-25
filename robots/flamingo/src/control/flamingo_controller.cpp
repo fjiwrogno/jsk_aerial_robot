@@ -21,6 +21,9 @@ void FlamingoController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
 
   rotor_coef_ = gimbal_dof_ + 1;  // number of virtual rotors in each rotor arm
 
+  flamingo_mode_ = aerial_robot_navigation::AIR_DEBUG_STATE;
+  swim_state_ = aerial_robot_navigation::STOP_SWIM;
+
   target_base_thrust_.resize(motor_num_ * rotor_coef_);
   target_full_thrust_.resize(motor_num_);
   target_gimbal_angles_.resize(motor_num_ * gimbal_dof_, 0);
@@ -33,6 +36,11 @@ void FlamingoController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   torque_allocation_matrix_inv_pub_ =
       nh_.advertise<spinal::TorqueAllocationMatrixInv>("torque_allocation_matrix_inv", 1);
   gimbal_dof_pub_ = nh_.advertise<std_msgs::UInt8>("gimbal_dof", 1);
+// for mode switch
+  flight_state_sub_ = nh_.subscribe("flight_state", 1, &FlamingoController::setStateCallback, this, ros::TransportHints().tcpNoDelay());
+// for swmming mode switch
+  swim_state_sub_ = nh_.subscribe("swim_state", 1, &FlamingoController::setSwimStateCallback, this, ros::TransportHints().tcpNoDelay());
+
 }
 
 void FlamingoController::reset()
@@ -367,6 +375,43 @@ void FlamingoController::setAttitudeGains()
   rpy_gain_msg.motors.at(0).yaw_d = pid_controllers_.at(YAW).getDGain() * 1000;
   rpy_gain_pub_.publish(rpy_gain_msg);
 }
+
+void FlamingoController::setStateCallback(std_msgs::UInt8 msg)
+{
+  if (msg.data == aerial_robot_navigation::UNDERWATER_DEBUG_STATE)
+  {
+    flamingo_mode_ = aerial_robot_navigation::UNDERWATER_DEBUG_STATE;
+  }
+  else
+  {
+    flamingo_mode_ = aerial_robot_navigation::AIR_DEBUG_STATE;
+  }
+}
+
+void FlamingoController::setSwimStateCallback(std_msgs::UInt8 msg)
+{
+  if (flamingo_mode_ == aerial_robot_navigation::UNDERWATER_DEBUG_STATE)
+  {
+    switch (msg.data)
+    {
+    case aerial_robot_navigation::START_SWIM:
+      swim_state_ = aerial_robot_navigation::START_SWIM;
+      ROS_ERROR("flamingo start to swim");
+      break;
+
+    case aerial_robot_navigation::STOP_SWIM:
+      swim_state_ = aerial_robot_navigation::STOP_SWIM;
+      ROS_ERROR("flamingo stop to swim");
+      break;
+    
+    default:
+      swim_state_ = aerial_robot_navigation::STOP_SWIM;
+      ROS_ERROR("flamingo stop to swim");
+      break;
+    }
+  }
+}
+
 }  // namespace aerial_robot_control
 
 /* plugin registration */

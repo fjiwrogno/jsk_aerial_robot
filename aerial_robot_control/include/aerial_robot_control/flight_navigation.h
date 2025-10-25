@@ -44,7 +44,10 @@ namespace aerial_robot_navigation
       LAND_STATE,
       HOVER_STATE,
       STOP_STATE,
-      UNDERWATER_DEBUG_STATE  
+      AIR_DEBUG_STATE,
+      UNDERWATER_DEBUG_STATE,
+      START_SWIM,
+      STOP_SWIM
     };
 
   class BaseNavigator
@@ -238,6 +241,7 @@ namespace aerial_robot_navigation
     ros::Publisher  flight_config_pub_;
     ros::Publisher  power_info_pub_;
     ros::Publisher  flight_state_pub_;
+    ros::Publisher  swim_state_pub_;
     ros::Publisher  path_pub_;
     ros::Publisher  waypoint_pub_;
     ros::Subscriber navi_sub_;

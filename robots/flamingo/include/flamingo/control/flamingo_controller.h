@@ -31,6 +31,8 @@ private:
   ros::Publisher rpy_gain_pub_;                      // for spinal
   ros::Publisher torque_allocation_matrix_inv_pub_;  // for spinal
   ros::Publisher gimbal_dof_pub_;                    // for spinal
+  ros::Subscriber flight_state_sub_;
+  ros::Subscriber swim_state_sub_;
 
   boost::shared_ptr<FlamingoRobotModel> flamingo_robot_model_;
   std::vector<float> target_base_thrust_;
@@ -48,6 +50,8 @@ private:
   bool gimbal_calc_in_fc_;
   bool underactuate_;
   double target_roll_ = 0.0, target_pitch_ = 0.0;
+  aerial_robot_navigation::flight_state flamingo_mode_;
+  aerial_robot_navigation::flight_state swim_state_;
 
   void rosParamInit();
   bool update() override;
@@ -58,5 +62,9 @@ private:
   void sendGimbalCommand();
   void sendTorqueAllocationMatrixInv();
   void setAttitudeGains();
+  void setStateCallback(std_msgs::UInt8 msg);
+  void setSwimStateCallback(std_msgs::UInt8 msg);
+
+
 };
 };  // namespace aerial_robot_control

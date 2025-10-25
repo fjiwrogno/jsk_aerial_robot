@@ -75,6 +75,8 @@ void BaseNavigator::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   flight_config_pub_ = nh_.advertise<spinal::FlightConfigCmd>("flight_config_cmd", 10);
   power_info_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("uav_power", 10);
   flight_state_pub_ = nh_.advertise<std_msgs::UInt8>("flight_state", 1);
+  swim_state_pub_ = nh_.advertise<std_msgs::UInt8>("swim_state", 1);
+
   path_pub_ = nh_.advertise<nav_msgs::Path>("trajectory", 1);
   waypoint_pub_ = nh_.advertise<visualization_msgs::MarkerArray>("waypoints", 1);
 
@@ -376,7 +378,7 @@ void BaseNavigator::joyStickControl(const sensor_msgs::JoyConstPtr & joy_msg)
             }
           else
             {
-              ROS_WARN("========== EXIT DEBUG MODE ==========");
+              ROS_WARN("========== EXIT UNDERWATER DEBUG MODE ==========");
               setNaviState(ARM_OFF_STATE);
             }
         }
@@ -390,6 +392,10 @@ void BaseNavigator::joyStickControl(const sensor_msgs::JoyConstPtr & joy_msg)
       if(joy_cmd.buttons[JOY_BUTTON_START] == 1)
         {
           ROS_INFO("Debug Mode: Motors armed");
+
+          std_msgs::UInt8 state_msg;
+          state_msg.data = START_SWIM;
+          swim_state_pub_.publish(state_msg);
           return;
         }
 
@@ -397,6 +403,10 @@ void BaseNavigator::joyStickControl(const sensor_msgs::JoyConstPtr & joy_msg)
       if(joy_cmd.buttons[JOY_BUTTON_STOP] == 1)
         {
           ROS_ERROR("Debug Mode: EMERGENCY STOP!");
+
+          std_msgs::UInt8 state_msg;
+          state_msg.data = STOP_SWIM;
+          swim_state_pub_.publish(state_msg);
           return;
         }
 
