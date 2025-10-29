@@ -24,7 +24,7 @@ void FlamingoController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
 
   rotor_coef_ = gimbal_dof_ + 1;  // number of virtual rotors in each rotor arm
 
-  flamingo_mode_ = aerial_robot_navigation::AIR_DEBUG_STATE;
+  flamingo_mode_ = aerial_robot_navigation::UNDERWATER_DEBUG_STATE;
   swim_state_ = aerial_robot_navigation::STOP_SWIM;
 
   target_base_thrust_.resize(motor_num_ * rotor_coef_);
@@ -400,14 +400,14 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
       // Here, we map the stick input directly to thrust. Up is positive thrust, Down is negative thrust.
       total_thrust = thrust_input * max_thrust;
     }
-    else
-    {
-      total_thrust = 0;
-    }
 
+    std::fill(target_base_thrust_.begin(), target_base_thrust_.end(), 0.0f);
+
+    // Assign thrust to the Z-component of each motor's virtual thrust vector
     for (int i = 0; i < motor_num_; ++i)
     {
-      target_base_thrust_.at(i) = total_thrust / motor_num_;
+      // The Z-component is at index (i * rotor_coef_ + 1) for gimbal_dof_ = 1
+      target_base_thrust_.at(i * rotor_coef_ + 1) = total_thrust / motor_num_;
     }
 
     // 2. Left Stick Vertical -> Pitch Angle
