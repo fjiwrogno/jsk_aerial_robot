@@ -597,7 +597,7 @@ void FlamingoController::setSafeAttitudeGains()
 
 void FlamingoController::setStateCallback(std_msgs::UInt8 msg)
 {
-  if (msg.data == aerial_robot_navigation::UNDERWATER_DEBUG_STATE)
+  if (msg.data == aerial_robot_navigation::UNDERWATER_DEBUG_STATE || msg.data == aerial_robot_navigation::ARM_ON_STATE)
   {
     flamingo_mode_ = aerial_robot_navigation::UNDERWATER_DEBUG_STATE;
   }

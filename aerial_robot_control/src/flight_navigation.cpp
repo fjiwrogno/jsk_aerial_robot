@@ -643,12 +643,12 @@ void BaseNavigator::update()
   /* ===== DEBUG MODE 更新 ===== */
   if(debug_mode_flag_)
     {
-      if(getNaviState() != UNDERWATER_DEBUG_STATE)
+      if(getNaviState() != UNDERWATER_DEBUG_STATE && getNaviState() != ARM_ON_STATE)
         {
           debug_mode_flag_ = false;
           setNaviState(ARM_OFF_STATE);
         }
-      else
+      else 
         {
           spinal::FlightConfigCmd flight_config_cmd;
           flight_config_cmd.cmd = spinal::FlightConfigCmd::ARM_OFF_CMD;
