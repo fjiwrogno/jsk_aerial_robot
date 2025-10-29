@@ -81,7 +81,7 @@ bool FlamingoController::update()
 
 void FlamingoController::controlCore()
 {
-  if (flamingo_mode_ = aerial_robot_navigation::AIR_DEBUG_STATE)
+  if (flamingo_mode_ == aerial_robot_navigation::AIR_DEBUG_STATE)
   {
     PoseLinearController::controlCore();
     tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);

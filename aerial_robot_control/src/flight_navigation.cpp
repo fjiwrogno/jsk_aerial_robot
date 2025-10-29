@@ -386,7 +386,7 @@ void BaseNavigator::joyStickControl(const sensor_msgs::JoyConstPtr & joy_msg)
     }
 
   /* ===== DEBUG MODE: ===== */
-  if(debug_mode_flag_ && getNaviState() == UNDERWATER_DEBUG_STATE)
+  if(debug_mode_flag_ && getNaviState() == ARM_ON_STATE)
     {
       /* 启动电机 */
       if(joy_cmd.buttons[JOY_BUTTON_START] == 1)
@@ -648,40 +648,36 @@ void BaseNavigator::update()
           debug_mode_flag_ = false;
           setNaviState(ARM_OFF_STATE);
         }
-      else 
+      else if(getNaviState() == UNDERWATER_DEBUG_STATE)
         {
           spinal::FlightConfigCmd flight_config_cmd;
           flight_config_cmd.cmd = spinal::FlightConfigCmd::ARM_OFF_CMD;
 
-          if(check_joy_stick_heart_beat_ && joy_stick_heart_beat_ &&
-         ros::Time::now().toSec() - joy_stick_prev_time_ > joy_stick_heart_beat_du_)
-          { 
-            setNaviState(ARM_OFF_STATE);
-            ROS_ERROR("Stop: att control mode, because no joy control");
-            debug_mode_flag_ = false;
-          }
-          else if(low_voltage_flag_)
-          {
-            setNaviState(ARM_OFF_STATE);
-            ROS_ERROR("low voltage!");
-            debug_mode_flag_ = false;
-          }
-          else if(high_voltage_flag_)
-          {
-            setNaviState(ARM_OFF_STATE);
-            ROS_ERROR("high voltage!");
-            debug_mode_flag_ = false;
-          }
-          else
-          {
             // start the attitude controller
-            flight_config_cmd.cmd = spinal::FlightConfigCmd::ARM_ON_CMD;
-          }
+          flight_config_cmd.cmd = spinal::FlightConfigCmd::ARM_ON_CMD;
 
           flight_config_pub_.publish(flight_config_cmd);
-
         }
-      
+      // for arm_on_state check
+      if(check_joy_stick_heart_beat_ && joy_stick_heart_beat_ &&
+         ros::Time::now().toSec() - joy_stick_prev_time_ > joy_stick_heart_beat_du_)
+        { 
+          setNaviState(ARM_OFF_STATE);
+          ROS_ERROR("Stop: att control mode, because no joy control");
+          debug_mode_flag_ = false;
+        }
+        else if(low_voltage_flag_)
+        {
+          setNaviState(ARM_OFF_STATE);
+          ROS_ERROR("low voltage!");
+          debug_mode_flag_ = false;
+        }
+        else if(high_voltage_flag_)
+        {
+          setNaviState(ARM_OFF_STATE);
+          ROS_ERROR("high voltage!");
+          debug_mode_flag_ = false;
+        }
       
       /* 发布状态 */
       std_msgs::UInt8 state_msg;
