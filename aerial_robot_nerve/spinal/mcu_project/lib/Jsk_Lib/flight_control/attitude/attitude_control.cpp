@@ -399,8 +399,7 @@ void AttitudeController::update(void)
 #if DEBUG_WATER_MODE
     if (!force_landing_flag_ && (fabs(angles[X]) > MAX_TILT_ANGLE || fabs(angles[Y]) > MAX_TILT_ANGLE))
     {
-      ROS_ERROR("Current roll pitch angles are large, roll: %f (%f), pitch: %f (%f)", angles[X],
-                MAX_TILT_ANGLE, angles[Y], MAX_TILT_ANGLE);
+      nh_->logerror("Uderwater debug: feedback angles are large");
     }
 
 #else
@@ -584,8 +583,7 @@ void AttitudeController::fourAxisCommandCallback(const spinal::FourAxisCommand& 
   if (fabs(cmd_msg.angles[0]) > MAX_TILT_ANGLE || fabs(cmd_msg.angles[1]) > MAX_TILT_ANGLE)
   {
   #if DEBUG_WATER_MODE
-    ROS_ERROR("failsafe: target angles are too large, roll: %f (%f), pitch: %f ()%f", target_angle_[X], MAX_TILT_ANGLE,
-              target_angle_[Y], MAX_TILT_ANGLE);
+    nh_->logerror("Uderwater debug: target angles are large");
   #else  
   
     setForceLandingFlag(true);
