@@ -99,7 +99,7 @@ void BaseNavigator::batteryCheckCallback(const std_msgs::Float32ConstPtr &msg)
 
   float voltage = msg->data;
   /* consider the voltage drop */
-  if(getNaviState() == TAKEOFF_STATE || getNaviState() == HOVER_STATE)
+  if(getNaviState() == TAKEOFF_STATE || getNaviState() == HOVER_STATE || getNaviState() == UNDERWATER_DEBUG_STATE)
     voltage += ( (bat_resistance_voltage_rate_ * voltage +  bat_resistance_) * hovering_current_);
 
   float average_voltage = voltage / bat_cell_;
