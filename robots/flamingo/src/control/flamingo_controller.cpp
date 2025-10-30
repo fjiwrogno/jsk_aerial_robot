@@ -449,9 +449,13 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   else if (swim_state_ == aerial_robot_navigation::STOP_SWIM)
   {
 
+    std::fill(target_base_thrust_.begin(), target_base_thrust_.end(), 0.0f);
+
+    // Assign thrust to the Z-component of each motor's virtual thrust vector
     for (int i = 0; i < motor_num_; ++i)
     {
-      target_base_thrust_.at(i) = 0;
+      // The Z-component is at index (i * rotor_coef_ + 1) for gimbal_dof_ = 1
+      target_base_thrust_.at(i * rotor_coef_ + 1) = 0.5 / motor_num_;
     }
 
     target_pitch_ = current_rpy[1];

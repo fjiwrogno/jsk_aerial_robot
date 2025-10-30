@@ -376,7 +376,12 @@ void AttitudeController::update(void)
 #else
       nh_->logerror("failsafe: cannot connect with ROS");
 #endif
+
+#if DEBUG_WATER_MODE
+      nh_->logerror("failsafe: flight_command_timeout");
+#else
       setForceLandingFlag(true);
+#endif
     }
 
 #ifdef SIMULATION
@@ -1299,14 +1304,7 @@ void AttitudeController::pwmConversion()
       if (target_pwm_[i] < min_duty_)
       {
         // to avoid throttle limit for bi-directional esc
-        if (i < 2)
-        {
-          target_pwm_[i] = min_duty_;
-        }
-        else if (target_pwm_[i] < 0)
-        {
           target_pwm_[i] = 0;
-        }
       }
       else if (target_pwm_[i] > max_duty_)
       {

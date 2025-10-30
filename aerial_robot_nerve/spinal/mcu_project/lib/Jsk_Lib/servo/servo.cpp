@@ -99,7 +99,7 @@ void DirectServo::sendData(bool flag_send_asap) {
                 // PWM servos do not provide feedback (present position, temp, load).
                 // As a substitute, we publish the goal position to the state topic.
                 // The float radian value is scaled to an integer for the message.
-                const float PWM_RAD_TO_INT_SCALE = 10000.0f / 3.14159265f;
+                const float PWM_RAD_TO_INT_SCALE = 180.0f / 3.14159265f;
                 servo.angle = static_cast<int16_t>(s.getGoalPositionRad() * PWM_RAD_TO_INT_SCALE);
                 servo.temp = 0;
                 servo.load = 0;
@@ -130,7 +130,7 @@ void DirectServo::sendData(bool flag_send_asap) {
                     // PWM servos do not provide feedback (present position, temp, load).
                     // As a substitute, we publish the goal position to the state topic.
                     // The float radian value is scaled to an integer for the message.
-                    const float PWM_RAD_TO_INT_SCALE = 10000.0f / 3.14159265f;
+                    const float PWM_RAD_TO_INT_SCALE = 180.0f / 3.14159265f;
                     servo.angle = static_cast<int16_t>(s.getGoalPositionRad() * PWM_RAD_TO_INT_SCALE);
                     servo.temp = 0;
                     servo.load = 0;
