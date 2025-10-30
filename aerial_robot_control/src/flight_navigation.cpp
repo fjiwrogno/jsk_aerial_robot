@@ -1179,15 +1179,6 @@ void BaseNavigator::updatePoseFromTrajectory()
 
 }
 
-void setNaviState(int navi_state)
-{
-  if (navi_state_ != navi_state)
-  {
-    ROS_WARN("NaviState changed from %d to %d", navi_state_, navi_state); // <-- 添加这行
-    navi_state_ = navi_state;
-  }
-}
-
 void BaseNavigator::rosParamInit()
 {
   getParam<bool>(nhp_, "param_verbose", param_verbose_, false);

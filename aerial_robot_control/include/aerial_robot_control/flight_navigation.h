@@ -66,7 +66,15 @@ namespace aerial_robot_navigation
     ros::Publisher& getFlightConfigPublisher() { return flight_config_pub_; }
 
     inline uint8_t getNaviState(){  return navi_state_;}
-    inline void setNaviState(const uint8_t  state){ navi_state_ = state;}
+    inline void setNaviState(const uint8_t  state)
+    { 
+      navi_state_ = state;
+      if (navi_state_ != state)
+    {
+      ROS_WARN("NaviState changed from %d to %d", navi_state_, state); 
+      // navi_state_ = state;
+    }
+    }
 
     inline uint8_t getXyControlMode(){  return (uint8_t)xy_control_mode_;}
     inline void setXyControlMode(uint8_t mode){  xy_control_mode_ = mode;}
