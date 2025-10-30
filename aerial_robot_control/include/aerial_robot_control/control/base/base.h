@@ -90,6 +90,7 @@ namespace aerial_robot_control
       int vel_ref_num;
       getParam<int>(motor_nh, "vel_ref_num", vel_ref_num, 0);
       motor_info_.resize(vel_ref_num);
+      ROS_INFO_STREAM("called");
       for(int i = 0; i < vel_ref_num; i++)
         {
           std::stringstream ss;
@@ -101,12 +102,15 @@ namespace aerial_robot_control
           nh.param("max_thrust", val, 0.0);
           motor_info_[i].max_thrust = val;
 
+	  ROS_INFO_STREAM(val);
+
           /* hardcode: up to 4 dimension */
           for(int j = 0; j < 5; j++)
             {
               std::stringstream ss2;
               ss2 << j;
               getParam<double>(nh, "polynominal" + ss2.str(), val, 0);
+	      ROS_INFO_STREAM(val);
               motor_info_[i].polynominal[j] = val;
             }
         }

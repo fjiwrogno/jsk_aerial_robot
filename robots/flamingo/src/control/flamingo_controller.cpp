@@ -214,6 +214,10 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
       // Here, we map the stick input directly to thrust. Up is positive thrust, Down is negative thrust.
       total_thrust = thrust_input * max_thrust;
     }
+    else
+    {
+      total_thrust = 1.0;
+    }
 
     std::fill(target_base_thrust_.begin(), target_base_thrust_.end(), 0.0f);
 

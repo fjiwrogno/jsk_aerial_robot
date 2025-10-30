@@ -67,7 +67,7 @@ void BaseNavigator::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   joy_udp_ = false;
 #endif
   if(joy_udp_) joy_transport_hints = ros::TransportHints().udp();
-  joy_stick_sub_ = nh_.subscribe("joy", 1, &BaseNavigator::joyStickControl, this, joy_transport_hints);
+  // joy_stick_sub_ = nh_.subscribe("joy", 1, &BaseNavigator::joyStickControl, this, joy_transport_hints);
 
   stop_teleop_sub_ = nh_.subscribe("stop_teleop", 1, &BaseNavigator::stopTeleopCallback, this);
 
@@ -618,16 +618,16 @@ void BaseNavigator::update()
         }
     }
 
-  // /* sensor health check */
-  // if(estimator_->getUnhealthLevel() == Sensor::UNHEALTH_LEVEL3 && !force_landing_flag_)
-  //   {
-  //     if(getNaviState() == TAKEOFF_STATE || getNaviState() == HOVER_STATE  || getNaviState() == LAND_STATE)
-  //       ROS_WARN("Sensor Unhealth Level%d: force landing state", estimator_->getUnhealthLevel());
-  //     spinal::FlightConfigCmd flight_config_cmd;
-  //     flight_config_cmd.cmd = spinal::FlightConfigCmd::FORCE_LANDING_CMD;
-  //     flight_config_pub_.publish(flight_config_cmd);
-  //     force_landing_flag_ = true;
-  //   }
+  /* sensor health check */
+  if(estimator_->getUnhealthLevel() == Sensor::UNHEALTH_LEVEL3 && !force_landing_flag_)
+    {
+      if(getNaviState() == TAKEOFF_STATE || getNaviState() == HOVER_STATE  || getNaviState() == LAND_STATE)
+        ROS_WARN("Sensor Unhealth Level%d: force landing state", estimator_->getUnhealthLevel());
+      spinal::FlightConfigCmd flight_config_cmd;
+      flight_config_cmd.cmd = spinal::FlightConfigCmd::FORCE_LANDING_CMD;
+      flight_config_pub_.publish(flight_config_cmd);
+      force_landing_flag_ = true;
+    }
 
   if(getNaviState() == TAKEOFF_STATE || getNaviState() == HOVER_STATE)
     {
