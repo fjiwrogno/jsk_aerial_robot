@@ -379,7 +379,7 @@ void BaseNavigator::joyStickControl(const sensor_msgs::JoyConstPtr & joy_msg)
           else
             {
               ROS_WARN("========== EXIT UNDERWATER DEBUG MODE ==========");
-              setNaviState(ARM_OFF_STATE);
+              setNaviState(STOP_STATE);
             }
         }
       return;
@@ -643,19 +643,18 @@ void BaseNavigator::update()
   /* ===== DEBUG MODE 更新 ===== */
   if(debug_mode_flag_)
     {
-      if(getNaviState() != UNDERWATER_DEBUG_STATE && getNaviState() != ARM_ON_STATE)
-        {
-          debug_mode_flag_ = false;
-          setNaviState(ARM_OFF_STATE);
-        }
-      else if(getNaviState() == UNDERWATER_DEBUG_STATE)
+      if(getNaviState() == UNDERWATER_DEBUG_STATE)
         {
           spinal::FlightConfigCmd flight_config_cmd;
             // start the attitude controller
           flight_config_cmd.cmd = spinal::FlightConfigCmd::ARM_ON_CMD;
 
           flight_config_pub_.publish(flight_config_cmd);
+
+          estimator_->setSensorFusionFlag(true);
+          force_landing_flag_ = false;
         }
+        
         
         // if(low_voltage_flag_)
         // {
