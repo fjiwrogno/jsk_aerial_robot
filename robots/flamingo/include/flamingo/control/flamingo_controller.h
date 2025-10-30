@@ -32,6 +32,9 @@ private:
   ros::Publisher torque_allocation_matrix_inv_pub_;  // for spinal
   ros::Publisher gimbal_dof_pub_;                    // for spinal
 
+  ros::Subscriber joy_sub_;                    // for spinal
+
+
   boost::shared_ptr<FlamingoRobotModel> flamingo_robot_model_;
   std::vector<float> target_base_thrust_;
   std::vector<float> target_full_thrust_;
