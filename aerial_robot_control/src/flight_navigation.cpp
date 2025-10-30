@@ -651,33 +651,24 @@ void BaseNavigator::update()
       else if(getNaviState() == UNDERWATER_DEBUG_STATE)
         {
           spinal::FlightConfigCmd flight_config_cmd;
-          flight_config_cmd.cmd = spinal::FlightConfigCmd::ARM_OFF_CMD;
-
             // start the attitude controller
           flight_config_cmd.cmd = spinal::FlightConfigCmd::ARM_ON_CMD;
 
           flight_config_pub_.publish(flight_config_cmd);
         }
-      // for arm_on_state check
-      if(check_joy_stick_heart_beat_ && joy_stick_heart_beat_ &&
-         ros::Time::now().toSec() - joy_stick_prev_time_ > joy_stick_heart_beat_du_)
-        { 
-          setNaviState(ARM_OFF_STATE);
-          ROS_ERROR("Stop: att control mode, because no joy control");
-          debug_mode_flag_ = false;
-        }
-        else if(low_voltage_flag_)
-        {
-          setNaviState(ARM_OFF_STATE);
-          ROS_ERROR("low voltage!");
-          debug_mode_flag_ = false;
-        }
-        else if(high_voltage_flag_)
-        {
-          setNaviState(ARM_OFF_STATE);
-          ROS_ERROR("high voltage!");
-          debug_mode_flag_ = false;
-        }
+        
+        // if(low_voltage_flag_)
+        // {
+        //   setNaviState(ARM_OFF_STATE);
+        //   ROS_ERROR("low voltage!");
+        //   debug_mode_flag_ = false;
+        // }
+        // else if(high_voltage_flag_)
+        // {
+        //   setNaviState(ARM_OFF_STATE);
+        //   ROS_ERROR("high voltage!");
+        //   debug_mode_flag_ = false;
+        // }
       
       /* 发布状态 */
       std_msgs::UInt8 state_msg;
@@ -1186,6 +1177,15 @@ void BaseNavigator::updatePoseFromTrajectory()
                     target_state.p(0), target_state.p(1), target_state.p(2), target_yaw, \
                     curr_pos.x(), curr_pos.y(), curr_pos.z(), yaw_angle);
 
+}
+
+void setNaviState(int navi_state)
+{
+  if (navi_state_ != navi_state)
+  {
+    ROS_WARN("NaviState changed from %d to %d", navi_state_, navi_state); // <-- 添加这行
+    navi_state_ = navi_state;
+  }
 }
 
 void BaseNavigator::rosParamInit()

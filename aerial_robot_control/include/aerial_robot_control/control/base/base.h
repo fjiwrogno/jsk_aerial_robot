@@ -124,6 +124,7 @@ namespace aerial_robot_control
         {
           if (navigator_->getNaviState() == aerial_robot_navigation::TAKEOFF_STATE || navigator_->getNaviState() == aerial_robot_navigation::ARM_ON_STATE)
             {
+              // only when switch to takeoff state, begin to update
               reset();
               control_timestamp_ = ros::Time::now().toSec();
             }
