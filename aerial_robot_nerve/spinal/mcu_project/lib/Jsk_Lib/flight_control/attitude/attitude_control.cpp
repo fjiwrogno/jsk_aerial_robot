@@ -376,7 +376,12 @@ void AttitudeController::update(void)
 #else
       nh_->logerror("failsafe: cannot connect with ROS");
 #endif
+
+#if DEBUG_WATER_MODE
+      nh_->logerror("failsafe: flight_command_timeout");
+#else
       setForceLandingFlag(true);
+#endif
     }
 
 #ifdef SIMULATION
@@ -396,19 +401,26 @@ void AttitudeController::update(void)
     rot.to_euler(&angles.x, &angles.y, &angles.z);
 
     /* failsafe 3: too large tile angle */
+#if DEBUG_WATER_MODE
     if (!force_landing_flag_ && (fabs(angles[X]) > MAX_TILT_ANGLE || fabs(angles[Y]) > MAX_TILT_ANGLE))
     {
-#ifdef SIMULATION
+      nh_->logerror("Uderwater debug: feedback angles are large");
+    }
+
+#else
+    if (!force_landing_flag_ && (fabs(angles[X]) > MAX_TILT_ANGLE || fabs(angles[Y]) > MAX_TILT_ANGLE))
+    {
+  #ifdef SIMULATION
       ROS_ERROR("failsafe: the roll pitch angles are too large, roll: %f (%f), pitch: %f (%f)", angles[X],
                 MAX_TILT_ANGLE, angles[Y], MAX_TILT_ANGLE);
-#else
+  #else
       nh_->logerror("failsafe: the roll pitch angles are too large");
-#endif
+  #endif
       setForceLandingFlag(true);
       error_angle_i_[X] = 0;
       error_angle_i_[Y] = 0;
     }
-
+#endif    
     /* Force Landing Flag */
     if (force_landing_flag_)
     {
@@ -574,15 +586,19 @@ void AttitudeController::fourAxisCommandCallback(const spinal::FourAxisCommand& 
   /* failsafe: if the pitch and roll angle is too big, start force landing */
   if (fabs(cmd_msg.angles[0]) > MAX_TILT_ANGLE || fabs(cmd_msg.angles[1]) > MAX_TILT_ANGLE)
   {
+  #if DEBUG_WATER_MODE
+    nh_->logerror("Uderwater debug: target angles are large");
+  #else  
+  
     setForceLandingFlag(true);
-#ifdef SIMULATION
+    #ifdef SIMULATION
     ROS_ERROR("failsafe: target angles are too large, roll: %f (%f), pitch: %f ()%f", target_angle_[X], MAX_TILT_ANGLE,
               target_angle_[Y], MAX_TILT_ANGLE);
-#else
+    #else
     nh_->logerror("failsafe: target angles are too large");
-#endif
+    #endif
+  #endif
   }
-
   /* check the number of motor which should be equal to the ros thrust */
 #ifdef SIMULATION
   if (cmd_msg.base_thrust.size() != motor_number_)
@@ -1287,14 +1303,7 @@ void AttitudeController::pwmConversion()
       if (target_pwm_[i] < min_duty_)
       {
         // to avoid throttle limit for bi-directional esc
-        if (i < 2)
-        {
-          target_pwm_[i] = min_duty_;
-        }
-        else if (target_pwm_[i] < 0)
-        {
           target_pwm_[i] = 0;
-        }
       }
       else if (target_pwm_[i] > max_duty_)
       {

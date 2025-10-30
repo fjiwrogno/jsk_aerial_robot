@@ -58,5 +58,8 @@ private:
   void sendGimbalCommand();
   void sendTorqueAllocationMatrixInv();
   void setAttitudeGains();
+  void setSafeAttitudeGains();
+
+  void joyCallback(const sensor_msgs::Joy::ConstPtr& msg);
 };
 };  // namespace aerial_robot_control
