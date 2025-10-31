@@ -10,35 +10,35 @@ motor_info:
         ref1:
                 voltage: 25.2
                 max_thrust: 21.1743 #20.26
-                polynomial4: 0.27220104 # x10^4
-                polynomial3: 7.84268887 # x10^3
-                polynomial2: -27.35529774 # x10^2
-                polynomial1: 59.62689433 # x10^1
-                polynomial0: 5.31928587 # x10^0
+                polynominal4: 0.27220104 # x10^4
+                polynominal3: 7.84268887 # x10^3
+                polynominal2: -27.35529774 # x10^2
+                polynominal1: 59.62689433 # x10^1
+                polynominal0: 5.31928587 # x10^0
         ref2:
                 voltage: 24.2
                 max_thrust: 21.3149 # N
-                polynomial4: -4.49312257 # x10^4
-                polynomial3: 25.67117640 # x10^3
-                polynomial2: -47.75818788 # x10^2
-                polynomial1: 67.62445163 # x10^1
-                polynomial0: 5.48946853 # x10^0
+                polynominal4: -4.49312257 # x10^4
+                polynominal3: 25.67117640 # x10^3
+                polynominal2: -47.75818788 # x10^2
+                polynominal1: 67.62445163 # x10^1
+                polynominal0: 5.48946853 # x10^0
         ref3:
                 voltage: 23.2
                 max_thrust: 20.4890 # N
-                polynomial4: -2.95746127 # x10^4
-                polynomial3: 20.77747488 # x10^3
-                polynomial2: -44.15328209 # x10^2
-                polynomial1: 69.42786237 # x10^1
-                polynomial0: 5.37462297 # x10^0
+                polynominal4: -2.95746127 # x10^4
+                polynominal3: 20.77747488 # x10^3
+                polynominal2: -44.15328209 # x10^2
+                polynominal1: 69.42786237 # x10^1
+                polynominal0: 5.37462297 # x10^0
         ref4:
                 voltage: 22.2
                 max_thrust: 19.6376 # N
-                polynomial4: -6.74821754 # x10^4
-                polynomial3: 35.12434932 # x10^3
-                polynomial2: -61.02618663 # x10^2
-                polynomial1: 77.45026705 # x10^1
-                polynomial0: 5.30078903 # x10^0
+                polynominal4: -6.74821754 # x10^4
+                polynominal3: 35.12434932 # x10^3
+                polynominal2: -61.02618663 # x10^2
+                polynominal1: 77.45026705 # x10^1
+                polynominal0: 5.30078903 # x10^0
 
         # for simualtion
         rotor_damping_rate: 0.1 # = 0.001 / (0.01 + 0.001); 0.01: time constant; 0.001: dt

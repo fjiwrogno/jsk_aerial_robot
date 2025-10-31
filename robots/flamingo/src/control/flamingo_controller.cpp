@@ -216,7 +216,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     }
     else
     {
-      total_thrust = 1.0;
+      total_thrust = 0.0;
     }
 
     std::fill(target_base_thrust_.begin(), target_base_thrust_.end(), 0.0f);
