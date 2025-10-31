@@ -257,7 +257,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     float max_yaw_rate = 0.5; // rad/s
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS]) > joy_stick_deadzone_)
     {
-      candidate_yaw_term_ = msg->axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS] * max_yaw_rate;
+      candidate_yaw_term_ = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS] * max_yaw_rate;
     }
     else
     {
@@ -319,6 +319,7 @@ void FlamingoController::sendFourAxisCommand()
   }
   else
   {
+
     flight_command_data.base_thrust = target_full_thrust_;
   }
 
