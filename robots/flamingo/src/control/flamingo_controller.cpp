@@ -200,6 +200,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   float joy_stick_deadzone_ = 0.2;
   
   tf::Vector3 current_rpy = estimator_->getEuler(Frame::COG, estimate_mode_);
+  tf::Vector3 omega = estimator_->getAngularVel(Frame::COG, estimate_mode_);
  
       // 1. Right Stick Vertical -> Thrust
     // JOY_AXIS_STICK_RIGHT_UPWARDS: Up is +1.0, Down is -1.0. Middle is 0.0.
@@ -216,7 +217,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     }
     else
     {
-      total_thrust = 0.0;
+      total_thrust = 4.0;
     }
 
     std::fill(target_base_thrust_.begin(), target_base_thrust_.end(), 0.0f);
@@ -234,7 +235,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS]) > joy_stick_deadzone_)
     {
       target_pitch_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] * max_pitch_angle;
-    }
+    } 
     else
     {
       target_pitch_ = current_rpy[1];
@@ -261,7 +262,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     }
     else
     {
-      candidate_yaw_term_ = 0;
+      candidate_yaw_term_ = omega.z();
     }
 
 }

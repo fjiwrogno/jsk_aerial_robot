@@ -117,7 +117,7 @@ void GxPwmServo::setAndSaveInitPosition(uint8_t id, float angle_rad)
 float GxPwmServo::angleToPulseWidth(float angle_rad) const
 {
   float pulse_width_us = MIN_PULSE_WIDTH_US + (angle_rad / ANGLE_RANGE_RAD) * (MAX_PULSE_WIDTH_US - MIN_PULSE_WIDTH_US);
-
+///TODO restrict the servo angle to [93,(178),263]
   if (pulse_width_us < MIN_PULSE_WIDTH_US)
   {
     pulse_width_us = MIN_PULSE_WIDTH_US;
