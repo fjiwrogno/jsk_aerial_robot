@@ -31,6 +31,8 @@ private:
   ros::Publisher rpy_gain_pub_;                      // for spinal
   ros::Publisher torque_allocation_matrix_inv_pub_;  // for spinal
   ros::Publisher gimbal_dof_pub_;                    // for spinal
+  ros::Publisher debug_rpy_pub_;                    // for underwater debug
+
 
   ros::Subscriber joy_sub_;                    // for spinal
 

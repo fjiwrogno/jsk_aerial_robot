@@ -36,6 +36,8 @@ void FlamingoController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   torque_allocation_matrix_inv_pub_ =
       nh_.advertise<spinal::TorqueAllocationMatrixInv>("torque_allocation_matrix_inv", 1);
   gimbal_dof_pub_ = nh_.advertise<std_msgs::UInt8>("gimbal_dof", 1);
+  debug_rpy_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("debug/current_rpy", 1);
+
 
   joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 1, &FlamingoController::joyCallback, this, ros::TransportHints().tcpNoDelay());
 }
@@ -201,33 +203,61 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   
   tf::Vector3 current_rpy = estimator_->getEuler(Frame::COG, estimate_mode_);
   tf::Vector3 omega = estimator_->getAngularVel(Frame::COG, estimate_mode_);
- 
-      // 1. Right Stick Vertical -> Thrust
-    // JOY_AXIS_STICK_RIGHT_UPWARDS: Up is +1.0, Down is -1.0. Middle is 0.0.
-    // could be set to different throttle levles later
-    float max_thrust = 10.0; 
-    float thrust_input = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS];
-    float total_thrust = 0;
 
-    // currently only allows lift force:single direction
-    if (thrust_input > joy_stick_deadzone_)
+  // publish current attitude angle
+  geometry_msgs::Vector3Stamped rpy_msg;
+  rpy_msg.header.stamp = ros::Time::now();
+  rpy_msg.vector.x = current_rpy[0];
+  rpy_msg.vector.y = current_rpy[1];
+  rpy_msg.vector.z = current_rpy[2];
+  debug_rpy_pub_.publish(rpy_msg);
+
+
+  bool stablize_mode = false;
+  if(joy_cmd.buttons[JOY_BUTTON_REAR_LEFT_1] && joy_cmd.buttons[JOY_BUTTON_REAR_RIGHT_1])
+  {
+    stablize_mode = !stablize_mode;
+
+    if(stablize_mode = true)
     {
-      // Here, we map the stick input directly to thrust. Up is positive thrust, Down is negative thrust.
-      total_thrust = thrust_input * max_thrust;
+      ROS_ERROR("STABLIZED MODE IS ON!");
     }
     else
     {
-      total_thrust = 4.0;
+      ROS_ERROR("MANUAL MODE IS ON!");
     }
 
-    std::fill(target_base_thrust_.begin(), target_base_thrust_.end(), 0.0f);
+  } 
+
+  // 1. Right Stick Vertical -> Thrust
+  // JOY_AXIS_STICK_RIGHT_UPWARDS: Up is +1.0, Down is -1.0. Middle is 0.0.
+  // could be set to different throttle levles later
+  float max_thrust = 10.0; 
+  float thrust_input = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS];
+  float total_thrust = 0;
+
+    // currently only allows lift force:single direction
+  if (thrust_input > joy_stick_deadzone_)
+  {
+      // Here, we map the stick input directly to thrust. Up is positive thrust, Down is negative thrust.
+    total_thrust = thrust_input * max_thrust;
+  }
+  else
+  {
+    total_thrust = 4.0;
+  }
+
+  std::fill(target_base_thrust_.begin(), target_base_thrust_.end(), 0.0f);
 
     // Assign thrust to the Z-component of each motor's virtual thrust vector
-    for (int i = 0; i < motor_num_; ++i)
-    {
-      // The Z-component is at index (i * rotor_coef_ + 1) for gimbal_dof_ = 1
-      target_base_thrust_.at(i * rotor_coef_ + 1) = total_thrust / motor_num_;
-    }
+  for (int i = 0; i < motor_num_; ++i)
+  {
+    // The Z-component is at index (i * rotor_coef_ + 1) for gimbal_dof_ = 1
+    target_base_thrust_.at(i * rotor_coef_ + 1) = total_thrust / motor_num_;
+  }
+
+  if(!stablize_mode)
+  {
 
     // 2. Left Stick Vertical -> Pitch Angle
     // JOY_AXIS_STICK_LEFT_UPWARDS: Up is +1.0, Down is -1.0
@@ -264,6 +294,46 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     {
       candidate_yaw_term_ = omega.z();
     }
+  }
+  else
+  {
+    
+    float max_pitch_angle = 0.52; // ~30 degrees
+    if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS]) > joy_stick_deadzone_)
+    {
+      target_pitch_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] * max_pitch_angle;
+    } 
+    else
+    {
+      target_pitch_ = 0;
+    }
+
+    // 2. Left Stick Horizontal -> Roll Angle
+    // JOY_AXIS_STICK_LEFT_LEFTWARDS: Left is +1.0, Right is -1.0
+    float max_roll_angle = 0.42; // ~30 degrees
+    if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS]) > joy_stick_deadzone_)
+    {
+      target_roll_ = 3.14 - joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle; 
+    }
+    else
+    {
+      // becasue the initial rool angle is 3.14rad so currently set this value to 3.14
+      target_roll_ = 3.14;
+    }
+
+    // 3. Right Stick Horizontal -> Yaw
+    // Map joystick to target yaw *rate*
+    float max_yaw_rate = 0.5; // rad/s
+    if(fabs(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS]) > joy_stick_deadzone_)
+    {
+      candidate_yaw_term_ = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS] * max_yaw_rate;
+    }
+    else
+    {
+      candidate_yaw_term_ = 0;
+    }
+
+  }
 
 }
 
