@@ -73,7 +73,7 @@ bool FlamingoController::update()
 
 void FlamingoController::controlCore()
 {
-//     PoseLinearController::controlCore();
+    PoseLinearController::controlCore();
 //     tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
 //     tf::Vector3 target_acc_w(pid_controllers_.at(X).result(), pid_controllers_.at(Y).result(),
 //                             pid_controllers_.at(Z).result());
@@ -188,7 +188,18 @@ void FlamingoController::controlCore()
     integrated_map_inv_trans_ = integrated_map_inv.leftCols(underactuate_ ? 1 : 3);
     integrated_map_inv_rot_ = integrated_map_inv.rightCols(3);
 
-  
+    last_col = 0;
+    double max_yaw_scale = 0;  // for reconstruct yaw control term in spinal
+    for (int i = 0; i < motor_num_; i++)
+    {
+
+      if (integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW)) > max_yaw_scale)
+        max_yaw_scale = integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW));  // underactuated: yaw col is shifted
+
+      last_col += rotor_coef_;
+    }
+    candidate_yaw_term_ = pid_controllers_.at(YAW).result() * max_yaw_scale;
+    
 }
 
 void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
@@ -288,11 +299,15 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     float max_yaw_rate = 0.5; // rad/s
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS]) > joy_stick_deadzone_)
     {
-      candidate_yaw_term_ = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS] * max_yaw_rate;
+      navigator_->setTargetOmegaZ(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS] * max_yaw_rate);
     }
     else
     {
-      candidate_yaw_term_ = omega.z();
+      double yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+      navigator_->setTargetYaw(yaw);
+
+      // set the velocty to zero
+      navigator_->setTargetOmegaZ(0);    
     }
   }
   else
@@ -326,11 +341,16 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     float max_yaw_rate = 0.5; // rad/s
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS]) > joy_stick_deadzone_)
     {
-      candidate_yaw_term_ = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS] * max_yaw_rate;
+      navigator_->setTargetOmegaZ(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS] * max_yaw_rate);
     }
     else
     {
-      candidate_yaw_term_ = 0;
+      double yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+      navigator_->setTargetYaw(yaw);
+
+      // set the velocty to zero
+      navigator_->setTargetOmegaZ(0);
+
     }
 
   }
