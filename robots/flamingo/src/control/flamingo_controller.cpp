@@ -220,7 +220,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   rpy_msg.header.stamp = ros::Time::now();
   rpy_msg.vector.x = current_rpy[0];
   rpy_msg.vector.y = current_rpy[1];
-  rpy_msg.vector.z = current_rpy[2];
+  rpy_msg.vector.z = omega.z();
   debug_rpy_pub_.publish(rpy_msg);
 
 
@@ -255,7 +255,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   }
   else
   {
-    total_thrust = 4.0;
+    total_thrust = 5.5;
   }
 
   std::fill(target_base_thrust_.begin(), target_base_thrust_.end(), 0.0f);
@@ -272,7 +272,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 
     // 2. Left Stick Vertical -> Pitch Angle
     // JOY_AXIS_STICK_LEFT_UPWARDS: Up is +1.0, Down is -1.0
-    float max_pitch_angle = 0.52; // ~30 degrees
+    float max_pitch_angle = 0.26; // ~15 degrees
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS]) > joy_stick_deadzone_)
     {
       target_pitch_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] * max_pitch_angle;
@@ -284,7 +284,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 
     // 2. Left Stick Horizontal -> Roll Angle
     // JOY_AXIS_STICK_LEFT_LEFTWARDS: Left is +1.0, Right is -1.0
-    float max_roll_angle = 0.42; // ~30 degrees
+    float max_roll_angle = 0.21; // ~30 degrees
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS]) > joy_stick_deadzone_)
     {
       target_roll_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle; 
@@ -313,7 +313,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   else
   {
     
-    float max_pitch_angle = 0.52; // ~30 degrees
+    float max_pitch_angle = 0.26; // ~15 degrees
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS]) > joy_stick_deadzone_)
     {
       target_pitch_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] * max_pitch_angle;
@@ -323,9 +323,9 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
       target_pitch_ = 0;
     }
 
-    // 2. Left Stick Horizontal -> Roll Angle
+    // 2. Left Stick Horizontal -> Roll Ange
     // JOY_AXIS_STICK_LEFT_LEFTWARDS: Left is +1.0, Right is -1.0
-    float max_roll_angle = 0.42; // ~30 degrees
+    float max_roll_angle = 0.21; // ~15 degrees
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS]) > joy_stick_deadzone_)
     {
       target_roll_ = 3.14 - joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle; 
@@ -345,7 +345,9 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     }
     else
     {
-      double yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+      // double yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+      // keep the orientation
+      double yaw = 0;
       navigator_->setTargetYaw(yaw);
 
       // set the velocty to zero
