@@ -224,18 +224,32 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   debug_rpy_pub_.publish(rpy_msg);
 
 
-  bool stablize_mode = false;
   if(joy_cmd.buttons[JOY_BUTTON_REAR_LEFT_1] && joy_cmd.buttons[JOY_BUTTON_REAR_RIGHT_1])
   {
-    stablize_mode = !stablize_mode;
+    if_stablize_ = !if_stablize_;
 
-    if(stablize_mode = true)
+    if(if_stablize_ = true)
     {
       ROS_ERROR("STABLIZED MODE IS ON!");
     }
     else
     {
       ROS_ERROR("MANUAL MODE IS ON!");
+    }
+
+  }
+  
+  if(joy_cmd.buttons[JOY_BUTTON_REAR_LEFT_2] && joy_cmd.buttons[JOY_BUTTON_REAR_RIGHT_2])
+  {
+    if_dive_ = !if_dive_;
+
+    if(if_dive_ = true)
+    {
+      ROS_ERROR("DIVE!");
+    }
+    else
+    {
+      ROS_ERROR("FLOAT!");
     }
 
   } 
@@ -253,9 +267,15 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
       // Here, we map the stick input directly to thrust. Up is positive thrust, Down is negative thrust.
     total_thrust = thrust_input * max_thrust;
   }
+  else if (if_dive_)
+  {
+    // dive into the water
+    total_thrust = 5.5;
+  }
   else
   {
-    total_thrust = 5.5;
+    // float on the surface 
+    total_thrust = 4.0;
   }
 
   std::fill(target_base_thrust_.begin(), target_base_thrust_.end(), 0.0f);
@@ -267,7 +287,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     target_base_thrust_.at(i * rotor_coef_ + 1) = total_thrust / motor_num_;
   }
 
-  if(!stablize_mode)
+  if(!if_stablize_)
   {
 
     // 2. Left Stick Vertical -> Pitch Angle
