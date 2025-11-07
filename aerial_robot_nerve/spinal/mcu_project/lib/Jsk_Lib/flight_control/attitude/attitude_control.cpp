@@ -401,14 +401,9 @@ void AttitudeController::update(void)
     rot.to_euler(&angles.x, &angles.y, &angles.z);
 
     /* failsafe 3: too large tile angle */
-#if DEBUG_WATER_MODE
     if (!force_landing_flag_ && (fabs(angles[X]) > MAX_TILT_ANGLE || fabs(angles[Y]) > MAX_TILT_ANGLE))
     {
-    }
-
-#else
-    if (!force_landing_flag_ && (fabs(angles[X]) > MAX_TILT_ANGLE || fabs(angles[Y]) > MAX_TILT_ANGLE))
-    {
+#if !DEBUG_WATER_MODE
   #ifdef SIMULATION
       ROS_ERROR("failsafe: the roll pitch angles are too large, roll: %f (%f), pitch: %f (%f)", angles[X],
                 MAX_TILT_ANGLE, angles[Y], MAX_TILT_ANGLE);
@@ -418,8 +413,8 @@ void AttitudeController::update(void)
       setForceLandingFlag(true);
       error_angle_i_[X] = 0;
       error_angle_i_[Y] = 0;
-    }
 #endif    
+    }
     /* Force Landing Flag */
     if (force_landing_flag_)
     {
