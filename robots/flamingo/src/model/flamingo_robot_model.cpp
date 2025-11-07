@@ -12,12 +12,18 @@ FlamingoRobotModel::FlamingoRobotModel(bool init_with_rosparam, bool verbose, do
 
 void FlamingoRobotModel::updateRobotModelImpl(const KDL::JntArray& joint_positions)
 {
+  KDL::JntArray gimbal_processed_joint = joint_positions;
+  for(int i = 0; i < getRotorNum(); ++i)
+    {
+      gimbal_processed_joint(i) = 0;
+    }
+    
   KDL::TreeFkSolverPos_recursive fk_solver(getTree());
   // /* special process */
   KDL::Frame f_baselink;
-  fk_solver.JntToCart(joint_positions, f_baselink, getBaselinkName());
+  fk_solver.JntToCart(gimbal_processed_joint, f_baselink, getBaselinkName());
   const KDL::Rotation cog_frame = f_baselink.M * getCogDesireOrientation<KDL::Rotation>().Inverse();
-  transformable::RobotModel::updateRobotModelImpl(joint_positions);
+  transformable::RobotModel::updateRobotModelImpl(gimbal_processed_joint);
   const auto seg_tf_map = getSegmentsTf();
 
   /* get local coords of thrust links */
@@ -25,7 +31,7 @@ void FlamingoRobotModel::updateRobotModelImpl(const KDL::JntArray& joint_positio
   {
     std::string thrust = "rotor_arm" + std::to_string(i + 1);
     KDL::Frame f;
-    fk_solver.JntToCart(joint_positions, f, thrust);
+    fk_solver.JntToCart(gimbal_processed_joint, f, thrust);
     thrust_coords_rot_[i] = cog_frame.Inverse() * f.M;
   }
 }
