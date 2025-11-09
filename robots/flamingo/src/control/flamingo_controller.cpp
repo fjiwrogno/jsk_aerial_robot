@@ -56,6 +56,7 @@ void FlamingoController::rosParamInit()
   getParam<bool>(control_nh, "gimbal_calc_in_fc", gimbal_calc_in_fc_, true);
   getParam<bool>(control_nh, "hovering_approximate", hovering_approximate_, false);
   getParam<bool>(control_nh, "underactuate", underactuate_, false);
+  getParam<double>(control_nh, "joy_yaw_rate", joy_yaw_rate_, 0.01);
 }
 
 bool FlamingoController::update()
@@ -192,14 +193,12 @@ void FlamingoController::controlCore()
     double max_yaw_scale = 0;  // for reconstruct yaw control term in spinal
     for (int i = 0; i < motor_num_; i++)
     {
-
-      if (integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW)) > max_yaw_scale)
+      if (fabs(integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW))) > fabs(max_yaw_scale))
         max_yaw_scale = integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW));  // underactuated: yaw col is shifted
 
       last_col += rotor_coef_;
     }
     candidate_yaw_term_ = pid_controllers_.at(YAW).result() * max_yaw_scale;
-    
 }
 
 void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
@@ -324,18 +323,10 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     {
       navigator_->setTargetOmegaZ(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS] * max_yaw_rate);
     }
-    else
-    {
-      double yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
-      navigator_->setTargetYaw(yaw);
-
-      // set the velocty to zero
-      navigator_->setTargetOmegaZ(0);    
-    }
   }
   else
   {
-    
+
     float max_pitch_angle = 0.26; // ~15 degrees
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS]) > joy_stick_deadzone_)
     {
@@ -358,28 +349,29 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
       // becasue the initial rool angle is 3.14rad so currently set this value to 3.14
       target_roll_ = 3.14;
     }
-
-    // 3. Right Stick Horizontal -> Yaw
-    // Map joystick to target yaw *rate*
-    float max_yaw_rate = 0.5; // rad/s
-    if(fabs(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS]) > joy_stick_deadzone_)
-    {
-      navigator_->setTargetOmegaZ(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS] * max_yaw_rate);
-    }
-    else
-    {
-      // double yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
-      // keep the orientation
-      double yaw = 0;
-      navigator_->setTargetYaw(yaw);
-
-      // set the velocty to zero
-      navigator_->setTargetOmegaZ(0);
-
-    }
-
   }
 
+  // 3. Right Stick Horizontal -> Yaw
+  static bool yaw_control_flag = false;
+  double joy_val = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS];
+  double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+  if(fabs(joy_val) > joy_stick_deadzone_)
+    {
+      double target_yaw = current_yaw + joy_val * joy_yaw_rate_;
+      navigator_->setTargetYaw(angles::normalize_angle(target_yaw));
+      navigator_->setTargetOmegaZ(joy_val * joy_yaw_rate_);
+
+      yaw_control_flag = true;
+    }
+  else
+    {
+      if(yaw_control_flag)
+        {
+          navigator_->setTargetYaw(current_yaw);
+          navigator_->setTargetOmegaZ(0);
+          yaw_control_flag = false;
+        }
+    }
 }
 
 
@@ -435,7 +427,6 @@ void FlamingoController::sendFourAxisCommand()
   }
   else
   {
-
     flight_command_data.base_thrust = target_full_thrust_;
   }
 
