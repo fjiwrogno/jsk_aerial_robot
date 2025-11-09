@@ -48,6 +48,7 @@ private:
   Eigen::MatrixXd integrated_map_inv_trans_;
   Eigen::MatrixXd integrated_map_inv_rot_;
   double candidate_yaw_term_;
+  double joy_yaw_rate_;
   int gimbal_dof_;
   int rotor_coef_;
   bool gimbal_calc_in_fc_;
