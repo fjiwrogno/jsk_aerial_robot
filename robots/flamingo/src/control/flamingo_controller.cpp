@@ -278,7 +278,10 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     total_thrust = 4.0;
   }
 
-  std::fill(target_base_thrust_.begin(), target_base_thrust_.end(), 0.0f);
+  // workaround: pad non-zero small value for base thrust (base_throttle) to avoid the
+  // unexpected condition check `fabs(base_thrust_term_[0]) > 0` in spinal.
+  // pelase refer to attitude_control.cpp, l.1175
+  std::fill(target_base_thrust_.begin(), target_base_thrust_.end(), 1e-6);
 
     // Assign thrust to the Z-component of each motor's virtual thrust vector
   for (int i = 0; i < motor_num_; ++i)
