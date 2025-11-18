@@ -1210,7 +1210,20 @@ void AttitudeController::pwmConversion()
         std::map<uint8_t, float> gimbal_map;
         for(int i = 0; i < motor_number_ / (rotor_coef_); i++){
           if(start_control_flag_)
+          {
+          #if GX_PWM_SERVO  
+            if (target_gimbal_angles_[i] < -0.5 * M_PI)
+            {
+              target_gimbal_angles_[i] = -0.5 * M_PI;
+            }
+
+            if (target_gimbal_angles_[i] > 0.5 * M_PI)
+            {
+              target_gimbal_angles_[i] = 0.5 * M_PI;
+            }
+          #endif           
             gimbal_map[i] = target_gimbal_angles_[i];
+          }
           else
             gimbal_map[i] = 0;
         }
