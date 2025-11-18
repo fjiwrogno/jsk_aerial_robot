@@ -315,14 +315,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     {
       target_roll_ = current_rpy[0];
     }
-
-    // 3. Right Stick Horizontal -> Yaw
-    // Map joystick to target yaw *rate*
-    float max_yaw_rate = 0.5; // rad/s
-    if(fabs(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS]) > joy_stick_deadzone_)
-    {
-      navigator_->setTargetOmegaZ(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS] * max_yaw_rate);
-    }
+    
   }
   else
   {

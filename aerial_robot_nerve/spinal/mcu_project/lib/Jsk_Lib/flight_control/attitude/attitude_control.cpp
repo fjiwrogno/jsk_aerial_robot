@@ -1365,7 +1365,21 @@ void AttitudeController::pwmConversion()
       for (int i = 0; i < motor_number_ / (rotor_coef_); i++)
       {
         if (start_control_flag_)
+        {
+
+          if (target_gimbal_angles_[i] < -0.5 * M_PI)
+          {
+            target_gimbal_angles_[i] = -0.5 * M_PI;
+          }
+
+          if (target_gimbal_angles_[i] > 0.5 * M_PI)
+          {
+            target_gimbal_angles_[i] = 0.5 * M_PI;
+          }
+          
           gimbal_map[i] = target_gimbal_angles_[i];
+        
+        }
         else
           gimbal_map[i] = 0;
       }
