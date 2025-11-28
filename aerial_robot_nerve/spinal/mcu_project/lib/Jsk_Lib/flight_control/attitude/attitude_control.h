@@ -119,7 +119,7 @@ private:
 #endif
 
   ros::NodeHandle* nh_;
-  ros::Publisher pwms_pub_;
+  ros::Publisher pwms_pub_; // for hydris' motor using can 
   ros::Publisher control_term_pub_;
   ros::Publisher control_feedback_state_pub_;
   spinal::Pwms pwms_msg_;

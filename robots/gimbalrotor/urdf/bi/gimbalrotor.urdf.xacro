@@ -18,11 +18,11 @@
     #### base link ####
     <link name="base_link">
       <inertial>
-        <origin xyz="0 0 -0.134417" rpy="0 0 0"/>
-        <mass value="0.942442"/>
+      <origin xyz="-0.001881 -0.000360 -0.034200" rpy="0 0 0"/>
+        <mass value="0.856021"/>
         <inertia
-            ixx="0.015351" iyy="0.002766" izz="0.013177"
-            ixy="-0.000002" ixz="-0.000024" iyz="0.000002"/>
+            ixx="0.013681" iyy="0.002270" izz="0.013685"
+            ixy="-0.00001" ixz="-0.00074" iyz="-0.000003"/>
       </inertial>
       <visual>
         <geometry>
@@ -83,7 +83,7 @@
     <joint name="fc_joint" type="fixed">
       <parent link="base_link"/>
       <child link="fc"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0.025 -0.02598 0.0438" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
