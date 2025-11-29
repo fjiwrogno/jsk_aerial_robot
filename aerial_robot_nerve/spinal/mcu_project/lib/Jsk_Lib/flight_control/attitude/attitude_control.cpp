@@ -557,6 +557,7 @@ void AttitudeController::fourAxisCommandCallback( const spinal::FourAxisCommand 
     {
       extra_yaw_pi_term_[i] = cmd_msg.angles[Z] * thrust_d_gain_[i][Z] / max_yaw_thrust_d_gain;
     }
+  }
 
 #ifndef SIMULATION
   /* mutex to protect the completion of following update  */
