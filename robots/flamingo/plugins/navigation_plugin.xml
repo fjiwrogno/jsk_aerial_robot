@@ -1,0 +1,5 @@
+<library path="lib/libflamingo_navigation">
+  <class name="aerial_robot_navigation/flamingo_navigation" type="aerial_robot_navigation::FlamingoNavigator" base_class_type="aerial_robot_navigation::BaseNavigator">
+    <description>plugin for flamingo navigation </description>
+  </class>
+</library>
