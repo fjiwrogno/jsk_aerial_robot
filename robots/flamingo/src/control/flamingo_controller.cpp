@@ -274,34 +274,29 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   else
   {
     // float on the surface 
+    // 6.0 will fully submerged
     total_thrust = 4.0;
   }
 
   // workaround: pad non-zero small value for base thrust (base_throttle) to avoid the
   // unexpected condition check `fabs(base_thrust_term_[0]) > 0` in spinal.
   // pelase refer to attitude_control.cpp, l.1175
-  std::fill(target_base_thrust_.begin(), target_base_thrust_.end(), 1e-6);
-
-    // Assign thrust to the Z-component of each motor's virtual thrust vector
-  for (int i = 0; i < motor_num_; ++i)
-  {
-    // The Z-component is at index (i * rotor_coef_ + 1) for gimbal_dof_ = 1
-    target_base_thrust_.at(i * rotor_coef_ + 1) = total_thrust / motor_num_;
-  }
 
   if(!if_stablize_)
   {
 
     // 2. Left Stick Vertical -> Pitch Angle
     // JOY_AXIS_STICK_LEFT_UPWARDS: Up is +1.0, Down is -1.0
-    float max_pitch_angle = 0.26; // ~15 degrees
+    float max_pitch_angle = 0.36; // ~15 degrees
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS]) > joy_stick_deadzone_)
     {
       target_pitch_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] * max_pitch_angle;
+      total_thrust = 4.5;
+
     } 
     else
     {
-      target_pitch_ = current_rpy[1];
+      target_pitch_ = 0.0;
     }
 
     // 2. Left Stick Horizontal -> Roll Angle
@@ -313,7 +308,9 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     }
     else
     {
-      target_roll_ = current_rpy[0];
+      // target_roll_ = current_rpy[0];
+      target_roll_ = 0.0;
+
     }
     
   }
@@ -365,6 +362,16 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
           yaw_control_flag = false;
         }
     }
+
+  std::fill(target_base_thrust_.begin(), target_base_thrust_.end(), 1e-6);
+
+    // Assign thrust to the Z-component of each motor's virtual thrust vector
+  for (int i = 0; i < motor_num_; ++i)
+  {
+    // The Z-component is at index (i * rotor_coef_ + 1) for gimbal_dof_ = 1
+    target_base_thrust_.at(i * rotor_coef_ + 1) = total_thrust / motor_num_;
+  }
+
 }
 
 
