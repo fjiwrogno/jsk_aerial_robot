@@ -9,8 +9,9 @@
 #ifndef APPLICATION_MOTOR_TEMP_MOTOR_H_
 #define APPLICATION_MOTOR_TEMP_MOTOR_H_
 
-#include "CAN/can_device.h"
+#include "can_device_manager.h"
 
+#define MAX_PWM  36000
 #define IDLE_DUTY 0.5f // 1000[usec] / 2000[usec]
 #define MIN_DUTY_DEFAULT  0.55f   //1100 / 2000
 #define MAX_DUTY_DEFAULT 0.95f // 1900 / 2000
