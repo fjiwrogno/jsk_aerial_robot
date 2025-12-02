@@ -60,6 +60,10 @@ void FlamingoController::rosParamInit()
   getParam<bool>(control_nh, "hovering_approximate", hovering_approximate_, false);
   getParam<bool>(control_nh, "underactuate", underactuate_, false);
   getParam<double>(control_nh, "joy_yaw_rate", joy_yaw_rate_, 0.01);
+  getParam<double>(control_nh, "depth_p_gain", depth_p_gain_, 1.0);
+  getParam<double>(control_nh, "depth_i_gain", depth_i_gain_, 0.0);
+  getParam<double>(control_nh, "depth_d_gain", depth_d_gain_, 0.0);
+  getParam<double>(control_nh, "depth_hover_thrust", depth_hover_thrust_, 4.0);
 }
 
 bool FlamingoController::update()
@@ -202,6 +206,41 @@ void FlamingoController::controlCore()
       last_col += rotor_coef_;
     }
     candidate_yaw_term_ = pid_controllers_.at(YAW).result() * max_yaw_scale;
+
+    if (if_dive_)
+    {
+      double err_p = target_depth_ - current_depth_;
+      double ctrl_loop_rate_ = 0.001;
+      double dt = 1.0 / ctrl_loop_rate_;
+      depth_err_i_ += err_p * dt;
+
+      // Clamp integral
+      if (depth_err_i_ > 2.0)
+        depth_err_i_ = 2.0;
+      if (depth_err_i_ < -2.0)
+        depth_err_i_ = -2.0;
+
+      double err_d = (err_p - depth_prev_err_) / dt;
+      depth_prev_err_ = err_p;
+
+      // Low Pass Filter for d_item to avoid larger noise
+      double lpf_factor = 0.5; 
+      filtered_depth_err_d_ = lpf_factor * err_d + (1.0 - lpf_factor) * filtered_depth_err_d_;
+
+      double pid_depth_item = depth_p_gain_ * err_p + depth_i_gain_ * depth_err_i_ + depth_d_gain_ * filtered_depth_err_d_;
+      double total_thrust = depth_hover_thrust_ + pid_depth_item;
+
+      // Clamp thrust
+      if (total_thrust > 20.0)
+        total_thrust = 20.0;
+      if (total_thrust < 0.0)
+        total_thrust = 0.0;
+
+      for (int i = 0; i < motor_num_; ++i)
+      {
+        target_base_thrust_.at(i * rotor_coef_ + 1) = total_thrust / motor_num_;
+      }
+    }
 }
 
 void FlamingoController::depthCallback(const geometry_msgs::PointStamped::ConstPtr& msg)
@@ -254,13 +293,14 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   rpy_msg.vector.y = current_rpy[1];
   rpy_msg.vector.z = omega.z();
   debug_rpy_pub_.publish(rpy_msg);
+  double mapped_total_thrust = depth_hover_thrust_;
 
 
   if(joy_cmd.buttons[JOY_BUTTON_REAR_LEFT_1] && joy_cmd.buttons[JOY_BUTTON_REAR_RIGHT_1])
   {
     if_stablize_ = !if_stablize_;
 
-    if(if_stablize_ = true)
+    if(if_stablize_)
     {
       ROS_ERROR("STABLIZED MODE IS ON!");
     }
@@ -275,40 +315,62 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   {
     if_dive_ = !if_dive_;
 
-    if(if_dive_ = true)
+    if(if_dive_)
     {
-      ROS_ERROR("DIVE!");
+      ROS_ERROR("DEPTH CONTROL IS ON!");
+      target_depth_ = current_depth_;
+      depth_err_i_ = 0;
+      depth_prev_err_ = 0;
     }
     else
     {
-      ROS_ERROR("FLOAT!");
+      ROS_ERROR("DEPTH CONTROL IS OFF");
     }
-
-  } 
-
-  // 1. Right Stick Vertical -> Thrust
-  // JOY_AXIS_STICK_RIGHT_UPWARDS: Up is +1.0, Down is -1.0. Middle is 0.0.
-  // could be set to different throttle levles later
-  float max_thrust = 10.0; 
-  float thrust_input = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS];
-  float total_thrust = 0;
-
-    // currently only allows lift force:single direction
-  if (thrust_input > joy_stick_deadzone_)
-  {
-      // Here, we map the stick input directly to thrust. Up is positive thrust, Down is negative thrust.
-    total_thrust = thrust_input * max_thrust;
   }
-  else if (if_dive_)
+
+  if (if_dive_)
   {
-    // dive into the water
-    total_thrust = 5.5;
+    float max_depth = 1.0;  // ~15 degrees
+                            // LIFT AND SINK
+                            /// TODO according to the value of depth sensor, the mapping here should be further modified
+    if (fabs(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS]) > joy_stick_deadzone_)
+    {
+      // only use right joy axis stick to set target_depth
+      if (joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS] < 0)
+      {
+        target_depth_ = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS] * max_depth;
+      }
+      else
+      {
+        target_depth_ = current_depth_;
+
+      }
+    }
+    else
+    {
+      target_depth_ = current_depth_;
+    }
   }
   else
   {
-    // float on the surface 
-    // 6.0 will fully submerged
-    total_thrust = 4.0;
+    // 1. Right Stick Vertical -> Thrust
+    // JOY_AXIS_STICK_RIGHT_UPWARDS: Up is +1.0, Down is -1.0. Middle is 0.0.
+    // could be set to different throttle levles later
+    float max_thrust = 10.0;
+    float thrust_input = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS];
+
+    // currently only allows lift force:single direction
+    if (thrust_input > joy_stick_deadzone_)
+    {
+      // Here, we map the stick input directly to thrust. Up is positive thrust, Down is negative thrust.
+      mapped_total_thrust = thrust_input * max_thrust;
+    }
+    else
+    {
+      // float on the surface
+      // 6.0 will fully submerged
+      mapped_total_thrust = 4.0;
+    }
   }
 
   // workaround: pad non-zero small value for base thrust (base_throttle) to avoid the
@@ -324,8 +386,6 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS]) > joy_stick_deadzone_)
     {
       target_pitch_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] * max_pitch_angle;
-      total_thrust = 4.5;
-
     } 
     else
     {
@@ -402,7 +462,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   for (int i = 0; i < motor_num_; ++i)
   {
     // The Z-component is at index (i * rotor_coef_ + 1) for gimbal_dof_ = 1
-    target_base_thrust_.at(i * rotor_coef_ + 1) = total_thrust / motor_num_;
+    target_base_thrust_.at(i * rotor_coef_ + 1) = mapped_total_thrust / motor_num_;
   }
 
 }

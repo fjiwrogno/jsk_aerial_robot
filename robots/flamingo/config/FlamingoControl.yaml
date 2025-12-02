@@ -6,6 +6,11 @@ controller:
   underactuate: true
   joy_yaw_rate: 0.05
 
+  depth_p_gain: 1.0
+  depth_i_gain: 0.0
+  depth_d_gain: 0.0
+  depth_hover_thrust: 5.0 #thrust for submerging in the water
+
   xy:
     p_gain: 3.5
     i_gain: 0.2
