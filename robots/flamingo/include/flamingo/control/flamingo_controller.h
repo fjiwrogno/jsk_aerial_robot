@@ -31,11 +31,10 @@ private:
   ros::Publisher rpy_gain_pub_;                      // for spinal
   ros::Publisher torque_allocation_matrix_inv_pub_;  // for spinal
   ros::Publisher gimbal_dof_pub_;                    // for spinal
-  ros::Publisher debug_rpy_pub_;                    // for underwater debug
+  ros::Publisher debug_rpy_pub_;                     // for underwater debug
 
-
-  ros::Subscriber joy_sub_;                    // for spinal
-
+  ros::Subscriber joy_sub_;  // for spinal
+  ros::Subscriber depth_sub_;
 
   boost::shared_ptr<FlamingoRobotModel> flamingo_robot_model_;
   std::vector<float> target_base_thrust_;
@@ -56,6 +55,13 @@ private:
   double target_roll_ = 0.0, target_pitch_ = 0.0;
   bool if_stablize_ = false, if_dive_ = false;
 
+  // Depth control
+  double current_depth_ = 0.0;
+  double target_depth_ = 0.0;
+  double depth_p_gain_ = 1.0, depth_i_gain_ = 0.0, depth_d_gain_ = 0.0;
+  double depth_err_i_ = 0.0;
+  double depth_prev_err_ = 0.0;
+  double depth_hover_thrust_ = 4.0;  // Default hover thrust for depth control
 
   void rosParamInit();
   bool update() override;
@@ -69,5 +75,6 @@ private:
   void setSafeAttitudeGains();
 
   void joyCallback(const sensor_msgs::Joy::ConstPtr& msg);
+  void depthCallback(const geometry_msgs::PointStamped::ConstPtr& msg);
 };
 };  // namespace aerial_robot_control
