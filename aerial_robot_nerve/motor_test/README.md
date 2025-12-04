@@ -26,7 +26,8 @@
    - `min_pwm_value`/`max_pwm_value`: the min/max of the pwm value
    - `raise_duration`/`brake_duration`: these are the special parameters for one-shot mode, since we have to consider the raise-up phase after staring rotation and brake-down phase after stopping rotation. For small propellers (e.g. 5inch), these value can be small. For large propellers (e.g. 14inch), please increase there values
    - `force_sensor`: the type of force sensor. Options are CFS034CA301U (default); PFS055YA501U6 (larger type)
-
+0.58，0.92
+1160， 1840
    **sample**:
    - for 5inch propeller:
      ```

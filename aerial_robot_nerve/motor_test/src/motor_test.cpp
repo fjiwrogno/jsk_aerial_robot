@@ -96,7 +96,8 @@ private:
 
   void startCallback(const std_msgs::EmptyConstPtr & msg)
   {
-    std::string file_name  = std::string("motor_test_") + std::to_string((int)ros::Time::now().toSec()) + std::string(".txt");
+    std::string folder_name = std::string("/home/chen/Research/jsk_aerial_robot/src/jsk_aerial_robot_dev/aerial_robot_nerve/motor_test/10inch_930kv/");
+    std::string file_name  = folder_name + std::string("motor_test_") + std::to_string((int)ros::Time::now().toSec()) + std::string(".txt");
     ofs_.open(file_name, std::ios::out);
 
     pwm_value_ = min_pwm_value_;
