@@ -34,7 +34,9 @@ private:
   ros::Publisher debug_rpy_pub_;                    // for underwater debug
 
 
-  ros::Subscriber joy_sub_;                    // for spinal
+  ros::Subscriber joy_sub_;                   
+  ros::Subscriber depth_sub_;
+
 
 
   boost::shared_ptr<FlamingoRobotModel> flamingo_robot_model_;
@@ -56,6 +58,8 @@ private:
   double target_roll_ = 0.0, target_pitch_ = 0.0;
   bool if_stablize_ = false, if_dive_ = false;
 
+  // Depth feedback
+  double current_depth_ = 0.0;
 
   void rosParamInit();
   bool update() override;
@@ -69,5 +73,6 @@ private:
   void setSafeAttitudeGains();
 
   void joyCallback(const sensor_msgs::Joy::ConstPtr& msg);
+  void depthCallback(const geometry_msgs::PointStamped::ConstPtr& msg);
 };
 };  // namespace aerial_robot_control

@@ -2,6 +2,8 @@
 #include <sensor_msgs/Joy.h>
 // ADDED: Include the joy_parser utility
 #include <aerial_robot_control/util/joy_parser.h>
+#include <deque>
+#include <algorithm>
 
 using namespace std;
 
@@ -40,6 +42,7 @@ void FlamingoController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
 
 
   joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 1, &FlamingoController::joyCallback, this, ros::TransportHints().tcpNoDelay());
+  depth_sub_ = nh_.subscribe<geometry_msgs::PointStamped>("depth_sensor_node/depth", 1, &FlamingoController::depthCallback, this);
 }
 
 void FlamingoController::reset()
@@ -199,6 +202,36 @@ void FlamingoController::controlCore()
       last_col += rotor_coef_;
     }
     candidate_yaw_term_ = pid_controllers_.at(YAW).result() * max_yaw_scale;
+}
+
+void FlamingoController::depthCallback(const geometry_msgs::PointStamped::ConstPtr& msg)
+{
+  // Assuming valid depth range is 0.0m to 10.0m
+  if (msg->point.z < 0.0 || msg->point.z > 10.0) return;
+
+  // /* 2. Median Filter */
+  // static std::deque<double> depth_buffer;
+  // const size_t window_size = 5;
+
+  // depth_buffer.push_back(msg->point.z);
+  // if (depth_buffer.size() > window_size)
+  // {
+  //   depth_buffer.pop_front();
+  // }
+
+  // std::vector<double> sorted_buffer(depth_buffer.begin(), depth_buffer.end());
+  // std::sort(sorted_buffer.begin(), sorted_buffer.end());
+
+  // double filtered_depth = sorted_buffer[sorted_buffer.size() / 2];
+
+  current_depth_ = msg->point.z;
+
+  // Update estimator
+  // Assuming depth is positive distance from surface, and world Z is negative underwater (ENU)
+  int estimate_mode = estimator_->getEstimateMode();
+  tf::Vector3 pos = estimator_->getPos(Frame::COG, estimate_mode);
+  pos.setZ(current_depth_);
+  estimator_->setPos(Frame::COG, estimate_mode, pos);
 }
 
 void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
