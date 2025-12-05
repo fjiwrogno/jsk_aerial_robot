@@ -289,8 +289,8 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   // publish current attitude angle
   geometry_msgs::Vector3Stamped rpy_msg;
   rpy_msg.header.stamp = ros::Time::now();
-  rpy_msg.vector.x = current_rpy[0];
-  rpy_msg.vector.y = current_rpy[1];
+  rpy_msg.vector.x = target_depth_;
+  rpy_msg.vector.y = target_yaw_;
   rpy_msg.vector.z = omega.z();
   debug_rpy_pub_.publish(rpy_msg);
   double mapped_total_thrust = depth_hover_thrust_;
@@ -440,8 +440,8 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
   if(fabs(joy_val) > joy_stick_deadzone_)
     {
-      double target_yaw = current_yaw + joy_val * joy_yaw_rate_;
-      navigator_->setTargetYaw(angles::normalize_angle(target_yaw));
+      target_yaw_ = current_yaw + joy_val * joy_yaw_rate_;
+      navigator_->setTargetYaw(angles::normalize_angle(target_yaw_));
       navigator_->setTargetOmegaZ(joy_val * joy_yaw_rate_);
 
       yaw_control_flag = true;
