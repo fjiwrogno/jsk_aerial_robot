@@ -394,10 +394,14 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 
     // 2. Left Stick Horizontal -> Roll Angle
     // JOY_AXIS_STICK_LEFT_LEFTWARDS: Left is +1.0, Right is -1.0
-    float max_roll_angle = 0.21; // ~30 degrees
+    float max_roll_angle = 0.31; // ~30 degrees
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS]) > joy_stick_deadzone_)
     {
-      target_roll_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle; 
+      target_roll_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle;
+      // no yaw control for strait forward motion
+      target_yaw_ = current_yaw;
+      navigator_->setTargetYaw(angles::normalize_angle(target_yaw_));
+      navigator_->setTargetOmegaZ(omega.z());  
     }
     else
     {
