@@ -108,6 +108,9 @@ tags
 .idea/
 *cmake-build-debug/
 
+#vscode
+.vscode/
+
 # mujoco
 MUJOCO_LOG.txt
 robots/**/mujoco
