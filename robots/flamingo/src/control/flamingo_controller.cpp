@@ -268,6 +268,8 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   tf::Vector3 current_rpy = estimator_->getEuler(Frame::COG, estimate_mode_);
   tf::Vector3 omega = estimator_->getAngularVel(Frame::COG, estimate_mode_);
   double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+  static bool yaw_control_flag = false;
+
 
 
   // publish current attitude angle
@@ -369,6 +371,9 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS]) > joy_stick_deadzone_)
     {
       target_pitch_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] * max_pitch_angle;
+      // keep the current yaw when pitch/roll control is activated to enable straight-line motion
+      yaw_control_flag = true;
+
     } 
     else
     {
@@ -381,10 +386,8 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS]) > joy_stick_deadzone_)
     {
       target_roll_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle;
-      // no yaw control for strait forward motion
-      target_yaw_ = current_yaw;
-      navigator_->setTargetYaw(angles::normalize_angle(target_yaw_));
-      navigator_->setTargetOmegaZ(omega.z());  
+      // keep the current yaw when pitch/roll control is activated to enable straight-line motion
+      yaw_control_flag = true;
     }
     else
     {
@@ -422,7 +425,6 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   }
 
   // 3. Right Stick Horizontal -> Yaw
-  static bool yaw_control_flag = false;
   double joy_val = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS];
   if(fabs(joy_val) > joy_stick_deadzone_)
     {
