@@ -42,7 +42,7 @@ void FlamingoController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
 
 
   joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 1, &FlamingoController::joyCallback, this, ros::TransportHints().tcpNoDelay());
-  depth_sub_ = nh_.subscribe<geometry_msgs::PointStamped>("depth_sensor_node/depth", 1, &FlamingoController::depthCallback, this);
+  depth_sub_ = nh_.subscribe<geometry_msgs::PointStamped>("depth_sensor_node/depth", 1, &FlamingoController::depthCallback, this, ros::TransportHints().tcpNoDelay());
 }
 
 void FlamingoController::reset()
@@ -82,30 +82,22 @@ bool FlamingoController::update()
 void FlamingoController::controlCore()
 {
     PoseLinearController::controlCore();
-//     tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
-//     tf::Vector3 target_acc_w(pid_controllers_.at(X).result(), pid_controllers_.at(Y).result(),
-//                             pid_controllers_.at(Z).result());
-//     tf::Vector3 target_acc_dash = (tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z()))).inverse() * target_acc_w;
-//     tf::Vector3 target_acc_cog = uav_rot.inverse() * target_acc_w;
-//     Eigen::VectorXd target_wrench_acc_cog = Eigen::VectorXd::Zero(6);
+    double pid_depth_w = depthControlLoop();
+    tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
+    tf::Vector3 target_acc_w(0, 0, pid_depth_w);
+    tf::Vector3 target_acc_dash = (tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z()))).inverse() * target_acc_w;
+    Eigen::VectorXd target_wrench_acc_cog = Eigen::VectorXd::Zero(6);
 
-//     if (underactuate_)
-//       target_wrench_acc_cog.head(3) = Eigen::Vector3d(target_acc_dash.x(), target_acc_dash.y(), target_acc_dash.z());
-//     else
-//       target_wrench_acc_cog.head(3) = Eigen::Vector3d(target_acc_cog.x(), target_acc_cog.y(), target_acc_cog.z());
+    target_wrench_acc_cog.head(3) = Eigen::Vector3d(target_acc_dash.x(), target_acc_dash.y(), target_acc_dash.z());
 
-//     double target_ang_acc_x = pid_controllers_.at(ROLL).result();
-//     double target_ang_acc_y = pid_controllers_.at(PITCH).result();
-//     double target_ang_acc_z = pid_controllers_.at(YAW).result();
-//     Eigen::Matrix3d inertia = flamingo_robot_model_->getInertia<Eigen::Matrix3d>();
-//     Eigen::Vector3d omega;
-//     tf::vectorTFToEigen(omega_, omega);
-//     Eigen::Vector3d gyro = omega.cross(inertia * omega);
+    // for underactuate flaingo, rpy control is done in fc
+    double target_ang_acc_x = 0.0;
+    double target_ang_acc_y = 0.0;
+    double target_ang_acc_z = 0.0;
 
-//     if (gimbal_calc_in_fc_)
-//       target_wrench_acc_cog.tail(3) = Eigen::Vector3d(target_ang_acc_x, target_ang_acc_y, target_ang_acc_z);
-//     else
-//       target_wrench_acc_cog.tail(3) = Eigen::Vector3d(target_ang_acc_x, target_ang_acc_y, target_ang_acc_z) + gyro;
+    if (gimbal_calc_in_fc_)
+      target_wrench_acc_cog.tail(3) = Eigen::Vector3d(target_ang_acc_x, target_ang_acc_y, target_ang_acc_z);
+    // logic is not complete here
 
     pid_msg_.roll.total.at(0) = pid_controllers_.at(ROLL).result();;
     pid_msg_.roll.p_term.at(0) = pid_controllers_.at(ROLL).getPTerm();
@@ -188,6 +180,7 @@ void FlamingoController::controlCore()
     /* extract controlled axis  */
     if (underactuate_)
     {
+      target_wrench_acc_cog = target_wrench_acc_cog.tail(4);  // z, roll, pitch, yaw
       integrated_map = integrated_map.bottomRows(4);          // z, roll, pitch, yaw
     }
 
@@ -195,82 +188,71 @@ void FlamingoController::controlCore()
     Eigen::MatrixXd integrated_map_inv = aerial_robot_model::pseudoinverse(integrated_map);
     integrated_map_inv_trans_ = integrated_map_inv.leftCols(underactuate_ ? 1 : 3);
     integrated_map_inv_rot_ = integrated_map_inv.rightCols(3);
+    //only send the translational item z 
+    // 0.2-0 -> at least over 5N -> larger than 25 ->
+    // so the problem may be caused by too small gain! 
+    target_vectoring_f_trans_ = integrated_map_inv_trans_ * target_wrench_acc_cog(0);
 
     last_col = 0;
     double max_yaw_scale = 0;  // for reconstruct yaw control term in spinal
     for (int i = 0; i < motor_num_; i++)
     {
+      if(if_dive_)
+      {
+        // depth control mapping
+        Eigen::VectorXd f_i = target_vectoring_f_trans_.segment(last_col, rotor_coef_);
+        target_base_thrust_.at(rotor_coef_ * i) = f_i[0];
+        target_base_thrust_.at(rotor_coef_ * i + 1) = f_i[1];
+      }
+
       if (fabs(integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW))) > fabs(max_yaw_scale))
         max_yaw_scale = integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW));  // underactuated: yaw col is shifted
 
       last_col += rotor_coef_;
     }
     candidate_yaw_term_ = pid_controllers_.at(YAW).result() * max_yaw_scale;
+}
 
-    if (if_dive_)
-    {
-      double err_p = target_depth_ - current_depth_;
-      double ctrl_loop_rate_ = 0.001;
-      double dt = 1.0 / ctrl_loop_rate_;
-      depth_err_i_ += err_p * dt;
 
-      // Clamp integral
-      if (depth_err_i_ > 2.0)
-        depth_err_i_ = 2.0;
-      if (depth_err_i_ < -2.0)
-        depth_err_i_ = -2.0;
+double FlamingoController::depthControlLoop()
+{
+  double total_thrust = 0.0;
+  if (if_dive_)
+  {
+    double err_p = target_depth_ - current_depth_;
+    double ctrl_loop_rate_ = 0.001;
+    double dt = 1.0 / ctrl_loop_rate_;
+    depth_err_i_ += err_p * dt;
 
-      double err_d = (err_p - depth_prev_err_) / dt;
-      depth_prev_err_ = err_p;
+    // Clamp integral
+    if (depth_err_i_ > 2.0)
+      depth_err_i_ = 2.0;
+    if (depth_err_i_ < -2.0)
+      depth_err_i_ = -2.0;
 
-      // Low Pass Filter for d_item to avoid larger noise
-      double lpf_factor = 0.5; 
-      filtered_depth_err_d_ = lpf_factor * err_d + (1.0 - lpf_factor) * filtered_depth_err_d_;
+    double err_d = (err_p - depth_prev_err_) / dt;
+    depth_prev_err_ = err_p;
 
-      double pid_depth_item = depth_p_gain_ * err_p + depth_i_gain_ * depth_err_i_ + depth_d_gain_ * filtered_depth_err_d_;
-      double total_thrust = depth_hover_thrust_ + pid_depth_item;
+    // Low Pass Filter for d_item to avoid larger noise
+    double lpf_factor = 0.3; 
+    filtered_depth_err_d_ = lpf_factor * err_d + (1.0 - lpf_factor) * filtered_depth_err_d_;
 
-      // Clamp thrust
-      if (total_thrust > 20.0)
-        total_thrust = 20.0;
-      if (total_thrust < 0.0)
-        total_thrust = 0.0;
+    double pid_depth_item = depth_p_gain_ * err_p + depth_i_gain_ * depth_err_i_ + depth_d_gain_ * filtered_depth_err_d_;
+    total_thrust = depth_hover_thrust_ + pid_depth_item;
 
-      for (int i = 0; i < motor_num_; ++i)
-      {
-        target_base_thrust_.at(i * rotor_coef_ + 1) = total_thrust / motor_num_;
-      }
-    }
+    // Clamp thrust
+    if (total_thrust > 20.0)
+      total_thrust = 20.0;
+    if (total_thrust < 0.0)
+      total_thrust = 0.0;
+  }
+  
+  return total_thrust;
 }
 
 void FlamingoController::depthCallback(const geometry_msgs::PointStamped::ConstPtr& msg)
 {
-  // Assuming valid depth range is 0.0m to 10.0m
-  if (msg->point.z < 0.0 || msg->point.z > 10.0) return;
-
-  // /* 2. Median Filter */
-  // static std::deque<double> depth_buffer;
-  // const size_t window_size = 5;
-
-  // depth_buffer.push_back(msg->point.z);
-  // if (depth_buffer.size() > window_size)
-  // {
-  //   depth_buffer.pop_front();
-  // }
-
-  // std::vector<double> sorted_buffer(depth_buffer.begin(), depth_buffer.end());
-  // std::sort(sorted_buffer.begin(), sorted_buffer.end());
-
-  // double filtered_depth = sorted_buffer[sorted_buffer.size() / 2];
-
   current_depth_ = msg->point.z;
-
-  // Update estimator
-  // Assuming depth is positive distance from surface, and world Z is negative underwater (ENU)
-  int estimate_mode = estimator_->getEstimateMode();
-  tf::Vector3 pos = estimator_->getPos(Frame::COG, estimate_mode);
-  pos.setZ(current_depth_);
-  estimator_->setPos(Frame::COG, estimate_mode, pos);
 }
 
 void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
@@ -285,6 +267,8 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   
   tf::Vector3 current_rpy = estimator_->getEuler(Frame::COG, estimate_mode_);
   tf::Vector3 omega = estimator_->getAngularVel(Frame::COG, estimate_mode_);
+  double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+
 
   // publish current attitude angle
   geometry_msgs::Vector3Stamped rpy_msg;
@@ -331,8 +315,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   if (if_dive_)
   {
     float max_depth = 1.0;  // ~15 degrees
-                            // LIFT AND SINK
-                            /// TODO according to the value of depth sensor, the mapping here should be further modified
+    /// TODO according to the value of depth sensor, the mapping here should be further modified
     if (fabs(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS]) > joy_stick_deadzone_)
     {
       // only use right joy axis stick to set target_depth
@@ -441,7 +424,6 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   // 3. Right Stick Horizontal -> Yaw
   static bool yaw_control_flag = false;
   double joy_val = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS];
-  double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
   if(fabs(joy_val) > joy_stick_deadzone_)
     {
       target_yaw_ = current_yaw + joy_val * joy_yaw_rate_;

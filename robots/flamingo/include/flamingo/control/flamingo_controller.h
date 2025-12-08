@@ -80,5 +80,6 @@ private:
 
   void joyCallback(const sensor_msgs::Joy::ConstPtr& msg);
   void depthCallback(const geometry_msgs::PointStamped::ConstPtr& msg);
+  double depthControlLoop();
 };
 };  // namespace aerial_robot_control
