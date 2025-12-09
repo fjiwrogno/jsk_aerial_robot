@@ -64,6 +64,8 @@ void FlamingoController::rosParamInit()
   getParam<double>(control_nh, "depth_i_gain", depth_i_gain_, 0.0);
   getParam<double>(control_nh, "depth_d_gain", depth_d_gain_, 0.0);
   getParam<double>(control_nh, "depth_hover_thrust", depth_hover_thrust_, 4.0);
+  getParam<double>(control_nh, "max_depth", max_depth_, 0.5);
+
 }
 
 bool FlamingoController::update()
@@ -316,14 +318,13 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 
   if (if_dive_)
   {
-    float max_depth = 1.0;  // ~15 degrees
     /// TODO according to the value of depth sensor, the mapping here should be further modified
     if (fabs(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS]) > joy_stick_deadzone_)
     {
       // only use right joy axis stick to set target_depth
       if (joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS] < 0)
       {
-        target_depth_ = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS] * max_depth;
+        target_depth_ = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS] * max_depth_;
       }
       else
       {

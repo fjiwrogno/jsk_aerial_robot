@@ -34,6 +34,7 @@ private:
   ros::Publisher debug_rpy_pub_;                    // for underwater debug
 
 
+
   ros::Subscriber joy_sub_;                   
   ros::Subscriber depth_sub_;
 
@@ -66,6 +67,7 @@ private:
   double depth_prev_err_ = 0.0;
   double depth_hover_thrust_ = 4.0;  // Default hover thrust for depth control
   double filtered_depth_err_d_ = 0;
+  double max_depth_ = 0.0; // maximum depth for depth control
 
   void rosParamInit();
   bool update() override;
