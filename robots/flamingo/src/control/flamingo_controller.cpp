@@ -84,7 +84,7 @@ bool FlamingoController::update()
 void FlamingoController::controlCore()
 {
     PoseLinearController::controlCore();
-    double pid_depth_w = depthControlLoop();
+    double pid_depth_w = -1.0 * depthControlLoop();
     tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
     tf::Vector3 target_acc_w(0, 0, pid_depth_w);
     tf::Vector3 target_acc_dash = (tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z()))).inverse() * target_acc_w;
@@ -221,7 +221,7 @@ double FlamingoController::depthControlLoop()
   double total_thrust = 0.0;
   if (if_dive_)
   {
-    double err_p = target_depth_ - current_depth_;
+    double err_p = fabs(target_depth_) - fabs(current_depth_);
     double ctrl_loop_rate_ = 0.001;
     double dt = 1.0 / ctrl_loop_rate_;
     depth_err_i_ += err_p * dt;
@@ -398,7 +398,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     {
       target_roll_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle;
       // keep the current yaw when pitch/roll control is activated to enable straight-line motion
-      yaw_control_flag = true;
+      // yaw_control_flag = true;
     }
     else
     {
