@@ -32,6 +32,7 @@ private:
   ros::Publisher torque_allocation_matrix_inv_pub_;  // for spinal
   ros::Publisher gimbal_dof_pub_;                    // for spinal
   ros::Publisher debug_rpy_pub_;                    // for underwater debug
+  ros::Publisher desire_coord_pub_;                    // for spinal when underwater motion
 
 
 

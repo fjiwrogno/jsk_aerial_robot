@@ -4,6 +4,7 @@
 #include <aerial_robot_control/util/joy_parser.h>
 #include <deque>
 #include <algorithm>
+#include <spinal/DesireCoord.h> // 1. 添加头文件
 
 using namespace std;
 
@@ -40,7 +41,9 @@ void FlamingoController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   gimbal_dof_pub_ = nh_.advertise<std_msgs::UInt8>("gimbal_dof", 1);
   debug_rpy_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("debug/current_rpy", 1);
 
-
+  // 2. 初始化发布者
+  desire_coord_pub_ = nh_.advertise<spinal::DesireCoord>("desire_coordinate", 1);
+  
   joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 1, &FlamingoController::joyCallback, this, ros::TransportHints().tcpNoDelay());
   depth_sub_ = nh_.subscribe<geometry_msgs::PointStamped>("depth_sensor_node/depth", 1, &FlamingoController::depthCallback, this, ros::TransportHints().tcpNoDelay());
 }
@@ -76,6 +79,14 @@ bool FlamingoController::update()
     std_msgs::UInt8 msg;
     msg.data = gimbal_dof_;
     gimbal_dof_pub_.publish(msg);
+
+    //for underwater motion, the whole robot will be flipped back which measn the roll angle will be 180deg/-180deg
+    // for faciliating target_roll control, here set desire coordinate to flip the robot back to 0deg roll angle 
+    spinal::DesireCoord coord_msg;
+    coord_msg.roll = 3.14159265; // PI
+    coord_msg.pitch = 0;
+    coord_msg.yaw = 0;
+    desire_coord_pub_.publish(coord_msg);
   }
 
   return PoseLinearController::update();
