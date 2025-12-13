@@ -53,9 +53,9 @@ controller:
 
   yaw:
   # 增大p: 10.0+1.0
-    p_gain: 30.0 #7.0
+    p_gain: 3.0 #7.0
     i_gain: 0.0 # 1.0
-    d_gain: 1.0 # 4.0, 6.0
+    d_gain: 0.0 # 4.0, 6.0 #should be smaller than p_gain to avoid oscillation
     limit_err_p: 0.4
     limit_sum: 100.0
     limit_p: 100.0

@@ -223,7 +223,7 @@ void FlamingoController::controlCore()
 
       last_col += rotor_coef_;
     }
-    candidate_yaw_term_ = pid_controllers_.at(YAW).result() * max_yaw_scale;
+    candidate_yaw_term_ = -1.0 * pid_controllers_.at(YAW).result() * max_yaw_scale;
 }
 
 
@@ -399,7 +399,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     } 
     else
     {
-      target_pitch_ = 0.0;
+      target_pitch_ = current_rpy[1];
     }
 
     // 2. Left Stick Horizontal -> Roll Angle
@@ -413,8 +413,8 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     }
     else
     {
-      // target_roll_ = current_rpy[0];
-      target_roll_ = 0.0;
+      target_roll_ = current_rpy[0];
+      // target_roll_ = 0.0;
 
     }
     
