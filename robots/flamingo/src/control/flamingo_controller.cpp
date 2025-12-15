@@ -4,7 +4,7 @@
 #include <aerial_robot_control/util/joy_parser.h>
 #include <deque>
 #include <algorithm>
-#include <spinal/DesireCoord.h> // 1. 添加头文件
+#include <spinal/DesireCoord.h> 
 
 using namespace std;
 
@@ -61,14 +61,14 @@ void FlamingoController::rosParamInit()
   getParam<int>(control_nh, "gimbal_dof", gimbal_dof_, 1);
   getParam<bool>(control_nh, "gimbal_calc_in_fc", gimbal_calc_in_fc_, true);
   getParam<bool>(control_nh, "hovering_approximate", hovering_approximate_, false);
-  getParam<bool>(control_nh, "underactuate", underactuate_, false);
+  getParam<bool>(control_nh, "underactuate", underactuate_, true);
   getParam<double>(control_nh, "joy_yaw_rate", joy_yaw_rate_, 0.01);
   getParam<double>(control_nh, "depth_p_gain", depth_p_gain_, 1.0);
   getParam<double>(control_nh, "depth_i_gain", depth_i_gain_, 0.0);
   getParam<double>(control_nh, "depth_d_gain", depth_d_gain_, 0.0);
   getParam<double>(control_nh, "depth_hover_thrust", depth_hover_thrust_, 4.0);
   getParam<double>(control_nh, "max_depth", max_depth_, 0.5);
-
+  getParam<double>(control_nh, "max_dive_rate", max_dive_rate_, 0.05);
 }
 
 bool FlamingoController::update()
@@ -95,7 +95,8 @@ bool FlamingoController::update()
 void FlamingoController::controlCore()
 {
     PoseLinearController::controlCore();
-    double pid_depth_w = depthControlLoop();
+    // right now flamingo only has single direction thrust to sink
+    double pid_depth_w = -1.0 * depthControlLoop() / flamingo_robot_model_->getMass();  
     tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
     tf::Vector3 target_acc_w(0, 0, pid_depth_w);
     tf::Vector3 target_acc_dash = (tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z()))).inverse() * target_acc_w;
@@ -201,27 +202,31 @@ void FlamingoController::controlCore()
     Eigen::MatrixXd integrated_map_inv = aerial_robot_model::pseudoinverse(integrated_map);
     integrated_map_inv_trans_ = integrated_map_inv.leftCols(underactuate_ ? 1 : 3);
     integrated_map_inv_rot_ = integrated_map_inv.rightCols(3);
-    //only send the translational item z 
-    // 0.2-0 -> at least over 5N -> larger than 25 ->
-    // so the problem may be caused by too small gain! 
     target_vectoring_f_trans_ = integrated_map_inv_trans_ * target_wrench_acc_cog(0);
 
     last_col = 0;
-    double max_yaw_scale = 0;  // for reconstruct yaw control term in spinal
+    // depth control mapping
     for (int i = 0; i < motor_num_; i++)
     {
       if(if_dive_)
       {
-        // depth control mapping
         Eigen::VectorXd f_i = target_vectoring_f_trans_.segment(last_col, rotor_coef_);
         target_base_thrust_.at(rotor_coef_ * i) = f_i[0];
         target_base_thrust_.at(rotor_coef_ * i + 1) = f_i[1];
       }
-
-      if (fabs(integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW))) > fabs(max_yaw_scale))
-        max_yaw_scale = integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW));  // underactuated: yaw col is shifted
-
       last_col += rotor_coef_;
+    }
+
+    // pick the largest yaw scale for spinal yaw term reconstruction
+    // this operation is mainly due to the rate limit of rosserial
+    // reference： attitude_control.cpp:line 644 to 647 
+    double max_yaw_scale = 0;  // for reconstruct yaw control term in spinal
+    for (int i = 0; i < motor_num_ * rotor_coef_; i++)
+    {
+      if (fabs(integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW))) > fabs(max_yaw_scale))
+      {
+        max_yaw_scale = integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW));  // underactuated: yaw col is shifted
+      }
     }
     candidate_yaw_term_ = -1.0 * pid_controllers_.at(YAW).result() * max_yaw_scale;
 }
@@ -232,32 +237,29 @@ double FlamingoController::depthControlLoop()
   double total_thrust = 0.0;
   if (if_dive_)
   {
-    double err_p = fabs(target_depth_) - fabs(current_depth_);
-    double ctrl_loop_rate_ = 0.001;
-    double dt = 1.0 / ctrl_loop_rate_;
+    // clamp target to valid sensor range: depth <= 0, and not deeper than -max_depth_
+    if (target_depth_ > 0.0) target_depth_ = 0.0;
+    if (target_depth_ < -max_depth_) target_depth_ = -max_depth_;
+
+    const double err_p = target_depth_ - current_depth_;
+
+    const double ctrl_loop_rate_ = 1000.0;
+    const double dt = 1.0 / ctrl_loop_rate_;
+
     depth_err_i_ += err_p * dt;
+    depth_err_i_ = std::max(-2.0, std::min(2.0, depth_err_i_));
 
-    // Clamp integral
-    if (depth_err_i_ > 2.0)
-      depth_err_i_ = 2.0;
-    if (depth_err_i_ < -2.0)
-      depth_err_i_ = -2.0;
-
-    double err_d = (err_p - depth_prev_err_) / dt;
+    const double err_d = (err_p - depth_prev_err_) / dt;
     depth_prev_err_ = err_p;
 
-    // Low Pass Filter for d_item to avoid larger noise
-    double lpf_factor = 0.3; 
+    const double lpf_factor = 0.6;
     filtered_depth_err_d_ = lpf_factor * err_d + (1.0 - lpf_factor) * filtered_depth_err_d_;
 
-    double pid_depth_item = depth_p_gain_ * err_p + depth_i_gain_ * depth_err_i_ + depth_d_gain_ * filtered_depth_err_d_;
-    total_thrust = depth_hover_thrust_ + pid_depth_item;
+    const double pid_depth_item =
+      depth_p_gain_ * err_p + depth_i_gain_ * depth_err_i_ + depth_d_gain_ * filtered_depth_err_d_;
 
-    // Clamp thrust
-    if (total_thrust > 20.0)
-      total_thrust = 20.0;
-    if (total_thrust < 0.0)
-      total_thrust = 0.0;
+    total_thrust = depth_hover_thrust_ + pid_depth_item;
+    total_thrust = std::max(0.0, std::min(10.0, total_thrust));
   }
   
   return total_thrust;
@@ -329,23 +331,14 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 
   if (if_dive_)
   {
-    /// TODO according to the value of depth sensor, the mapping here should be further modified
     if (fabs(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS]) > joy_stick_deadzone_)
     {
-      // only use right joy axis stick to set target_depth
-      if (joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS] < 0)
-      {
-        target_depth_ = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS] * max_depth_;
-      }
-      else
-      {
-        target_depth_ = current_depth_;
+      // stick up (+) -> shallower (toward 0), stick down (-) -> deeper (more negative)
+      target_depth_ = current_depth_ + joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS] * max_dive_rate_;
 
-      }
-    }
-    else
-    {
-      target_depth_ = current_depth_;
+      // clamp to sensor-valid range
+      if (target_depth_ > 0.0) target_depth_ = 0.0;
+      if (target_depth_ < -max_depth_) target_depth_ = -max_depth_;
     }
   }
   else

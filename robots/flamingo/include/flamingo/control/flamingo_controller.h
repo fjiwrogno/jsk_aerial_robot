@@ -69,6 +69,7 @@ private:
   double depth_hover_thrust_ = 4.0;  // Default hover thrust for depth control
   double filtered_depth_err_d_ = 0;
   double max_depth_ = 0.0; // maximum depth for depth control
+  double max_dive_rate_ = 0.05; // maximum dive rate for depth control
 
   void rosParamInit();
   bool update() override;

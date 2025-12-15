@@ -11,6 +11,8 @@ controller:
   depth_d_gain: 0.0
   depth_hover_thrust: 2.0 #thrust for submerging in the water
   max_depth: 0.3 # max depth for depth control (meters)
+  max_dive_rate: 0.05 # max dive rate (m/s)
+  
   xy:
     p_gain: 3.5
     i_gain: 0.2
