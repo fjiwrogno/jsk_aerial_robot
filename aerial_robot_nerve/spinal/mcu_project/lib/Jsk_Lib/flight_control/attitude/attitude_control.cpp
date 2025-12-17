@@ -826,7 +826,7 @@ void AttitudeController::maxYawGainIndex()
   {
     /* only find the maximum (positive) value */
     /* to avoid identical absolute value */
-    if (thrust_d_gain_[i][Z] > max_yaw_gain)
+    if (fabs(thrust_d_gain_[i][Z]) > max_yaw_gain)
     {
       max_yaw_gain = fabs(thrust_d_gain_[i][Z]);
       max_yaw_term_index_ = i;
@@ -1364,14 +1364,14 @@ void AttitudeController::pwmConversion()
         if (start_control_flag_)
         {
 
-          if (target_gimbal_angles_[i] < -0.5 * M_PI)
+          if (target_gimbal_angles_[i] < -0.4 * M_PI)
           {
-            target_gimbal_angles_[i] = -0.5 * M_PI;
+            target_gimbal_angles_[i] = -0.4 * M_PI;
           }
 
-          if (target_gimbal_angles_[i] > 0.5 * M_PI)
+          if (target_gimbal_angles_[i] > 0.4 * M_PI)
           {
-            target_gimbal_angles_[i] = 0.5 * M_PI;
+            target_gimbal_angles_[i] = 0.4 * M_PI;
           }
           
           gimbal_map[i] = target_gimbal_angles_[i];
