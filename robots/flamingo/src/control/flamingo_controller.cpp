@@ -94,8 +94,7 @@ bool FlamingoController::update()
 void FlamingoController::controlCore()
 {
     PoseLinearController::controlCore();
-    // right now flamingo only has single direction thrust to sink
-    double pid_depth_w = -1.0 * depthControlLoop() / flamingo_robot_model_->getMass();  
+    double pid_depth_w = depthControlLoop() / flamingo_robot_model_->getMass();  
     tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
     tf::Vector3 target_acc_w(0, 0, pid_depth_w);
     tf::Vector3 target_acc_dash = (tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z()))).inverse() * target_acc_w;
