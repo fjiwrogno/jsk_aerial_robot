@@ -226,7 +226,7 @@ void FlamingoController::controlCore()
         max_yaw_scale = integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW));  // underactuated: yaw col is shifted
       }
     }
-    candidate_yaw_term_ = -1.0 * pid_controllers_.at(YAW).result() * max_yaw_scale;
+    candidate_yaw_term_ = pid_controllers_.at(YAW).result() * max_yaw_scale;
 }
 
 
@@ -239,7 +239,7 @@ double FlamingoController::depthControlLoop()
     if (target_depth_ > 0.0) target_depth_ = 0.0;
     if (target_depth_ < -max_depth_) target_depth_ = -max_depth_;
 
-    const double err_p = target_depth_ - current_depth_;
+    const double err_p = fabs(target_depth_) - fabs(current_depth_);
 
     const double ctrl_loop_rate_ = 1000.0;
     const double dt = 1.0 / ctrl_loop_rate_;
@@ -338,6 +338,12 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
       if (target_depth_ > 0.0) target_depth_ = 0.0;
       if (target_depth_ < -max_depth_) target_depth_ = -max_depth_;
     }
+    else
+    {
+      // hold current depth
+      target_depth_ = current_depth_;
+    }
+
   }
   else
   {
@@ -357,7 +363,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     {
       // float on the surface
       // 6.0 will fully submerged
-      mapped_total_thrust = 4.0;
+      mapped_total_thrust = 2.0;
     }
 
     // workaround: pad non-zero small value for base thrust (base_throttle) to avoid the

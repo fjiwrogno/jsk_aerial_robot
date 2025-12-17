@@ -6,12 +6,12 @@ controller:
   underactuate: true
   joy_yaw_rate: 0.05
 
-  depth_p_gain: 1.0
+  depth_p_gain: 10.0
   depth_i_gain: 0.0
   depth_d_gain: 0.0
   depth_hover_thrust: 2.0 #thrust for submerging in the water
   max_depth: 0.3 # max depth for depth control (meters)
-  max_dive_rate: 0.05 # max dive rate (m/s)
+  max_dive_rate: 1.0 # max dive rate (m/s)
   
   xy:
     p_gain: 3.5
@@ -55,9 +55,9 @@ controller:
 
   yaw:
   # 增大p: 10.0+1.0
-    p_gain: 3.0 #7.0
+    p_gain: 30.0 #7.0
     i_gain: 0.0 # 1.0
-    d_gain: 0.0 # 4.0, 6.0 #should be smaller than p_gain to avoid oscillation
+    d_gain: 0.1 # 4.0, 6.0 #should be smaller than p_gain to avoid oscillation
     limit_err_p: 0.4
     limit_sum: 100.0
     limit_p: 100.0
