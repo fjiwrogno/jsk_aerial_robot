@@ -4,13 +4,13 @@ controller:
   wrench_allocation_matrix_pub_interval: 0.1
   gimbal_calc_in_fc : true
   underactuate: true
-  joy_yaw_rate: 0.05
+  joy_yaw_rate: 0.10 #0.05
 
-  depth_p_gain: 10.0
+  depth_p_gain: 20.0
   depth_i_gain: 0.0
   depth_d_gain: 0.0
-  depth_hover_thrust: 2.0 #thrust for submerging in the water
-  max_depth: 0.3 # max depth for depth control (meters)
+  depth_hover_thrust: 6.0 #thrust for submerging in the water
+  max_depth: 0.6 # max depth for depth control (meters),0.6
   max_dive_rate: 1.0 # max dive rate (m/s)
   
   xy:
@@ -34,9 +34,9 @@ controller:
     force_landing_descending_rate: -0.5
 
   roll:
-    p_gain: 50.0 #36
+    p_gain: 10.0 #36
     i_gain: 0.0
-    d_gain: 8.0
+    d_gain: 1.0
     limit_sum: 100.0
     limit_p: 100.0
     limit_i: 20.0

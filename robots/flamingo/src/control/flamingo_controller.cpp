@@ -363,7 +363,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     {
       // float on the surface
       // 6.0 will fully submerged
-      mapped_total_thrust = 2.0;
+      mapped_total_thrust = 3.0;
     }
 
     // workaround: pad non-zero small value for base thrust (base_throttle) to avoid the
@@ -396,7 +396,9 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     } 
     else
     {
-      target_pitch_ = current_rpy[1];
+      // target_pitch_ = current_rpy[1];
+      target_pitch_ = 0.0;
+
     }
 
     // 2. Left Stick Horizontal -> Roll Angle
@@ -410,8 +412,8 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     }
     else
     {
-      target_roll_ = current_rpy[0];
-      // target_roll_ = 0.0;
+      // target_roll_ = current_rpy[0];
+      target_roll_ = 0.0;
 
     }
     
