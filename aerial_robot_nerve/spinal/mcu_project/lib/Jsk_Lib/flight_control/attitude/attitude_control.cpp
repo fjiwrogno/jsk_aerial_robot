@@ -1213,14 +1213,14 @@ void AttitudeController::pwmConversion()
           if(start_control_flag_)
           {
           #if GX_PWM_SERVO  
-            if (target_gimbal_angles_[i] < -0.5 * M_PI)
+            if (target_gimbal_angles_[i] < -0.4 * M_PI)
             {
-              target_gimbal_angles_[i] = -0.5 * M_PI;
+              target_gimbal_angles_[i] = -0.4 * M_PI;
             }
 
-            if (target_gimbal_angles_[i] > 0.5 * M_PI)
+            if (target_gimbal_angles_[i] > 0.4 * M_PI)
             {
-              target_gimbal_angles_[i] = 0.5 * M_PI;
+              target_gimbal_angles_[i] = 0.4 * M_PI;
             }
           #endif           
             gimbal_map[i] = target_gimbal_angles_[i];
