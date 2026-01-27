@@ -36,7 +36,7 @@
    <rosparam file="$(arg config_dir)/RobotModel.yaml" command="load" />
 
    ###########  Motor Config  ###########
-   <rosparam file="$(arg config_dir)/MotorInfo.yaml" command="load" />
+   <rosparam file="$(arg config_dir)/MotorInfo_water.yaml" command="load" />
 
    ###########  Servo Config  ###########
    <rosparam file="$(arg config_dir)/Servo.yaml" command="load"/>
@@ -45,7 +45,7 @@
    <rosparam file="$(arg config_dir)/Battery.yaml" command="load" />
 
    ###########  Control  ###########
-   <rosparam file="$(arg config_dir)/FlamingoControl.yaml" command="load" unless="$(arg simulation)"/>
+   <rosparam file="$(arg config_dir)/FlamingoControl_water.yaml" command="load" unless="$(arg simulation)"/>
    <rosparam file="$(arg config_dir)/FlamingoControl_sim.yaml" command="load" if="$(arg simulation)"/>
 
    ###########  Sensor Fusion  ###########
