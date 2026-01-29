@@ -35,9 +35,9 @@ controller:
     limit_d: 40.0
   
   pitch:
-    p_gain: 20.0
+    p_gain: 24.0
     i_gain: 1.0
-    d_gain: 8.0
+    d_gain: 12.0
     limit_sum: 30.0
     limit_p: 30.0
     limit_i: 30.0
