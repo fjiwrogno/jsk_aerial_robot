@@ -13,7 +13,7 @@
   <xacro:property name="air_min_force" value="1.0" /> <!-- [N] -->
   <!-- aquatic motor -->
   <xacro:property name="water_max_force" value="18.0" /> <!-- [N] -->
-  <xacro:property name="water_min_force" va0.0188lue="1.0" /> <!-- [N] -->
+  <xacro:property name="water_min_force" value="1.0" /> <!-- [N] -->
 
   <!-- friction -->
   <xacro:macro name="friction" params="self">
