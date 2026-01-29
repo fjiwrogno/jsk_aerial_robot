@@ -27,7 +27,7 @@
       </inertial>
       <visual>
         <geometry>
-          <mesh filename="package://flamingo/urdf/mesh/base_link.dae" scale="1 1 1"/>
+          <mesh filename="package://flamingo/urdf/mesh/base_link_v2.dae" scale="1 1 1"/>
           <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
         </geometry>
       </visual>
@@ -161,9 +161,9 @@
             ixy="-0.00000035" ixz="0.00008225" iyz="-0.00000564"/>
       </inertial>
       <visual>
-        <origin xyz="0.036 0.0 0.064" rpy="0 0 ${-pi/2}"/>
+        <origin xyz="0.036 0.0 0.064" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://flamingo/urdf/mesh/thrust_unit_forward.dae"/>
+          <mesh filename="package://flamingo/urdf/mesh/thrust_unit_v2.dae"/>
         </geometry>
       </visual>
       <collision>
