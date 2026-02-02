@@ -18,22 +18,23 @@
     #### base link ####
     <link name="base_link">
       <inertial>
-        <origin xyz="-0.0609995 -0.0010416 -0.1022045" rpy="0 0 0"/>
-        <mass value="2.9380827"/>
+      <!-- define the pos of cog under the root frame -->
+        <origin xyz="-0.1320295 0.0020275 -0.1049664" rpy="0 0 0"/>
+        <mass value="2.7914918"/>
         <inertia
-            ixx="0.0134198" iyy="0.0930810" izz="0.0542620"
-            ixy=" 0.0001751" ixz="0.0184499" iyz="0.0003133"/>
+            ixx="0.0151463" iyy="0.0558584" izz="0.0469160"
+            ixy="0.0000036" ixz="-0.0002407" iyz="0.0000023"/>
       </inertial>
       <visual>
         <geometry>
-          <mesh filename="package://flamingo/urdf/mesh/base_link.dae" scale="1 1 1"/>
+          <mesh filename="package://flamingo/urdf/mesh/base_link_v2.dae" scale="1 1 1"/>
           <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
         </geometry>
       </visual>
       <collision>
-        <origin xyz="-0.07191 0.0069 -0.08959" rpy="0 0 0"/>
+        <origin xyz="-0.13009 0.0059 -0.08959" rpy="0 0 0"/>
         <geometry>
-          <box size="0.4641 0.158 0.31219"/>
+          <box size="0.4671 0.168 0.33266"/>
         </geometry>
       </collision>
     </link>
@@ -82,7 +83,7 @@
     <joint name="fc_joint" type="fixed">
       <parent link="base_link"/>
       <child link="fc"/>
-      <origin xyz="-0.07191 0.0069 -0.08959" rpy="0 0 ${-0.5 * pi}"/>
+      <origin xyz="-0.101 0.023 -0.09983" rpy="0 0 ${-0.5 * pi}"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -91,14 +92,14 @@
     <joint name="rotor_coord_joint${child1}" type="fixed">
       <parent link="base_link" />
       <child link="rotor_arm${child1}"/>
-      <origin xyz="0.16605 -0.0011 0.045" rpy="0 0 0"/>
+      <origin xyz="0.09665 0.0021 0.045" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="rotor_coord_joint${child2}" type="fixed">
       <parent link="base_link"/>
       <child link="rotor_arm${child2}"/>
-      <origin xyz="-0.29805 -0.0011 0.045" rpy="0 0 ${pi}"/>
+      <origin xyz="-0.36955 -0.0021 0.045" rpy="0 0 ${pi}"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -153,16 +154,16 @@
     <link name="gimbal_link${self}">
     <!-- this link's cordinate is the actual gimbal -->
       <inertial>
-        <origin xyz="0.0328427 -0.0000782 -0.0167858" rpy="0 0 0"/>
-        <mass value="0.27076"/>
+        <origin xyz="0.04005 -0.00004 -0.01307" rpy="0 0 0"/>
+        <mass value="0.29576"/>
         <inertia
-            ixx="0.0007257" iyy="0.0007451" izz="0.0000987"
-            ixy="0.0000007" ixz="-0.0000189" iyz="-0.0000001"/>
+            ixx="0.00095359" iyy="0.00099897" izz="0.00045662"
+            ixy="-0.00000035" ixz="0.00008225" iyz="-0.00000564"/>
       </inertial>
       <visual>
-        <origin xyz="0.036 0.0 0.064" rpy="0 0 ${-pi/2}"/>
+        <origin xyz="0.036 0.0 0.064" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://flamingo/urdf/mesh/thrust_unit_forward.dae"/>
+          <mesh filename="package://flamingo/urdf/mesh/thrust_unit_v2.dae"/>
         </geometry>
       </visual>
       <collision>
@@ -215,7 +216,7 @@
     <joint name="rotor_parent_link_joint${self}" type="fixed">
       <parent link="gimbal_link${self}"/>
       <child link="rotor_parent${self}"/>
-      <origin xyz="0.036 0 0" rpy="0 0 0"/>
+      <origin xyz="0.0369 0 0" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -224,7 +225,7 @@
       <limit effort="100.0" lower="${water_min_force}" upper="${water_max_force}" velocity="0.5"/>
       <parent link="rotor_parent${self}"/>
       <child link="thrust${self}"/>
-      <origin rpy="0 0 0" xyz="0 0 -0.05"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <axis xyz="0 0 ${rotor_direction}"/>
     </joint>
 
