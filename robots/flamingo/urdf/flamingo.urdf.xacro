@@ -19,11 +19,11 @@
     <link name="base_link">
       <inertial>
       <!-- define the pos of cog under the root frame -->
-        <origin xyz="-0.1320295 0.0020275 -0.1049664" rpy="0 0 0"/>
-        <mass value="2.7914918"/>
+        <origin xyz="-0.1325765 0.0020237 -0.1113353" rpy="0 0 0"/>
+        <mass value="3.1799818"/>
         <inertia
-            ixx="0.0151463" iyy="0.0558584" izz="0.0469160"
-            ixy="0.0000036" ixz="-0.0002407" iyz="0.0000023"/>
+            ixx="0.0160903" iyy="0.0573578" izz="0.0476113"
+            ixy="0.0000037" ixz="-0.0001701" iyz="0.0000028"/>
       </inertial>
       <visual>
         <geometry>
