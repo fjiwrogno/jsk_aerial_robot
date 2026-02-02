@@ -72,6 +72,20 @@ private:
   double max_depth_ = 0.0; // maximum depth for depth control
   double max_dive_rate_ = 0.05; // maximum dive rate for depth control
 
+  // Speed Modes
+  enum SpeedMode {
+    SPEED_LOW = 0,      // Precsion mode
+    SPEED_MEDIUM = 1,   // Cruise mode
+    SPEED_HIGH = 2      // Sport mode
+  };
+  SpeedMode current_speed_mode_ = SPEED_LOW;
+  bool speed_mode_button_pressed_ = false;
+
+  // Max pitch angles for each mode (in radians)
+  const double PITCH_LIMIT_LOW = 0.15;    // ~8.6 deg
+  const double PITCH_LIMIT_MED = 0.26;    // ~15 deg
+  const double PITCH_LIMIT_HIGH = 0.45;   // ~25 deg 
+
   void rosParamInit();
   bool update() override;
   virtual void reset() override;

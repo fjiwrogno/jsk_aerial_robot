@@ -257,7 +257,18 @@ double FlamingoController::depthControlLoop()
     const double pid_depth_item =
       depth_p_gain_ * err_p + depth_i_gain_ * depth_err_i_ + depth_d_gain_ * filtered_depth_err_d_;
 
-    total_thrust = depth_hover_thrust_ + pid_depth_item;
+    tf::Vector3 current_rpy = estimator_->getEuler(Frame::COG, estimate_mode_);
+    double current_pitch = current_rpy.y();
+    double current_roll = current_rpy.x();
+
+    double base_hover_thrust = depth_hover_thrust_ + pid_depth_item;
+
+    // when roll changes, the vertical thrust will be smaller at that point
+    // when pitch changes, 
+    double tilt_factor = 1.0 / std::max(0.7, cos(current_pitch) * cos(current_roll));
+
+    total_thrust = base_hover_thrust * tilt_factor;
+
     total_thrust = std::max(0.0, std::min(10.0, total_thrust));
   }
   
@@ -331,6 +342,27 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
       ROS_ERROR("DEPTH CONTROL IS OFF");
     }
   }
+  // speed mode switch
+  if (joy_cmd.buttons[JOY_BUTTON_CROSS_LEFT] && joy_cmd.buttons[JOY_BUTTON_CROSS_RIGHT])
+  {
+    if (!speed_mode_button_pressed_) 
+    {
+      current_speed_mode_ = static_cast<SpeedMode>((current_speed_mode_ + 1) % 3);
+      speed_mode_button_pressed_ = true;
+      
+      const char* mode_str = "";
+      switch(current_speed_mode_) {
+        case SPEED_LOW:    mode_str = "LOW (Max 8 deg)"; break;
+        case SPEED_MEDIUM: mode_str = "MEDIUM (Max 15 deg)"; break;
+        case SPEED_HIGH:   mode_str = "HIGH (Max 25 deg)"; break;
+      }
+      ROS_WARN("[Flamingo] Speed Mode: %s", mode_str);
+    }
+  }
+  else
+  {
+    speed_mode_button_pressed_ = false;
+  }
 
   if (if_dive_)
   {
@@ -388,48 +420,46 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 
   if(!if_stablize_)
   {
-
-    // 2. Left Stick Vertical -> Pitch Angle
-    // JOY_AXIS_STICK_LEFT_UPWARDS: Up is +1.0, Down is -1.0
-    float max_pitch_angle = 0.36; // ~15 degrees
-    if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS]) > joy_stick_deadzone_)
-    {
-      target_pitch_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] * max_pitch_angle;
-      // keep the current yaw when pitch/roll control is activated to enable straight-line motion
-      yaw_control_flag = true;
-
-    } 
-    else
-    {
-      // target_pitch_ = current_rpy[1];
-      target_pitch_ = 0.0;
-
+    double current_max_pitch = PITCH_LIMIT_LOW;
+    switch(current_speed_mode_) {
+      case SPEED_LOW:    current_max_pitch = PITCH_LIMIT_LOW; break;
+      case SPEED_MEDIUM: current_max_pitch = PITCH_LIMIT_MED; break;
+      case SPEED_HIGH:   current_max_pitch = PITCH_LIMIT_HIGH; break;
     }
 
-    // 2. Left Stick Horizontal -> Roll Angle
-    // JOY_AXIS_STICK_LEFT_LEFTWARDS: Left is +1.0, Right is -1.0
+    double raw_target_pitch = 0.0;
+    if (joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] > joy_stick_deadzone_) 
+    {
+      raw_target_pitch = -1.0 * current_max_pitch;
+    }
+    else if (joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] < -joy_stick_deadzone_)
+    {
+      raw_target_pitch = current_max_pitch;
+    }
+    else
+    {
+      raw_target_pitch = 0.0;
+    } 
+  
+    target_pitch_ = raw_target_pitch;
+    
+    double raw_target_roll = 0.0;
     float max_roll_angle = 0.31; // ~30 degrees
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS]) > joy_stick_deadzone_)
     {
-      target_roll_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle;
-      // keep the current yaw when pitch/roll control is activated to enable straight-line motion
-      // yaw_control_flag = true;
+      raw_target_roll = -1.0 * joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle;
     }
-    else
-    {
-      // target_roll_ = current_rpy[0];
-      target_roll_ = 0.0;
 
-    }
+    target_roll_ = raw_target_roll;
     
   }
   else
   {
 
-    float max_pitch_angle = 0.26; // ~15 degrees
+    float current_max_pitch = 0.26; // ~15 degrees
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS]) > joy_stick_deadzone_)
     {
-      target_pitch_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] * max_pitch_angle;
+      target_pitch_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] * current_max_pitch;
     } 
     else
     {
