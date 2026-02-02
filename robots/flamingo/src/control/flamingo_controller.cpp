@@ -42,6 +42,7 @@ void FlamingoController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   debug_rpy_pub_ = nh_.advertise<geometry_msgs::Vector3Stamped>("debug/current_rpy", 1);
 
   desire_coord_pub_ = nh_.advertise<spinal::DesireCoord>("desire_coordinate", 1);
+  target_depth_pub_ = nh_.advertise<std_msgs::Float32>("debug/target_depth", 1);
   
   joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 1, &FlamingoController::joyCallback, this, ros::TransportHints().tcpNoDelay());
   depth_sub_ = nh_.subscribe<geometry_msgs::PointStamped>("depth_sensor_node/depth", 1, &FlamingoController::depthCallback, this, ros::TransportHints().tcpNoDelay());
@@ -292,6 +293,10 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   rpy_msg.vector.y = target_yaw_;
   rpy_msg.vector.z = omega.z();
   debug_rpy_pub_.publish(rpy_msg);
+  // Publish target depth for debugging and analysis
+  std_msgs::Float32 target_depth_msg;
+  target_depth_msg.data = target_depth_;
+  target_depth_pub_.publish(target_depth_msg);
   double mapped_total_thrust = depth_hover_thrust_;
 
 
