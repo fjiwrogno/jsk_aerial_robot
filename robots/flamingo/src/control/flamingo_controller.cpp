@@ -33,6 +33,14 @@ void FlamingoController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   torque_allocation_matrix_inv_pub_ =
       nh_.advertise<spinal::TorqueAllocationMatrixInv>("torque_allocation_matrix_inv", 1);
   gimbal_dof_pub_ = nh_.advertise<std_msgs::UInt8>("gimbal_dof", 1);
+
+  // Direct joystick control (Mode 2 American hand)
+  joy_throttle_cmd_ = 0.0;
+  joy_pitch_cmd_ = 0.0;
+  joy_roll_cmd_ = 0.0;
+  joy_yaw_val_cmd_ = 0.0;
+  direct_yaw_target_ = 0.0;
+  joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 1, &FlamingoController::joyCallback, this);
 }
 
 void FlamingoController::reset()
@@ -49,6 +57,14 @@ void FlamingoController::rosParamInit()
   getParam<bool>(control_nh, "gimbal_calc_in_fc", gimbal_calc_in_fc_, true);
   getParam<bool>(control_nh, "hovering_approximate", hovering_approximate_, false);
   getParam<bool>(control_nh, "underactuate", underactuate_, false);
+
+  // Direct joystick control mode params (Mode 2 American hand)
+  getParam<double>(control_nh, "joy_yaw_rate", joy_yaw_rate_, 0.01);
+  getParam<bool>(control_nh, "direct_joystick_mode", direct_joystick_mode_, false);
+  getParam<double>(control_nh, "direct_thrust_bias", direct_thrust_bias_, 25.0);      // hover thrust per rotor (N)
+  getParam<double>(control_nh, "direct_thrust_scale", direct_thrust_scale_, 8.0);    // throttle range (N)
+  getParam<double>(control_nh, "direct_pitch_max", direct_pitch_max_, 0.15);         // max pitch ~8.6 deg
+  getParam<double>(control_nh, "direct_roll_max", direct_roll_max_, 0.10);           // max roll ~5.7 deg
 }
 
 bool FlamingoController::update()
@@ -62,6 +78,67 @@ bool FlamingoController::update()
   }
 
   return PoseLinearController::update();
+}
+
+void FlamingoController::joyCallback(const sensor_msgs::JoyConstPtr& msg)
+{
+  sensor_msgs::Joy joy_cmd = joyParse(*msg);
+  if (joy_cmd.axes.size() == 0) return;
+
+  const double deadzone = 0.15;
+
+  // Mode 2 (American hand) mapping:
+  //   Left stick vertical   → throttle
+  //   Left stick horizontal → yaw rate
+  //   Right stick vertical  → pitch
+  //   Right stick horizontal→ roll
+  double raw_throttle = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS];
+  joy_throttle_cmd_ = (fabs(raw_throttle) > deadzone) ? raw_throttle : 0.0;
+
+  double raw_yaw = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS];
+  joy_yaw_val_cmd_ = (fabs(raw_yaw) > deadzone) ? raw_yaw : 0.0;
+
+  double raw_pitch = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS];
+  joy_pitch_cmd_ = (fabs(raw_pitch) > deadzone) ? raw_pitch : 0.0;
+
+  double raw_roll = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS];
+  joy_roll_cmd_ = (fabs(raw_roll) > deadzone) ? raw_roll : 0.0;
+}
+
+void FlamingoController::directJoystickControl()
+{
+  double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+
+  if(joy_yaw_val_cmd_ != 0)
+    {
+      double target_yaw_ = current_yaw + joy_yaw_val_cmd_ * joy_yaw_rate_;
+      navigator_->setTargetYaw(angles::normalize_angle(target_yaw_));
+      navigator_->setTargetOmegaZ(joy_yaw_val_cmd_ * joy_yaw_rate_);
+
+      yaw_control_flag_ = true;
+    }
+  else
+    {
+      if(yaw_control_flag_)
+        {
+          navigator_->setTargetYaw(current_yaw);
+          navigator_->setTargetOmegaZ(0);
+          yaw_control_flag_ = false;
+        }
+    }
+
+  // === 2) Thrust from joystick (override Z PID) ===
+  double thrust_per_rotor = direct_thrust_bias_ + joy_throttle_cmd_ * direct_thrust_scale_;
+  thrust_per_rotor = std::max(thrust_per_rotor, 0.0); 
+
+  for (int i = 0; i < motor_num_; i++)
+  {
+    target_base_thrust_.at(rotor_coef_ * i) = 0.0;                   // lateral thrust
+    target_base_thrust_.at(rotor_coef_ * i + 1) = thrust_per_rotor;  // vertical thrust
+  }
+
+  target_roll_ = joy_roll_cmd_ * direct_roll_max_;
+  target_pitch_ = joy_pitch_cmd_ * direct_pitch_max_;
 }
 
 void FlamingoController::controlCore()
@@ -137,6 +214,9 @@ void FlamingoController::controlCore()
   full_q_mat.bottomRows(3) = inertia_inv * full_q_mat.bottomRows(3);
 
   /* calculate masked rotation matrix */
+  // so from here, we get the important allocation matrices 
+  // maybe we can direclt add the aquatic one here to enable coxial rotor configuration?
+  // it's better to have a simulation first, but for my case maybe just try
   std::vector<KDL::Rotation> thrust_coords_rot = flamingo_robot_model_->getThrustCoordRot<KDL::Rotation>();
   std::vector<Eigen::MatrixXd> masked_rot;
   for (int i = 0; i < motor_num_; i++)
@@ -251,6 +331,11 @@ void FlamingoController::controlCore()
       target_gimbal_angles_.at(2 * i + 1) = gimbal_pitch;
     }
     last_col += rotor_coef_;
+  }
+
+  if (direct_joystick_mode_)
+  {
+    directJoystickControl();
   }
 }
 

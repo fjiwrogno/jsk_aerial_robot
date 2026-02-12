@@ -67,7 +67,7 @@ void BaseNavigator::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   joy_udp_ = false;
 #endif
   if(joy_udp_) joy_transport_hints = ros::TransportHints().udp();
-  joy_stick_sub_ = nh_.subscribe("joy", 1, &BaseNavigator::joyStickControl, this, joy_transport_hints);
+  // joy_stick_sub_ = nh_.subscribe("joy", 1, &BaseNavigator::joyStickControl, this, joy_transport_hints);
 
   stop_teleop_sub_ = nh_.subscribe("stop_teleop", 1, &BaseNavigator::stopTeleopCallback, this);
 

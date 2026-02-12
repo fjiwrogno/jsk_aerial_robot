@@ -5,6 +5,13 @@ controller:
   gimbal_calc_in_fc : true
   underactuate: true
 
+  direct_joystick_mode: false
+  direct_thrust_bias: 15.0
+  direct_thrust_scale: 15.0
+  direct_pitch_max: 0.20
+  direct_roll_max: 0.20
+  joy_yaw_rate: 0.01 
+
   xy:
     p_gain: 3.5
     i_gain: 0.2
