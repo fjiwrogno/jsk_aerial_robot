@@ -83,7 +83,7 @@
     <joint name="fc_joint" type="fixed">
       <parent link="base_link"/>
       <child link="fc"/>
-      <origin xyz="-0.101 0.023 -0.09983" rpy="0 0 ${-0.5 * pi}"/>
+      <origin xyz="-0.151 0.023 -0.09983" rpy="0 0 ${-0.5 * pi}"/>
       <axis xyz="0 0 1"/>
     </joint>
 
