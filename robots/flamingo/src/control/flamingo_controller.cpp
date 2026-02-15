@@ -40,6 +40,7 @@ void FlamingoController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   joy_roll_cmd_ = 0.0;
   joy_yaw_val_cmd_ = 0.0;
   direct_yaw_target_ = 0.0;
+  yaw_control_flag_ = false;
   joy_sub_ = nh_.subscribe<sensor_msgs::Joy>("joy", 1, &FlamingoController::joyCallback, this);
 }
 
@@ -61,10 +62,19 @@ void FlamingoController::rosParamInit()
   // Direct joystick control mode params (Mode 2 American hand)
   getParam<double>(control_nh, "joy_yaw_rate", joy_yaw_rate_, 0.01);
   getParam<bool>(control_nh, "direct_joystick_mode", direct_joystick_mode_, false);
-  getParam<double>(control_nh, "direct_thrust_bias", direct_thrust_bias_, 25.0);      // hover thrust per rotor (N)
-  getParam<double>(control_nh, "direct_thrust_scale", direct_thrust_scale_, 8.0);    // throttle range (N)
-  getParam<double>(control_nh, "direct_pitch_max", direct_pitch_max_, 0.15);         // max pitch ~8.6 deg
-  getParam<double>(control_nh, "direct_roll_max", direct_roll_max_, 0.10);           // max roll ~5.7 deg
+
+  // Betaflight-style throttle curve parameters
+  getParam<double>(control_nh, "throttle_min_thrust", throttle_min_thrust_, 0.0);     // thrust per rotor at stick bottom (N)
+  getParam<double>(control_nh, "throttle_max_thrust", throttle_max_thrust_, 28.0);    // thrust per rotor at full stick (N)
+  getParam<double>(control_nh, "throttle_mid", throttle_mid_, 0.89);                  // hover point (25/28≈0.89)
+  getParam<double>(control_nh, "throttle_expo", throttle_expo_, 0.5);                 // expo factor (0=linear, 1=max expo)
+  getParam<double>(control_nh, "throttle_deadzone_bottom", throttle_deadzone_bottom_, 0.1); // bottom deadzone fraction
+  getParam<double>(control_nh, "motor_max_thrust", motor_max_thrust_, 28.0);          // hard clamp per rotor (N)
+
+  // Attitude stick parameters
+  getParam<double>(control_nh, "direct_pitch_max", direct_pitch_max_, 0.20);          // max pitch ~11.5 deg
+  getParam<double>(control_nh, "direct_roll_max", direct_roll_max_, 0.20);            // max roll ~11.5 deg
+  getParam<double>(control_nh, "stick_expo", stick_expo_, 0.3);                       // expo for roll/pitch sticks
 }
 
 bool FlamingoController::update()
@@ -85,15 +95,25 @@ void FlamingoController::joyCallback(const sensor_msgs::JoyConstPtr& msg)
   sensor_msgs::Joy joy_cmd = joyParse(*msg);
   if (joy_cmd.axes.size() == 0) return;
 
-  const double deadzone = 0.15;
+  const double deadzone = 0.05;
 
   // Mode 2 (American hand) mapping:
-  //   Left stick vertical   → throttle
+  //   Left stick vertical   → throttle  (remap to 0..1)
   //   Left stick horizontal → yaw rate
   //   Right stick vertical  → pitch
   //   Right stick horizontal→ roll
+
+  // Throttle: use only upper half of spring-centered stick [0, 1].
+  // Stick at rest (center) = 0, push up = 0→1. Below center is ignored (0 thrust).
   double raw_throttle = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS];
-  joy_throttle_cmd_ = (fabs(raw_throttle) > deadzone) ? raw_throttle : 0.0;
+  joy_throttle_cmd_ = std::max(0.0, raw_throttle); 
+  joy_throttle_cmd_ = std::min(1.0, joy_throttle_cmd_);
+
+  // Apply small deadzone near center so stick rest noise doesn't produce thrust
+  if (joy_throttle_cmd_ < throttle_deadzone_bottom_)
+    joy_throttle_cmd_ = 0.0;
+  else
+    joy_throttle_cmd_ = (joy_throttle_cmd_ - throttle_deadzone_bottom_) / (1.0 - throttle_deadzone_bottom_);
 
   double raw_yaw = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS];
   joy_yaw_val_cmd_ = (fabs(raw_yaw) > deadzone) ? raw_yaw : 0.0;
@@ -127,9 +147,13 @@ void FlamingoController::directJoystickControl()
         }
     }
 
-  // === 2) Thrust from joystick (override Z PID) ===
-  double thrust_per_rotor = direct_thrust_bias_ + joy_throttle_cmd_ * direct_thrust_scale_;
-  thrust_per_rotor = std::max(thrust_per_rotor, 0.0); 
+  // === 2) Thrust from joystick with Betaflight-style expo curve ===
+  // joy_throttle_cmd_ is [0, 1] (0 = stick center/rest, 1 = stick top)
+  double curved_throttle = applyThrottleCurve(joy_throttle_cmd_);
+  double thrust_per_rotor = throttle_min_thrust_ + curved_throttle * (throttle_max_thrust_ - throttle_min_thrust_);
+
+  // Hard clamp: never exceed motor physical limit (leave headroom for attitude control)
+  thrust_per_rotor = std::max(0.0, std::min(thrust_per_rotor, motor_max_thrust_));
 
   for (int i = 0; i < motor_num_; i++)
   {
@@ -137,8 +161,54 @@ void FlamingoController::directJoystickControl()
     target_base_thrust_.at(rotor_coef_ * i + 1) = thrust_per_rotor;  // vertical thrust
   }
 
-  target_roll_ = joy_roll_cmd_ * direct_roll_max_;
-  target_pitch_ = joy_pitch_cmd_ * direct_pitch_max_;
+  // === 3) Roll/Pitch with expo for finer control ===
+  target_roll_ = applyStickExpo(joy_roll_cmd_) * direct_roll_max_;
+  target_pitch_ = applyStickExpo(joy_pitch_cmd_) * direct_pitch_max_;
+}
+
+double FlamingoController::applyThrottleCurve(double input)
+{
+  // Betaflight-style throttle expo with mid point.
+  // input: [0, 1], output: [0, 1]
+  // thr_mid: stick position that maps to the curve center (sensitivity inflection)
+  // thr_expo: 0 = linear, 1 = maximum expo (flat near mid)
+  //
+  // Formula (from Betaflight src/main/fc/rc_controls.c):
+  //   t = input - thr_mid
+  //   output = thr_mid + t * (1 + expo * (t*t / (thr_mid*thr_mid) - 1))
+  //   (normalized so that the curve passes smoothly through the mid point)
+  //
+  // This gives reduced sensitivity around thr_mid (fine hover control)
+  // and increased sensitivity at the extremes.
+
+  input = std::max(0.0, std::min(1.0, input));
+  double expo = std::max(0.0, std::min(1.0, throttle_expo_));
+  double mid = std::max(0.01, std::min(0.99, throttle_mid_));
+
+  if (expo < 0.001)
+    return input;  // linear if no expo
+
+  double t = input - mid;
+  // Betaflight scales the quadratic term by max(mid, 1-mid)^2 for normalization
+  double range = (t > 0) ? (1.0 - mid) : mid;
+  double t_normalized = t / range;  // normalize to [-1, 1] within each half
+  double output = mid + range * t_normalized * (1.0 + expo * (t_normalized * t_normalized - 1.0));
+
+  return std::max(0.0, std::min(1.0, output));
+}
+
+double FlamingoController::applyStickExpo(double input)
+{
+  // Standard RC expo for centered sticks (roll/pitch/yaw).
+  // input: [-1, 1], output: [-1, 1]
+  // Formula (Betaflight): output = input * (1 - expo + expo * input^2)
+  // This reduces sensitivity near center while preserving full deflection range.
+
+  double expo = std::max(0.0, std::min(1.0, stick_expo_));
+  if (expo < 0.001)
+    return input;
+
+  return input * (1.0 - expo + expo * input * input);
 }
 
 void FlamingoController::controlCore()

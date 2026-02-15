@@ -5,12 +5,22 @@ controller:
   gimbal_calc_in_fc : true
   underactuate: true
 
-  direct_joystick_mode: false
-  direct_thrust_bias: 15.0
-  direct_thrust_scale: 15.0
-  direct_pitch_max: 0.20
-  direct_roll_max: 0.20
-  joy_yaw_rate: 0.01 
+  direct_joystick_mode: false #joystick control without mocap
+  joy_yaw_rate: 0.01
+
+  # Stick at rest (center) = 0 thrust, push up to fly.
+  # Non-linear expo for fine hover control.
+  # Hover = 25N/rotor, motor max ~31N@25.2V / ~26.5N@22.2V
+  throttle_min_thrust: 0.0     # thrust per rotor at stick rest (N)
+  throttle_max_thrust: 28.0    # thrust per rotor at full stick (N), conservative for low-voltage safety
+  throttle_mid: 0.89           # hover point on stick (25/28≈0.89), expo flattens here
+  throttle_expo: 0.5           # strong expo: very flat near hover for fine control
+  throttle_deadzone_bottom: 0.1  # bottom deadzone fraction (stick below this = 0 thrust)
+  motor_max_thrust: 28.0       # hard clamp per rotor (N), must be < motor physical max
+  # Attitude stick parameters
+  direct_pitch_max: 0.20       # max pitch angle (rad), ~11.5 deg
+  direct_roll_max: 0.20        # max roll angle (rad), ~11.5 deg
+  stick_expo: 0.3              # expo for roll/pitch sticks (finer control near center)
 
   xy:
     p_gain: 3.5

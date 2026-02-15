@@ -56,20 +56,33 @@ private:
   //   Right stick: vertical = pitch,    horizontal = roll
   bool direct_joystick_mode_;
   bool yaw_control_flag_ = false;
-  double direct_thrust_bias_;       // hover thrust per rotor (N)
-  double direct_thrust_scale_;      // throttle stick → thrust offset scale (N)
+
+  // Throttle curve parameters (Betaflight-style)
+  double throttle_min_thrust_;      // thrust per rotor at stick bottom (N), default 0
+  double throttle_max_thrust_;      // thrust per rotor at full stick (N)
+  double throttle_mid_;             // normalized stick position (0-1) where hover sensitivity centers
+  double throttle_expo_;            // exponential factor 0-1 (0 = linear, higher = flatter near mid)
+  double throttle_deadzone_bottom_; // bottom deadzone for throttle (fraction 0-1 of stick range)
+  double motor_max_thrust_;         // hard clamp per rotor (N), must be < motor physical max
+
+  // Attitude stick parameters
   double direct_pitch_max_;         // max pitch angle from joystick (rad)
   double direct_roll_max_;          // max roll angle from joystick (rad)
-  double direct_yaw_rate_max_;      // max yaw rate from joystick (rad/s)
+  double stick_expo_;               // expo for roll/pitch sticks (0 = linear, higher = gentler near center)
+
   ros::Subscriber joy_sub_;
-  double joy_throttle_cmd_;         // normalized [-1, 1] from left stick vertical
+  double joy_throttle_cmd_;         // normalized [0, 1] from left stick vertical (0=bottom, 1=top)
   double joy_pitch_cmd_;            // normalized [-1, 1] from right stick vertical
   double joy_roll_cmd_;             // normalized [-1, 1] from right stick horizontal
-  double joy_yaw_val_cmd_;              // normalized [-1, 1] from left stick horizontal
+  double joy_yaw_val_cmd_;          // normalized [-1, 1] from left stick horizontal
   double joy_yaw_rate_;
   double direct_yaw_target_;        // integrated yaw heading target (rad)
   void joyCallback(const sensor_msgs::JoyConstPtr& msg);
   void directJoystickControl();
+
+  // Betaflight-style curve helpers
+  double applyThrottleCurve(double normalized_input);  // input [0,1] → output [0,1]
+  double applyStickExpo(double input);                 // input [-1,1] → output [-1,1]
 
   void rosParamInit();
   bool update() override;
