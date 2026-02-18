@@ -123,29 +123,39 @@ void FlamingoController::joyCallback(const sensor_msgs::JoyConstPtr& msg)
 
   double raw_roll = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS];
   joy_roll_cmd_ = (fabs(raw_roll) > deadzone) ? raw_roll : 0.0;
+
+  if(joy_cmd.buttons[JOY_BUTTON_STOP] == 1)
+  {
+    navigator_->setNaviState(aerial_robot_navigation::STOP_STATE);
+    /* update the target pos(maybe not necessary) */
+    // navigator_->setTargetXyFromCurrentState();
+    double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+    navigator_->setTargetYaw(current_yaw);
+  }
+
 }
 
 void FlamingoController::directJoystickControl()
 {
   double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
 
-  if(joy_yaw_val_cmd_ != 0)
-    {
-      double target_yaw_ = current_yaw + joy_yaw_val_cmd_ * joy_yaw_rate_;
-      navigator_->setTargetYaw(angles::normalize_angle(target_yaw_));
-      navigator_->setTargetOmegaZ(joy_yaw_val_cmd_ * joy_yaw_rate_);
+  // if(joy_yaw_val_cmd_ != 0)
+  //   {
+  //     double target_yaw_ = current_yaw + joy_yaw_val_cmd_ * joy_yaw_rate_;
+  //     navigator_->setTargetYaw(angles::normalize_angle(target_yaw_));
+  //     navigator_->setTargetOmegaZ(joy_yaw_val_cmd_ * joy_yaw_rate_);
 
-      yaw_control_flag_ = true;
-    }
-  else
-    {
-      if(yaw_control_flag_)
-        {
-          navigator_->setTargetYaw(current_yaw);
-          navigator_->setTargetOmegaZ(0);
-          yaw_control_flag_ = false;
-        }
-    }
+  //     yaw_control_flag_ = true;
+  //   }
+  // else
+  //   {
+  //     if(yaw_control_flag_)
+  //       {
+  //         navigator_->setTargetYaw(current_yaw);
+  //         navigator_->setTargetOmegaZ(0);
+  //         yaw_control_flag_ = false;
+  //       }
+  //   }
 
   // === 2) Thrust from joystick with Betaflight-style expo curve ===
   // joy_throttle_cmd_ is [0, 1] (0 = stick center/rest, 1 = stick top)
@@ -162,8 +172,17 @@ void FlamingoController::directJoystickControl()
   }
 
   // === 3) Roll/Pitch with expo for finer control ===
-  target_roll_ = applyStickExpo(joy_roll_cmd_) * direct_roll_max_;
-  target_pitch_ = applyStickExpo(joy_pitch_cmd_) * direct_pitch_max_;
+  if(joy_throttle_cmd_ == 0.0)
+  {
+    // no attitude control for intial stage before actively increase the throttle to takeoff
+    target_roll_ = estimator_->getEuler(Frame::COG, estimate_mode_).x();
+    target_pitch_ = estimator_->getEuler(Frame::COG, estimate_mode_).y();
+  }
+  else
+  {
+    target_roll_ = applyStickExpo(joy_roll_cmd_) * direct_roll_max_;
+    target_pitch_ = applyStickExpo(joy_pitch_cmd_) * direct_pitch_max_;
+  }
 }
 
 double FlamingoController::applyThrottleCurve(double input)
