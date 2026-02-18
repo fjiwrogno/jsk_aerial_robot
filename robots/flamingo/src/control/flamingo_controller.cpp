@@ -137,44 +137,37 @@ void FlamingoController::joyCallback(const sensor_msgs::JoyConstPtr& msg)
 
 void FlamingoController::directJoystickControl()
 {
-  double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
-
-  // if(joy_yaw_val_cmd_ != 0)
-  //   {
-  //     double target_yaw_ = current_yaw + joy_yaw_val_cmd_ * joy_yaw_rate_;
-  //     navigator_->setTargetYaw(angles::normalize_angle(target_yaw_));
-  //     navigator_->setTargetOmegaZ(joy_yaw_val_cmd_ * joy_yaw_rate_);
-
-  //     yaw_control_flag_ = true;
-  //   }
-  // else
-  //   {
-  //     if(yaw_control_flag_)
-  //       {
-  //         navigator_->setTargetYaw(current_yaw);
-  //         navigator_->setTargetOmegaZ(0);
-  //         yaw_control_flag_ = false;
-  //       }
-  //   }
-
-  // === 2) Thrust from joystick with Betaflight-style expo curve ===
+  // === 1) Thrust from joystick with Betaflight-style expo curve ===
   // joy_throttle_cmd_ is [0, 1] (0 = stick center/rest, 1 = stick top)
   double curved_throttle = applyThrottleCurve(joy_throttle_cmd_);
-  double thrust_per_rotor = throttle_min_thrust_ + curved_throttle * (throttle_max_thrust_ - throttle_min_thrust_);
+  double total_z_thrust = throttle_min_thrust_ + curved_throttle * (throttle_max_thrust_ - throttle_min_thrust_);
+  total_z_thrust = std::max(0.0, std::min(total_z_thrust, motor_max_thrust_ * motor_num_));
 
-  // Hard clamp: never exceed motor physical limit (leave headroom for attitude control)
-  thrust_per_rotor = std::max(0.0, std::min(thrust_per_rotor, motor_max_thrust_));
+  // Convert total z-thrust to target z-acceleration (same unit as PID Z output),
+  // then use the already-computed integrated_map_inv_trans_ to distribute to each rotor,
+  // exactly as the mocap z-control does in controlCore().
+  double mass = flamingo_robot_model_->getMass();
+  double target_acc_z = total_z_thrust / mass;
 
+  Eigen::VectorXd joy_wrench_z(underactuate_ ? 1 : 3);
+  joy_wrench_z(0) = target_acc_z;
+  target_vectoring_f_trans_ = integrated_map_inv_trans_ * joy_wrench_z;
+
+  // Re-fill target_base_thrust_ from the allocation result, identical to the loop in controlCore().
+  int last_col = 0;
   for (int i = 0; i < motor_num_; i++)
   {
-    target_base_thrust_.at(rotor_coef_ * i) = 0.0;                   // lateral thrust
-    target_base_thrust_.at(rotor_coef_ * i + 1) = thrust_per_rotor;  // vertical thrust
+    Eigen::VectorXd f_i = target_vectoring_f_trans_.segment(last_col, rotor_coef_);
+    target_base_thrust_.at(rotor_coef_ * i)     = f_i[0];
+    target_base_thrust_.at(rotor_coef_ * i + 1) = f_i[1];
+    
+    last_col += rotor_coef_;
   }
 
-  // === 3) Roll/Pitch with expo for finer control ===
-  if(joy_throttle_cmd_ == 0.0)
+  // === 2) Roll/Pitch with expo for finer control ===
+  if (joy_throttle_cmd_ == 0.0)
   {
-    // no attitude control for intial stage before actively increase the throttle to takeoff
+    // no attitude control before actively increasing throttle to takeoff
     target_roll_ = estimator_->getEuler(Frame::COG, estimate_mode_).x();
     target_pitch_ = estimator_->getEuler(Frame::COG, estimate_mode_).y();
   }

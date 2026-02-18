@@ -8,28 +8,30 @@ controller:
   direct_joystick_mode: true #joystick control without mocap
   joy_yaw_rate: 0.01
 
-  # Stick at rest (center) = 0 thrust, push up to fly.
-  # Non-linear expo for fine hover control.
-  # Hover = 25N/rotor, motor max ~31N@25.2V / ~26.5N@22.2V
-  throttle_min_thrust: 0.0     # thrust per rotor at stick rest (N)
-  throttle_max_thrust: 28.0    # thrust per rotor at full stick (N), conservative for low-voltage safety
-  throttle_mid: 0.89           # hover point on stick (25/28≈0.89), expo flattens here
-  throttle_expo: 0.5           # strong expo: very flat near hover for fine control
-  throttle_deadzone_bottom: 0.1  # bottom deadzone fraction (stick below this = 0 thrust)
-  motor_max_thrust: 28.0       # hard clamp per rotor (N), must be < motor physical max
+  # Throttle maps stick [0,1] → total vertical Z force (N) → target_acc_z = force / mass.
+  # At hover: pid/z/total ≈ 13 m/s²; throttle_mid=0.89 maps to itself via Betaflight expo,
+  # so: throttle_max_thrust = hover_acc / throttle_mid * total_mass = 13/0.89*3.77 ≈ 55 N
+  # (total_mass = base 3.18 kg + 2×gimbal 0.296 kg ≈ 3.77 kg)
+  # Motor physical max: ~28 N/rotor × 2 rotors = 56 N → use 56 as ceiling.
+  throttle_min_thrust: 0.0     # total Z force at stick rest (N)
+  throttle_max_thrust: 56.0    # total Z force at full stick (N) = 2 rotors × 28 N
+  throttle_mid: 0.89           # hover point on stick; expo curve passes through midpoint unchanged
+  throttle_expo: 0.2           # mild expo: more linear ramp-up below hover, easier takeoff (was 0.5)
+  throttle_deadzone_bottom: 0.05  # small deadzone: feel thrust build earlier (was 0.1)
+  motor_max_thrust: 28.0       # physical max per rotor (N); clamp = motor_max_thrust × motor_num
   # Attitude stick parameters
-  direct_pitch_max: 0.20       # max pitch angle (rad), ~11.5 deg
-  direct_roll_max: 0.20        # max roll angle (rad), ~11.5 deg
+  direct_pitch_max: 0.40       # max pitch angle (rad), ~11.5 deg
+  direct_roll_max: 0.40        # max roll angle (rad), ~11.5 deg
   stick_expo: 0.3              # expo for roll/pitch sticks (finer control near center)
 
   xy:
     p_gain: 3.5
     i_gain: 0.2
     d_gain: 4.0
-    limit_sum: 4.0
-    limit_p: 12.0
-    limit_i: 12.0
-    limit_d: 12.0
+    limit_sum: 20.0
+    limit_p: 20.0
+    limit_i: 20.0
+    limit_d: 20.0
 
   z:
     p_gain: 12.0 #20:
@@ -52,9 +54,9 @@ controller:
     limit_d: 40.0
   
   pitch:
-    p_gain: 34.0 #32
+    p_gain: 32.0
     i_gain: 1.0
-    d_gain: 20.0 #20
+    d_gain: 20.0
     limit_sum: 60.0
     limit_p: 60.0
     limit_i: 60.0
@@ -63,10 +65,10 @@ controller:
     start_rp_integration_height: 0.01
 
   yaw:
-    p_gain: 20.0
+    p_gain: 8.0
     i_gain: 1.0
-    d_gain: 8.0
-    limit_err_p: 0.8
+    d_gain: 4.0
+    limit_err_p: 0.4
     limit_sum: 40.0
     limit_p: 40.0
     limit_i: 40.0
