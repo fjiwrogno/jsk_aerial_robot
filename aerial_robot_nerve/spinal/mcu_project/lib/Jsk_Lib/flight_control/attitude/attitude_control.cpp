@@ -267,10 +267,32 @@ void AttitudeController::pwmsControl(void)
     }
   else
     {
+      // --- Channels 1 & 2: aerial rotors, pwm range[0.5~1.0] ---
+      // --- Channels 3 & 4: auqatic Thrusters ,pwm range[0.0~1.0]---
+
+      // 0.0 ~ 0.5 / 0.5 ~ 1.0 -> currently abnormal -> only half thrust, double direction
+      // double direction driver is kepy but not used here.
+        float pulse_bi = 1000.0f + target_pwm_[i] * 1000.0f;
+
+        if (pulse_bi < 1000.0f)
+        {
+          pulse_bi = 1000.0f;
+        }
+        if (pulse_bi > 2000.0f)
+        {
+          pulse_bi = 2000.0f;
+        }
+
+
+          pwm_htim2_->Instance->CCR3 = (uint32_t)1000.0f + target_pwm_[2] * 1000.0f;
+          pwm_htim2_->Instance->CCR4 = (uint32_t)1000.0f + target_pwm_[3] * 1000.0f;
+
+      // pwm command for single-direction aerial motor
+      //  hardcoding for enable target_pwm1&2 for aerial motor
       pwm_htim1_->Instance->CCR1 = (uint32_t)(target_pwm_[0] * pwm_htim1_->Init.Period);
       pwm_htim1_->Instance->CCR2 = (uint32_t)(target_pwm_[1] * pwm_htim1_->Init.Period);
-      pwm_htim1_->Instance->CCR3 = (uint32_t)(target_pwm_[2] * pwm_htim1_->Init.Period);
-      pwm_htim1_->Instance->CCR4 = (uint32_t)(target_pwm_[3] * pwm_htim1_->Init.Period);
+      // pwm_htim1_->Instance->CCR3 = (uint32_t)(target_pwm_[2] * pwm_htim1_->Init.Period);
+      // pwm_htim1_->Instance->CCR4 = (uint32_t)(target_pwm_[3] * pwm_htim1_->Init.Period);   
     }
 #if !GX_PWM_SERVO
   pwm_htim2_->Instance->CCR1 = (uint32_t)(target_pwm_[4] * pwm_htim2_->Init.Period);
@@ -323,6 +345,7 @@ void AttitudeController::update(void)
       rot.to_euler(&angles.x, &angles.y, &angles.z);
 
       /* failsafe 3: too large tile angle */
+      /// TODO  here when switch to underwater mode, the max tilt angle limit should be wider
       if(!force_landing_flag_  && (fabs(angles[X]) > MAX_TILT_ANGLE || fabs(angles[Y]) > MAX_TILT_ANGLE))
         {
 #ifdef SIMULATION
@@ -574,7 +597,11 @@ void AttitudeController::pwmInfoCallback( const spinal::PwmInfo &info_msg)
 
   force_landing_thrust_ = info_msg.force_landing_thrust;
 
+#if DEBUG_WATER_MODE
+  min_duty_ = 0;
+#else
   min_duty_ = info_msg.min_pwm;
+#endif
   max_duty_ = info_msg.max_pwm;
   pwm_conversion_mode_ = info_msg.pwm_conversion_mode;
 
@@ -724,9 +751,9 @@ void AttitudeController::maxYawGainIndex()
     {
       /* only find the maximum (positive) value */
       /* to avoid identical absolute value */
-      if(thrust_d_gain_[i][Z] > max_yaw_gain)
+      if(fabs(thrust_d_gain_[i][Z]) > max_yaw_gain)
         {
-          max_yaw_gain = thrust_d_gain_[i][Z];
+          max_yaw_gain = fabs(thrust_d_gain_[i][Z]);
           max_yaw_term_index_ = i;
         }
     }
@@ -762,6 +789,13 @@ void AttitudeController::pwmTestCallback(const spinal::PwmTest& pwm_msg)
           {
             pwm_test_value_[motor_index] = pwm_msg.pwms[i];
           }
+        else if ((i > 1) && pwm_msg.pwms[i] >= 0 && pwm_msg.pwms[i] <= 0.92)
+          {
+        // hardcoding to enable pwm test for bi-directional rotor usage
+        // right now only the 3th and 4th rotor(2,3) are enabled
+        // throttle range for bi-directional rotor: 0.5-0:reverse 0.5-1.0:
+            pwm_test_value_[motor_index] = pwm_msg.pwms[i];
+          }
         else
           {
             nh_->logwarn("FAIL SAFE!  Invaild PWM value for motor");
@@ -777,6 +811,13 @@ void AttitudeController::pwmTestCallback(const spinal::PwmTest& pwm_msg)
         if (pwm_msg.pwms[0] >= IDLE_DUTY && pwm_msg.pwms[0] <= MAX_PWM)
           {
             pwm_test_value_[i] = pwm_msg.pwms[0];
+          }
+        else if ((i > 1) && pwm_msg.pwms[0] >= 0 && pwm_msg.pwms[0] <= 0.92)
+          {
+        // hardcoding to enable pwm test for bi-directional rotor usage
+        // right now only the 3th and 4th rotor(2,3) are enabled
+        // throttle range for bi-directional rotor: 0.5-0:reverse 0.5-1.0:
+          pwm_test_value_[i] = pwm_msg.pwms[0];
           }
         else
           {

@@ -33,6 +33,15 @@ private:
   ros::Publisher rpy_gain_pub_;                      // for spinal
   ros::Publisher torque_allocation_matrix_inv_pub_;  // for spinal
   ros::Publisher gimbal_dof_pub_;                    // for spinal
+  ros::Publisher debug_rpy_pub_;                    // for underwater debug
+  ros::Publisher target_depth_pub_;                  // for depth control debug and analysis
+
+
+
+  ros::Subscriber joy_sub_;                   
+  ros::Subscriber depth_sub_;
+
+
 
   boost::shared_ptr<FlamingoRobotModel> flamingo_robot_model_;
   std::vector<float> target_base_thrust_;
@@ -45,6 +54,7 @@ private:
   Eigen::MatrixXd integrated_map_inv_trans_;
   Eigen::MatrixXd integrated_map_inv_rot_;
   double candidate_yaw_term_;
+  double joy_yaw_rate_;
   int gimbal_dof_;
   int rotor_coef_;
   bool gimbal_calc_in_fc_;
@@ -70,28 +80,67 @@ private:
   double direct_roll_max_;          // max roll angle from joystick (rad)
   double stick_expo_;               // expo for roll/pitch sticks (0 = linear, higher = gentler near center)
 
-  ros::Subscriber joy_sub_;
   double joy_throttle_cmd_;         // normalized [0, 1] from left stick vertical (0=bottom, 1=top)
   double joy_pitch_cmd_;            // normalized [-1, 1] from right stick vertical
   double joy_roll_cmd_;             // normalized [-1, 1] from right stick horizontal
   double joy_yaw_val_cmd_;          // normalized [-1, 1] from left stick horizontal
-  double joy_yaw_rate_;
   double direct_yaw_target_;        // integrated yaw heading target (rad)
-  void joyCallback(const sensor_msgs::JoyConstPtr& msg);
+  void joyCallback(const sensor_msgs::Joy::ConstPtr& msg);
   void directJoystickControl();
 
   // Betaflight-style curve helpers
   double applyThrottleCurve(double normalized_input);  // input [0,1] → output [0,1]
   double applyStickExpo(double input);                 // input [-1,1] → output [-1,1]
+  double target_yaw_ = 0.0;
+  bool if_stablize_ = false, if_dive_ = false;
+
+  // Depth control
+  double current_depth_ = 0.0;
+  double target_depth_ = 0.0;
+  double depth_p_gain_ = 1.0, depth_i_gain_ = 0.0, depth_d_gain_ = 0.0;
+  double depth_err_i_ = 0.0;
+  double depth_prev_err_ = 0.0;
+  double depth_hover_thrust_ = 4.0;  // Default hover thrust for depth control
+  double filtered_depth_err_d_ = 0;
+  double max_depth_ = 0.0; // maximum depth for depth control
+  double max_dive_rate_ = 0.05; // maximum dive rate for depth control
+
+  // Speed Modes
+  enum SpeedMode {
+    SPEED_LOW = 0,      // Precsion mode
+    SPEED_MEDIUM = 1,   // Cruise mode
+    SPEED_HIGH = 2      // Sport mode
+  };
+  SpeedMode current_speed_mode_ = SPEED_LOW;
+  bool speed_mode_button_pressed_ = false;
+
+  // Max pitch angles for each mode (in radians)
+  const double PITCH_LIMIT_LOW = 0.15;    // ~8.6 deg
+  const double PITCH_LIMIT_MED = 0.26;    // ~15 deg
+  const double PITCH_LIMIT_HIGH = 0.45;   // ~25 deg 
+  
+  enum MODE {
+    CROSS_DOMAIN = 0,      // cross domain mode
+    UNDERWATER = 1,   // underwater mode   
+  };
+  MODE current_mode_ = UNDERWATER;
 
   void rosParamInit();
   bool update() override;
   virtual void reset() override;
   void controlCore() override;
+  void aerialControlCore();
+  void underwaterControlCore();
+
   void sendCmd() override;
   void sendFourAxisCommand();
   void sendGimbalCommand();
   void sendTorqueAllocationMatrixInv();
   void setAttitudeGains();
+
+  void aerialJoyCallback(const sensor_msgs::Joy::ConstPtr& msg);
+  void underwaterJoyCallback(const sensor_msgs::Joy::ConstPtr& msg);
+  void depthCallback(const geometry_msgs::PointStamped::ConstPtr& msg);
+  double depthControlLoop();
 };
 };  // namespace aerial_robot_control

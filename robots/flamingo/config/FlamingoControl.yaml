@@ -24,6 +24,13 @@ controller:
   direct_roll_max: 0.40        # max roll angle (rad), ~11.5 deg
   stick_expo: 0.3              # expo for roll/pitch sticks (finer control near center)
 
+  depth_p_gain: 20.0
+  depth_i_gain: 0.0
+  depth_d_gain: 0.0
+  depth_hover_thrust: 6.0 #thrust for submerging in the water
+  max_depth: 0.6 # max depth for depth control (meters),0.6
+  max_dive_rate: 1.0 # max dive rate (m/s)
+  
   xy:
     p_gain: 3.5
     i_gain: 0.2

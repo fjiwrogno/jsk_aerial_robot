@@ -21,7 +21,47 @@ void FlamingoController::sendTorqueAllocationMatrixInv()
   }
   torque_allocation_matrix_inv_pub_.publish(torque_allocation_matrix_inv_msg);
 }
+- 目前来说，这两种状态之间的切换可能也会出现一些问题，比如从水下切换为空中模式时，这个时候应该需要一些安全措施？
+- 以及从空中切换为水下的时候，应该也要添加一些rules比如set current yaw为target yaw, set target_pitch&& target_roll = 0.0, target_depth = current_depth_
+  - 总的来说就是类似于添加一些reset函数这样？
+todo:
+- 电机切换
+- attitude_control中hard coding 为3号和4号电机
+  - 看来底层的attitude_control确实还是需要直接兼容两套参数而不是通过topic发布的方式来切换。底层的切换还是得通过allocation matrix来实现。对于target_pwm,感觉需要直接将target_thrust设置为0就行
+  - motor info的参数的话其实也是只需要重新pub一下就可以了！
+  - 直接存储为两套参数，在切换的时候重新pub一下就可以？！
+- 控制器的参数也需要重新发布一次针对不同mode
+  - 直接通过publish gain来重新发布一次gain
+  - 或者应该也可以直接去修改pid_controller(yaw).gain去set p_gain？
+    - 直接把水下controller的参数放在另外一个yaml file里面，同时读进来！
+- 重新校对urdf
+- 测试
 
+### Cross Domain Strategyfwe
+WuKong uses two independent sets of thrusters, which simplifies the air-to-water transition strategy. Assisted by water pressure sensor, the transition can be completed smoothly. During
+submergence, if pressure exceeds a threshold, the aerial thruster
+shut down and the aquatic thrusters activate. Conversely, when
+the pressure drops below the threshold during emergence, the
+aquatic thrusters shut down and the aerial propellers activate.
+For safety reasons, the operator needs to engage the transition
+detector switch before transition to prevent repeated detection
+from triggering the transition. Additionally, the throttle should
+be set to around the hover level. By using the dual thruster
+system and the layout of the thrusters distributed, the time of
+the aerial propellers hitting the water surface is reduced during
+the transition, which also improves the stability and efficiency
+of the water-to-air transition.
+
+- 感觉确实可以用depth sensor的pressure来作为一个分界点，比分界点小认为cross domain mode,比分界点大：underwater mode
+- 在试验过程中直接拿手来完成这个过程
+  - 在空气中calibrate,开启系统的时候，一块电池直接去measure pressure,然后直接看什么时候水桨刚刚出水面？这个时候设置为cross domain？
+    - 水压大于一个阈值的时候，我们应该将空桨强制关闭！！强制转换为水下模式！
+    - switch到cross domain的时候需要将初始油门设置为不是的值！
+    - 在实际cross domain的时候应该还是油门初始值给大一点！
+- 所以看来其实整体上完全没有出现两种电机同时控制的情况？反而是直接独立的两种模式？那么的话貌似还是可以直接通过发布的方式来切换motor info?
+- 水下切换为cross domain的时候，能不能直接arming + takeoff呢？
+- cross domain切换为underwater的话，那么就得立即停桨！那就直接halt?然后呢？再直接将发pwm值，arming和takeoff!
+  - 把这三个步骤写成一个函数！直接通过一个按键实现了！\
 ### 具体细节
 
 我的机器人有四个电机，1号和2号电机为空中电机，3号和4号为水下电机。
