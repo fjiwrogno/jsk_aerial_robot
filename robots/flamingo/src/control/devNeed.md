@@ -1,4 +1,4 @@
-## Develop goal
+## Background
 
 兼容具有两种推力pwm转换逻辑的两套电机系统在一个机器人上，并在不同状态时使用不同的电机系统。
 
@@ -25,18 +25,30 @@ void FlamingoController::sendTorqueAllocationMatrixInv()
 - 以及从空中切换为水下的时候，应该也要添加一些rules比如set current yaw为target yaw, set target_pitch&& target_roll = 0.0, target_depth = current_depth_
   - 总的来说就是类似于添加一些reset函数这样？
 todo:
-- 电机切换
 - attitude_control中hard coding 为3号和4号电机
-  - 看来底层的attitude_control确实还是需要直接兼容两套参数而不是通过topic发布的方式来切换。底层的切换还是得通过allocation matrix来实现。对于target_pwm,感觉需要直接将target_thrust设置为0就行
-  - motor info的参数的话其实也是只需要重新pub一下就可以了！
-  - 直接存储为两套参数，在切换的时候重新pub一下就可以？！
-- 控制器的参数也需要重新发布一次针对不同mode
-  - 直接通过publish gain来重新发布一次gain
+  - for rotor 3&& rotor4(index is 2 and 3)pwm conversion, directly write the conversion param according to MotorInfo_water.yaml 
+-     - 直接把水下controller的参数放在另外一个yaml file里面，同时读进来！
+-     when swithcing to different mode, 控制器的参数也需要重新发布一次针对不同mode's gain. for underwater, publish gain directly      according to the value from flamingoControl.yaml. for cross domain mode, directly use the param read from flamingoControl.yaml file
+  - meanwhile, use pid_controller->setGain to change the gain like p_gain, i_gain of pid_controller(yaw) since this part of calculation is done not in attitude_controller.cpp
   - 或者应该也可以直接去修改pid_controller(yaw).gain去set p_gain？
-    - 直接把水下controller的参数放在另外一个yaml file里面，同时读进来！
 - 重新校对urdf
 - 测试
 
+
+## PLAN:
+for attitude_control.cpp
+- attitude_control中hard coding 为3号和4号电机 conversion and safety protection like min_duty and max_duty beacause value is read for rotor 1&2, not for rotor 3&4. so we have to manually add the value according to the value from MotorInfo_water.yaml.
+- for rotor 3&& rotor4(index is 2 and 3)pwm conversion, directly write the conversion param according to MotorInfo_water.yaml. 
+- 直接把水下controller的参数放在另外一个yaml file里面，同时读进来！
+- when swithcing to different mode, 控制器的参数也需要重新发布一次针对不同mode's gain. for underwater, publish gain directly according to the value from flamingoControl.yaml. for cross domain mode, directly use the param read from flamingoControl.yaml file
+- meanwhile, use pid_controller->setGain to change the gain like p_gain, i_gain of pid_controller(yaw) since this part of calculation is done not in attitude_controller.cpp
+- 或者应该也可以直接去修改pid_controller(yaw).gain去set p_gain？
+for flamingo_controll.cpp
+- when in underwater mode, the item in allocation for rotor 1&rotor2 should be zero. and in attitude_controller.cpp, we need to set target_thrust[0] target_thrust[1] to 0.5(the min_duty of aerial motor)
+- when in aerial mode, the item in allocation for rotor 3&rotor4 should be zero, and in attitude_controll.cpp we need to set target_thrust[2] target_thrust[3] to 0.0((the min_duty of aquatic motor))
+
+
+-  
 ### Cross Domain Strategyfwe
 WuKong uses two independent sets of thrusters, which simplifies the air-to-water transition strategy. Assisted by water pressure sensor, the transition can be completed smoothly. During
 submergence, if pressure exceeds a threshold, the aerial thruster
