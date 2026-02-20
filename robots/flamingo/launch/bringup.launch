@@ -47,6 +47,9 @@
    ###########  Control  ###########
    <rosparam file="$(arg config_dir)/FlamingoControl.yaml" command="load" unless="$(arg simulation)"/>
    <rosparam file="$(arg config_dir)/FlamingoControl_sim.yaml" command="load" if="$(arg simulation)"/>
+   <!-- Underwater-mode gains, loaded under the "underwater" sub-namespace -->
+   <rosparam file="$(arg config_dir)/FlamingoControl_water.yaml" command="load" ns="underwater" unless="$(arg simulation)"/>
+   <rosparam file="$(arg config_dir)/FlamingoControl_water.yaml" command="load" ns="underwater" if="$(arg simulation)"/>
 
    ###########  Sensor Fusion  ###########
    <rosparam file="$(arg config_dir)/StateEstimation.yaml" command="load" />

@@ -86,6 +86,56 @@ void FlamingoController::rosParamInit()
   getParam<double>(control_nh, "depth_hover_thrust", depth_hover_thrust_, 4.0);
   getParam<double>(control_nh, "max_depth", max_depth_, 0.5);
   getParam<double>(control_nh, "max_dive_rate", max_dive_rate_, 0.05);
+
+  // Cache aerial gains for mode switching (read from controller/* namespace)
+  {
+    ros::NodeHandle z_nh(nh_, "controller/z");
+    getParam<double>(z_nh, "p_gain", aerial_gains_[Z].p, 12.0);
+    getParam<double>(z_nh, "i_gain", aerial_gains_[Z].i, 5.0);
+    getParam<double>(z_nh, "d_gain", aerial_gains_[Z].d, 5.0);
+    ros::NodeHandle roll_nh(nh_, "controller/roll");
+    getParam<double>(roll_nh, "p_gain", aerial_gains_[ROLL].p, 20.0);
+    getParam<double>(roll_nh, "i_gain", aerial_gains_[ROLL].i, 1.0);
+    getParam<double>(roll_nh, "d_gain", aerial_gains_[ROLL].d, 8.0);
+    ros::NodeHandle pitch_nh(nh_, "controller/pitch");
+    getParam<double>(pitch_nh, "p_gain", aerial_gains_[PITCH].p, 32.0);
+    getParam<double>(pitch_nh, "i_gain", aerial_gains_[PITCH].i, 1.0);
+    getParam<double>(pitch_nh, "d_gain", aerial_gains_[PITCH].d, 20.0);
+    ros::NodeHandle yaw_nh(nh_, "controller/yaw");
+    getParam<double>(yaw_nh, "p_gain", aerial_gains_[YAW].p, 8.0);
+    getParam<double>(yaw_nh, "i_gain", aerial_gains_[YAW].i, 1.0);
+    getParam<double>(yaw_nh, "d_gain", aerial_gains_[YAW].d, 4.0);
+    ros::NodeHandle xy_nh(nh_, "controller/xy");
+    getParam<double>(xy_nh, "p_gain", aerial_gains_[X].p, 3.5);
+    getParam<double>(xy_nh, "i_gain", aerial_gains_[X].i, 0.2);
+    getParam<double>(xy_nh, "d_gain", aerial_gains_[X].d, 4.0);
+    aerial_gains_[Y] = aerial_gains_[X];
+  }
+
+  // Cache underwater gains (loaded from FlamingoControl_water.yaml under underwater/ namespace)
+  {
+    ros::NodeHandle z_nh(nh_, "underwater/controller/z");
+    getParam<double>(z_nh, "p_gain", underwater_gains_[Z].p, 5.0);
+    getParam<double>(z_nh, "i_gain", underwater_gains_[Z].i, 1.0);
+    getParam<double>(z_nh, "d_gain", underwater_gains_[Z].d, 2.5);
+    ros::NodeHandle roll_nh(nh_, "underwater/controller/roll");
+    getParam<double>(roll_nh, "p_gain", underwater_gains_[ROLL].p, 10.0);
+    getParam<double>(roll_nh, "i_gain", underwater_gains_[ROLL].i, 0.0);
+    getParam<double>(roll_nh, "d_gain", underwater_gains_[ROLL].d, 1.0);
+    ros::NodeHandle pitch_nh(nh_, "underwater/controller/pitch");
+    getParam<double>(pitch_nh, "p_gain", underwater_gains_[PITCH].p, 30.0);
+    getParam<double>(pitch_nh, "i_gain", underwater_gains_[PITCH].i, 0.0);
+    getParam<double>(pitch_nh, "d_gain", underwater_gains_[PITCH].d, 6.0);
+    ros::NodeHandle yaw_nh(nh_, "underwater/controller/yaw");
+    getParam<double>(yaw_nh, "p_gain", underwater_gains_[YAW].p, 30.0);
+    getParam<double>(yaw_nh, "i_gain", underwater_gains_[YAW].i, 0.0);
+    getParam<double>(yaw_nh, "d_gain", underwater_gains_[YAW].d, 0.1);
+    ros::NodeHandle xy_nh(nh_, "underwater/controller/xy");
+    getParam<double>(xy_nh, "p_gain", underwater_gains_[X].p, 3.5);
+    getParam<double>(xy_nh, "i_gain", underwater_gains_[X].i, 0.2);
+    getParam<double>(xy_nh, "d_gain", underwater_gains_[X].d, 4.0);
+    underwater_gains_[Y] = underwater_gains_[X];
+  }
 }
 
 bool FlamingoController::update()
@@ -397,6 +447,16 @@ void FlamingoController::aerialControlCore()
   {
     directJoystickControl();
   }
+
+  // In aerial mode, disable the aquatic motors (rotor index 2 and 3) by zeroing their
+  // base-thrust allocation entries.  attitude_control will detect these as inactive and
+  // set target_pwm[2/3] = WATER_MIN_DUTY (0.0).
+  int aquatic_motor_count = 2;  // motors 0 and 1 are aerial
+  for (int m = aquatic_motor_count; m < motor_num_; m++)
+  {
+    for (int j = 0; j < rotor_coef_; j++)
+      target_base_thrust_.at(m * rotor_coef_ + j) = 0.0f;
+  }
 }
 
 void FlamingoController::underwaterControlCore()
@@ -534,6 +594,16 @@ void FlamingoController::underwaterControlCore()
       }
     }
     candidate_yaw_term_ = pid_controllers_.at(YAW).result() * max_yaw_scale;
+
+  // In underwater mode, disable the aerial motors (rotor index 0 and 1) by zeroing their
+  // base-thrust allocation entries.  attitude_control will detect these as inactive and
+  // set target_pwm[0/1] = IDLE_DUTY (0.5).
+  int aerial_motor_count = 2;  // motors 0 and 1 are aerial
+  for (int m = 0; m < aerial_motor_count; m++)
+  {
+    for (int j = 0; j < rotor_coef_; j++)
+      target_base_thrust_.at(m * rotor_coef_ + j) = 0.0f;
+  }
 }
 
 double FlamingoController::depthControlLoop()
@@ -605,7 +675,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 
   if(joy_cmd.buttons[JOY_BUTTON_START] == 1)
   {
-    current_mode_ != current_mode_;
+    switchMode();
   }
 
   if(current_mode_ == MODE::CROSS_DOMAIN)
@@ -959,13 +1029,86 @@ void FlamingoController::sendTorqueAllocationMatrixInv()
   Eigen::MatrixXd torque_allocation_matrix_inv = integrated_map_inv_rot_;
   if (torque_allocation_matrix_inv.cwiseAbs().maxCoeff() > INT16_MAX * 0.001f)
     ROS_ERROR("Torque Allocation Matrix overflow");
+
+  // Number of aerial motors (rotor index 0 & 1) and aquatic motors (rotor index 2 & 3).
+  // When a motor type is inactive for the current mode, zero out its allocation rows so
+  // that spinal computes zero roll/pitch/yaw torque contribution from those rotors.
+  const int aerial_motor_count = 2;  // motors 0, 1 are aerial
+
   for (unsigned int i = 0; i < motor_num_ * rotor_coef_; i++)
   {
-    torque_allocation_matrix_inv_msg.rows.at(i).x = torque_allocation_matrix_inv(i, 0) * 1000;
-    torque_allocation_matrix_inv_msg.rows.at(i).y = torque_allocation_matrix_inv(i, 1) * 1000;
-    torque_allocation_matrix_inv_msg.rows.at(i).z = torque_allocation_matrix_inv(i, 2) * 1000;
+    // Determine which physical motor this row belongs to
+    int motor_idx = i / rotor_coef_;
+    bool is_aerial  = (motor_idx < aerial_motor_count);
+    bool is_aquatic = !is_aerial;
+
+    // Mask inactive motor rows to zero
+    bool mask_out = (current_mode_ == UNDERWATER && is_aerial) ||
+                    (current_mode_ == CROSS_DOMAIN && is_aquatic);
+
+    if (mask_out)
+    {
+      torque_allocation_matrix_inv_msg.rows.at(i).x = 0;
+      torque_allocation_matrix_inv_msg.rows.at(i).y = 0;
+      torque_allocation_matrix_inv_msg.rows.at(i).z = 0;
+    }
+    else
+    {
+      torque_allocation_matrix_inv_msg.rows.at(i).x = torque_allocation_matrix_inv(i, 0) * 1000;
+      torque_allocation_matrix_inv_msg.rows.at(i).y = torque_allocation_matrix_inv(i, 1) * 1000;
+      torque_allocation_matrix_inv_msg.rows.at(i).z = torque_allocation_matrix_inv(i, 2) * 1000;
+    }
   }
   torque_allocation_matrix_inv_pub_.publish(torque_allocation_matrix_inv_msg);
+}
+
+void FlamingoController::switchMode()
+{
+  // Toggle between CROSS_DOMAIN and UNDERWATER
+  MODE new_mode = (current_mode_ == CROSS_DOMAIN) ? UNDERWATER : CROSS_DOMAIN;
+  current_mode_ = new_mode;
+
+  // Select gain set for the new mode
+  const auto& gains = (current_mode_ == CROSS_DOMAIN) ? aerial_gains_ : underwater_gains_;
+
+  // Apply gains to all PID controllers
+  pid_controllers_.at(X).setGains(gains[X].p, gains[X].i, gains[X].d);
+  pid_controllers_.at(Y).setGains(gains[Y].p, gains[Y].i, gains[Y].d);
+  pid_controllers_.at(Z).setGains(gains[Z].p, gains[Z].i, gains[Z].d);
+  pid_controllers_.at(ROLL).setGains(gains[ROLL].p, gains[ROLL].i, gains[ROLL].d);
+  pid_controllers_.at(PITCH).setGains(gains[PITCH].p, gains[PITCH].i, gains[PITCH].d);
+  pid_controllers_.at(YAW).setGains(gains[YAW].p, gains[YAW].i, gains[YAW].d);
+
+  // Re-publish roll/pitch/yaw gains to spinal attitude controller
+  setAttitudeGains();
+
+  // Reset all PID integrators to avoid integral wind-up across mode switch
+  for (auto& pid : pid_controllers_)
+    pid.reset();
+
+  // Safety state reset
+  double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+  navigator_->setTargetYaw(current_yaw);
+  target_yaw_   = current_yaw;
+  target_pitch_ = 0.0;
+  target_roll_  = 0.0;
+
+  if (current_mode_ == UNDERWATER)
+  {
+    ROS_WARN("[Flamingo] Switched to UNDERWATER mode");
+    // Anchor target depth to current depth when entering underwater mode
+    target_depth_ = current_depth_;
+    depth_err_i_  = 0.0;
+    depth_prev_err_ = 0.0;
+    filtered_depth_err_d_ = 0.0;
+    if_dive_ = false;  // start with depth control off until user enables
+  }
+  else
+  {
+    ROS_WARN("[Flamingo] Switched to CROSS_DOMAIN (aerial) mode");
+    // Reset joystick throttle so the robot does not suddenly thrust
+    joy_throttle_cmd_ = 0.0;
+  }
 }
 
 void FlamingoController::setAttitudeGains()

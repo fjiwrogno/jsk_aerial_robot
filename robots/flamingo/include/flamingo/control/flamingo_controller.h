@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <array>
 #include <numeric>
 #include <aerial_robot_control/control/base/pose_linear_controller.h>
 #include <aerial_robot_control/control/fully_actuated_controller.h>
@@ -125,10 +126,18 @@ private:
   };
   MODE current_mode_ = UNDERWATER;
 
+  /* Per-axis PID gain set for mode switching */
+  struct GainSet { double p, i, d; };
+  /* Indexed by [X, Y, Z, ROLL, PITCH, YAW] */
+  std::array<GainSet, 6> aerial_gains_{};
+  std::array<GainSet, 6> underwater_gains_{};
+
   void rosParamInit();
   bool update() override;
   virtual void reset() override;
   void controlCore() override;
+  /* Switch between CROSS_DOMAIN and UNDERWATER modes, updating gains and safety state */
+  void switchMode();
   void aerialControlCore();
   void underwaterControlCore();
 

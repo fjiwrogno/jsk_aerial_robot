@@ -151,6 +151,8 @@ void AttitudeController::baseInit()
   motor_info_.resize(0);
   v_factor_ = 1;
   motor_ref_index_ = 0;
+  water_v_factor_ = 1;
+  water_motor_ref_index_ = 0;
   voltage_update_last_time_ = 0;
 
   control_term_pub_last_time_ = 0;
@@ -972,6 +974,35 @@ void AttitudeController::pwmConversion()
       return target_pwm / 100; // target_pwm is [%]
     };
 
+  /* -----------------------------------------------------------------------
+   * Hardcoded aquatic motor (rotor index 2 & 3) parameters from MotorInfo_water.yaml.
+   * pwm_conversion_mode = POLYNOMINAL_MODE (1), min_duty = 0.0, max_duty = 0.92
+   * poly[j] order: [p0, p1, p2, p3, p4]
+   * ----------------------------------------------------------------------- */
+  static const float WATER_MIN_DUTY = 0.0f;
+  static const float WATER_MAX_DUTY = 0.92f;
+  struct WaterMotorInfo { float voltage; float max_thrust; float poly[5]; };
+  static const WaterMotorInfo water_motor_table[] = {
+    {25.2f, 21.1743f, {5.31928587f,  59.62689433f, -27.35529774f,   7.84268887f,  0.27220104f}},
+    {24.2f, 21.3149f, {5.48946853f,  67.62445163f, -47.75818788f,  25.67117640f, -4.49312257f}},
+    {23.2f, 20.4890f, {5.37462297f,  69.42786237f, -44.15328209f,  20.77747488f, -2.95746127f}},
+    {22.2f, 19.6376f, {5.30078903f,  77.45026705f, -61.02618663f,  35.12434932f, -6.74821754f}},
+  };
+  static const int WATER_MOTOR_REF_NUM = 4;
+
+  /* Convert aquatic thrust [N] to PWM duty using hardcoded water motor polynominals */
+  auto convertWater = [this, &water_motor_table](float target_thrust)
+    {
+      /* pwm = F_inv[(V_ref / V)^1.5 f], POLYNOMINAL_MODE */
+      float scaled_thrust = water_v_factor_ * target_thrust / rotor_devider_;
+      if (scaled_thrust < 0) scaled_thrust = 0;
+      float tenth_scaled_thrust = scaled_thrust * 0.1f;
+      float target_pwm = water_motor_table[water_motor_ref_index_].poly[4];
+      for (int j = 3; j >= 0; j--)
+        target_pwm = target_pwm * tenth_scaled_thrust + water_motor_table[water_motor_ref_index_].poly[j];
+      return target_pwm / 100.0f; // [%] -> [0..1]
+    };
+
   if(pwm_test_flag_) /* motor pwm test */
     {
       for(int i = 0; i < MAX_MOTOR_NUMBER; i++)
@@ -1025,6 +1056,18 @@ void AttitudeController::pwmConversion()
         }
 
       if(min_thrust_> 0) min_duty_ = convert(min_thrust_);
+
+      /* also update water motor voltage factor (POLYNOMINAL_MODE hardcoded) */
+      {
+        float min_vdiff = 1e6f;
+        for (int wi = 0; wi < WATER_MOTOR_REF_NUM; wi++)
+          {
+            float vdiff = fabs(voltage - water_motor_table[wi].voltage);
+            if (vdiff < min_vdiff) { min_vdiff = vdiff; water_motor_ref_index_ = wi; }
+          }
+        water_v_factor_ = water_motor_table[water_motor_ref_index_].voltage / voltage
+                        * ap::inv_sqrt(voltage / water_motor_table[water_motor_ref_index_].voltage);
+      }
 
       voltage_update_last_time_ = HAL_GetTick();
     }
@@ -1183,11 +1226,44 @@ void AttitudeController::pwmConversion()
               break;
             }
 
-          target_pwm_[i] = convert(target_thrust_[i]);
+          /* ---------------------------------------------------------------
+           * Per-motor PWM conversion:
+           *   i = 0, 1 → aerial rotors  (normal convert, clamp [min_duty_, max_duty_])
+           *                if base_thrust == 0 (motor disabled) → set to IDLE_DUTY (0.5)
+           *   i = 2, 3 → aquatic rotors (water convert, clamp [WATER_MIN_DUTY, WATER_MAX_DUTY])
+           *                if base_thrust == 0 (motor disabled) → set to WATER_MIN_DUTY (0.0)
+           * --------------------------------------------------------------- */
+          bool aerial_motor_disabled =
+            (i < 2) &&
+            (fabs(base_thrust_term_[i * rotor_coef_]) < 1e-5f) &&
+            (fabs(base_thrust_term_[i * rotor_coef_ + 1]) < 1e-5f);
+          bool aquatic_motor_disabled =
+            (i >= 2) &&
+            (fabs(base_thrust_term_[i * rotor_coef_]) < 1e-5f) &&
+            (fabs(base_thrust_term_[i * rotor_coef_ + 1]) < 1e-5f);
 
-          /* constraint */
-          if(target_pwm_[i] < min_duty_) target_pwm_[i]  = min_duty_;
-          else if(target_pwm_[i]  > max_duty_) target_pwm_[i]  = max_duty_;
+          if (aerial_motor_disabled)
+            {
+              target_pwm_[i] = IDLE_DUTY;  // keep aerial motor at idle
+            }
+          else if (aquatic_motor_disabled)
+            {
+              target_pwm_[i] = WATER_MIN_DUTY;  // aquatic motor off (0.0 duty)
+            }
+          else if (i >= 2)
+            {
+              /* aquatic motor active: use hardcoded water motor conversion */
+              target_pwm_[i] = convertWater(target_thrust_[i]);
+              if (target_pwm_[i] < WATER_MIN_DUTY) target_pwm_[i] = WATER_MIN_DUTY;
+              else if (target_pwm_[i] > WATER_MAX_DUTY) target_pwm_[i] = WATER_MAX_DUTY;
+            }
+          else
+            {
+              /* aerial motor active: normal conversion */
+              target_pwm_[i] = convert(target_thrust_[i]);
+              if (target_pwm_[i] < min_duty_) target_pwm_[i] = min_duty_;
+              else if (target_pwm_[i] > max_duty_) target_pwm_[i] = max_duty_;
+            }
         }
 
       /* for ros */

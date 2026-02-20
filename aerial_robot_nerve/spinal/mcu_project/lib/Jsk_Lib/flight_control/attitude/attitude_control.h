@@ -221,6 +221,9 @@ private:
   std::vector<spinal::MotorInfo> motor_info_;
   uint8_t motor_ref_index_;
   float v_factor_;
+  // Water motor (rotor index 2 & 3) separate voltage-scaling factor
+  uint8_t water_motor_ref_index_;
+  float water_v_factor_;
   uint32_t voltage_update_last_time_;
   uint32_t control_term_pub_last_time_, control_feedback_state_pub_last_time_;
   uint32_t pwm_pub_last_time_;
