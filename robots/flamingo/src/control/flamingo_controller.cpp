@@ -135,47 +135,24 @@ void FlamingoController::joyCallback(const sensor_msgs::JoyConstPtr& msg)
 
 }
 
-void FlamingoController::directJoystickControl()
+tf::Vector3 FlamingoController::directJoystickControl() const
 {
-  // === 1) Thrust from joystick with Betaflight-style expo curve ===
-  // joy_throttle_cmd_ is [0, 1] (0 = stick center/rest, 1 = stick top)
-  double curved_throttle = applyThrottleCurve(joy_throttle_cmd_);
-  double total_z_thrust = throttle_min_thrust_ + curved_throttle * (throttle_max_thrust_ - throttle_min_thrust_);
-  total_z_thrust = std::max(0.0, std::min(total_z_thrust, motor_max_thrust_ * motor_num_));
+  // Returns acceleration command in the dash frame (yaw-aligned body frame).
+  // Pitch stick  → forward/backward (dash x),  range [-5, 5] m/s²
+  // Roll stick   → left/right       (dash y),  range [-5, 5] m/s²
+  // Throttle     → vertical          (dash z),  range [ 0, 25] m/s²
+  // Values exceeding physical motor limits are clamped (not rescaled).
+  constexpr double target_acc_z_max = 25.0;
+  constexpr double target_acc_xy_max = 10.0;
 
-  // Convert total z-thrust to target z-acceleration (same unit as PID Z output),
-  // then use the already-computed integrated_map_inv_trans_ to distribute to each rotor,
-  // exactly as the mocap z-control does in controlCore().
-  double mass = flamingo_robot_model_->getMass();
-  double target_acc_z = total_z_thrust / mass;
+  const double mass = flamingo_robot_model_->getMass();
+  const double acc_z_physical_max = motor_max_thrust_ * motor_num_ / mass;
 
-  Eigen::VectorXd joy_wrench_z(underactuate_ ? 1 : 3);
-  joy_wrench_z(0) = target_acc_z;
-  target_vectoring_f_trans_ = integrated_map_inv_trans_ * joy_wrench_z;
+  const double target_acc_x = joy_pitch_cmd_ * target_acc_xy_max;
+  const double target_acc_y = joy_roll_cmd_ * target_acc_xy_max;
+  const double target_acc_z = std::min(joy_throttle_cmd_ * target_acc_z_max, acc_z_physical_max);
 
-  // Re-fill target_base_thrust_ from the allocation result, identical to the loop in controlCore().
-  int last_col = 0;
-  for (int i = 0; i < motor_num_; i++)
-  {
-    Eigen::VectorXd f_i = target_vectoring_f_trans_.segment(last_col, rotor_coef_);
-    target_base_thrust_.at(rotor_coef_ * i)     = f_i[0];
-    target_base_thrust_.at(rotor_coef_ * i + 1) = f_i[1];
-    
-    last_col += rotor_coef_;
-  }
-
-  // === 2) Roll/Pitch with expo for finer control ===
-  if (joy_throttle_cmd_ == 0.0)
-  {
-    // no attitude control before actively increasing throttle to takeoff
-    target_roll_ = estimator_->getEuler(Frame::COG, estimate_mode_).x();
-    target_pitch_ = estimator_->getEuler(Frame::COG, estimate_mode_).y();
-  }
-  else
-  {
-    target_roll_ = applyStickExpo(joy_roll_cmd_) * direct_roll_max_;
-    target_pitch_ = applyStickExpo(joy_pitch_cmd_) * direct_pitch_max_;
-  }
+  return tf::Vector3(target_acc_x, target_acc_y, target_acc_z);
 }
 
 double FlamingoController::applyThrottleCurve(double input)
@@ -225,10 +202,34 @@ double FlamingoController::applyStickExpo(double input)
 
 void FlamingoController::controlCore()
 {
+  if (direct_joystick_mode_)
+  {
+    const double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+    if (!yaw_control_flag_)
+    {
+      direct_yaw_target_ = current_yaw;
+      yaw_control_flag_ = true;
+    }
+    direct_yaw_target_ += joy_yaw_val_cmd_ * joy_yaw_rate_;
+    navigator_->setTargetYaw(direct_yaw_target_);
+  }
+  else
+  {
+    yaw_control_flag_ = false;
+  }
+
   PoseLinearController::controlCore();
   tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
   tf::Vector3 target_acc_w(pid_controllers_.at(X).result(), pid_controllers_.at(Y).result(),
                            pid_controllers_.at(Z).result());
+  if (direct_joystick_mode_)
+  {
+    // directJoystickControl() returns acceleration in dash frame (yaw-aligned),
+    // rotate to world frame so downstream target_acc_dash computation is consistent.
+    tf::Vector3 input_acc_dash = directJoystickControl();
+    target_acc_w = tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z())) * input_acc_dash;
+  }
+  
   tf::Vector3 target_acc_dash = (tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z()))).inverse() * target_acc_w;
   tf::Vector3 target_acc_cog = uav_rot.inverse() * target_acc_w;
   Eigen::VectorXd target_wrench_acc_cog = Eigen::VectorXd::Zero(6);
@@ -413,11 +414,6 @@ void FlamingoController::controlCore()
       target_gimbal_angles_.at(2 * i + 1) = gimbal_pitch;
     }
     last_col += rotor_coef_;
-  }
-
-  if (direct_joystick_mode_)
-  {
-    directJoystickControl();
   }
 }
 
