@@ -25,6 +25,15 @@
             ixx="0.0160903" iyy="0.0573578" izz="0.0476113"
             ixy="0.0000037" ixz="-0.0001701" iyz="0.0000028"/>
       </inertial>
+
+        <!-- two batteries
+        <origin xyz="-0.1317508 0.0020567 -0.1162396" rpy="0 0 0"/>
+        <mass value="3.7625799"/>
+        <inertia
+            ixx="0.0176913" iyy="0.0646863" izz="0.0552197"
+            ixy="0.0000030" ixz="-0.0002878" iyz="0.0000036"/>
+      </inertial>
+ -->
       <visual>
         <geometry>
           <mesh filename="package://flamingo/urdf/mesh/base_link_v2.dae" scale="1 1 1"/>
