@@ -115,13 +115,13 @@ void FlamingoController::joyCallback(const sensor_msgs::JoyConstPtr& msg)
   else
     joy_throttle_cmd_ = (joy_throttle_cmd_ - throttle_deadzone_bottom_) / (1.0 - throttle_deadzone_bottom_);
 
-  double raw_yaw = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS];
-  joy_yaw_val_cmd_ = (fabs(raw_yaw) > deadzone) ? raw_yaw : 0.0;
+  // double raw_yaw = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS];
+  // joy_yaw_val_cmd_ = (fabs(raw_yaw) > deadzone) ? raw_yaw : 0.0;
 
   double raw_pitch = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS];
   joy_pitch_cmd_ = (fabs(raw_pitch) > deadzone) ? raw_pitch : 0.0;
 
-  double raw_roll = joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS];
+  double raw_roll = -1.0 * joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS];
   joy_roll_cmd_ = (fabs(raw_roll) > deadzone) ? raw_roll : 0.0;
 
   if(joy_cmd.buttons[JOY_BUTTON_STOP] == 1)
@@ -135,7 +135,7 @@ void FlamingoController::joyCallback(const sensor_msgs::JoyConstPtr& msg)
 
 }
 
-tf::Vector3 FlamingoController::directJoystickControl() const
+tf::Vector3 FlamingoController::directJoystickControl() 
 {
   // Returns acceleration command in the dash frame (yaw-aligned body frame).
   // Pitch stick  → forward/backward (dash x),  range [-5, 5] m/s²
@@ -143,14 +143,18 @@ tf::Vector3 FlamingoController::directJoystickControl() const
   // Throttle     → vertical          (dash z),  range [ 0, 25] m/s²
   // Values exceeding physical motor limits are clamped (not rescaled).
   constexpr double target_acc_z_max = 25.0;
-  constexpr double target_acc_xy_max = 10.0;
+  constexpr double target_acc_xy_max = 5.0;
 
   const double mass = flamingo_robot_model_->getMass();
   const double acc_z_physical_max = motor_max_thrust_ * motor_num_ / mass;
 
-  const double target_acc_x = joy_pitch_cmd_ * target_acc_xy_max;
-  const double target_acc_y = joy_roll_cmd_ * target_acc_xy_max;
-  const double target_acc_z = std::min(joy_throttle_cmd_ * target_acc_z_max, acc_z_physical_max);
+  // Apply Betaflight-style expo curve so sensitivity is reduced around hover point,
+  // then scale to acceleration and clamp to physical limit.
+  const double curved_throttle = applyThrottleCurve(joy_throttle_cmd_);
+
+  const double target_acc_x = applyStickExpo(joy_pitch_cmd_) * target_acc_xy_max;
+  const double target_acc_y = applyStickExpo(joy_roll_cmd_) * target_acc_xy_max;
+  const double target_acc_z = std::min(curved_throttle * target_acc_z_max, acc_z_physical_max);
 
   return tf::Vector3(target_acc_x, target_acc_y, target_acc_z);
 }
@@ -202,21 +206,21 @@ double FlamingoController::applyStickExpo(double input)
 
 void FlamingoController::controlCore()
 {
-  if (direct_joystick_mode_)
-  {
-    const double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
-    if (!yaw_control_flag_)
-    {
-      direct_yaw_target_ = current_yaw;
-      yaw_control_flag_ = true;
-    }
-    direct_yaw_target_ += joy_yaw_val_cmd_ * joy_yaw_rate_;
-    navigator_->setTargetYaw(direct_yaw_target_);
-  }
-  else
-  {
-    yaw_control_flag_ = false;
-  }
+  // if (direct_joystick_mode_)
+  // {
+  //   const double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+  //   if (!yaw_control_flag_)
+  //   {
+  //     direct_yaw_target_ = current_yaw;
+  //     yaw_control_flag_ = true;
+  //   }
+  //   direct_yaw_target_ += joy_yaw_val_cmd_ * joy_yaw_rate_;
+  //   navigator_->setTargetYaw(direct_yaw_target_);
+  // }
+  // else
+  // {
+  //   yaw_control_flag_ = false;
+  // }
 
   PoseLinearController::controlCore();
   tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);

@@ -78,7 +78,7 @@ private:
   double joy_yaw_rate_;
   double direct_yaw_target_;        // integrated yaw heading target (rad)
   void joyCallback(const sensor_msgs::JoyConstPtr& msg);
-  tf::Vector3 directJoystickControl() const;
+  tf::Vector3 directJoystickControl();
 
   // Betaflight-style curve helpers
   double applyThrottleCurve(double normalized_input);  // input [0,1] → output [0,1]
