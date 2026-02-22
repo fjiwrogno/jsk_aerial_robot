@@ -335,9 +335,15 @@ void AttitudeController::update(void)
       ap::Vector3f angles; // euler angles
       rot.to_euler(&angles.x, &angles.y, &angles.z);
 
-      /* failsafe 3: too large tile angle */
-      /// TODO  here when switch to underwater mode, the max tilt angle limit should be wider
-      if(!force_landing_flag_  && (fabs(angles[X]) > MAX_TILT_ANGLE || fabs(angles[Y]) > MAX_TILT_ANGLE))
+      /* failsafe 3: too large tilt angle.
+         Skip when aerial motors carry negligible thrust (underwater mode):
+         base_thrust_term_[1] and [3] are the z-components of aerial rotors 0
+         and 1 (rotor_coef_==2).  In underwater mode the PC masks them to ~1e-6,
+         so both are below the threshold → large tilt angles are intentional. */
+      bool aerial_motors_active = (fabs(base_thrust_term_[1]) > 1e-3f)
+                               || (fabs(base_thrust_term_[3]) > 1e-3f);
+      if(aerial_motors_active && !force_landing_flag_
+         && (fabs(angles[X]) > MAX_TILT_ANGLE || fabs(angles[Y]) > MAX_TILT_ANGLE))
         {
 #ifdef SIMULATION
           ROS_ERROR("failsafe: the roll pitch angles are too large, roll: %f (%f), pitch: %f (%f)",
@@ -510,8 +516,14 @@ void AttitudeController::fourAxisCommandCallback( const spinal::FourAxisCommand 
   if(!start_control_flag_) return; //do not receive command
 
 
-  /* failsafe: if the pitch and roll angle is too big, start force landing */
-  if(fabs(cmd_msg.angles[0]) > MAX_TILT_ANGLE || fabs(cmd_msg.angles[1]) > MAX_TILT_ANGLE )
+  /* failsafe: if the pitch and roll angle is too big, start force landing.
+     Skip when aerial motors carry negligible thrust (underwater mode):
+     base_thrust_term_[1] and [3] are the z-components of aerial rotors 0 and 1.
+     In underwater mode they are ~1e-6, so large target angles are intentional. */
+  bool aerial_active = (fabs(base_thrust_term_[1]) > 1e-3f)
+                    || (fabs(base_thrust_term_[3]) > 1e-3f);
+  if(aerial_active
+     && (fabs(cmd_msg.angles[0]) > MAX_TILT_ANGLE || fabs(cmd_msg.angles[1]) > MAX_TILT_ANGLE))
     {
       setForceLandingFlag(true);
 #ifdef SIMULATION
