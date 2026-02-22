@@ -102,7 +102,7 @@ void AttitudeController::init(TIM_HandleTypeDef* htim1, TIM_HandleTypeDef* htim2
       HAL_TIM_PWM_Start(pwm_htim1_, TIM_CHANNEL_3);
       HAL_TIM_PWM_Start(pwm_htim1_, TIM_CHANNEL_4);
     }
-#if !GX_SERVO_PWM
+#if !GX_PWM_SERVO
   HAL_TIM_PWM_Start(pwm_htim2_,TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(pwm_htim2_,TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(pwm_htim2_,TIM_CHANNEL_3);
@@ -274,20 +274,9 @@ void AttitudeController::pwmsControl(void)
 
       // 0.0 ~ 0.5 / 0.5 ~ 1.0 -> currently abnormal -> only half thrust, double direction
       // double direction driver is kepy but not used here.
-        float pulse_bi = 1000.0f + target_pwm_[i] * 1000.0f;
 
-        if (pulse_bi < 1000.0f)
-        {
-          pulse_bi = 1000.0f;
-        }
-        if (pulse_bi > 2000.0f)
-        {
-          pulse_bi = 2000.0f;
-        }
-
-
-          pwm_htim2_->Instance->CCR3 = (uint32_t)1000.0f + target_pwm_[2] * 1000.0f;
-          pwm_htim2_->Instance->CCR4 = (uint32_t)1000.0f + target_pwm_[3] * 1000.0f;
+      pwm_htim2_->Instance->CCR3 = (uint32_t)(1000.0f + target_pwm_[2] * 1000.0f);
+      pwm_htim2_->Instance->CCR4 = (uint32_t)(1000.0f + target_pwm_[3] * 1000.0f);
 
       // pwm command for single-direction aerial motor
       //  hardcoding for enable target_pwm1&2 for aerial motor
@@ -477,7 +466,7 @@ void AttitudeController::reset(void)
   for(int i = 0; i < MAX_MOTOR_NUMBER; i++)
     {
       target_thrust_[i] = 0;
-      target_pwm_[i] = IDLE_DUTY;
+      target_pwm_[i] = (i >= 2 && i <= 3) ? 0.0f : IDLE_DUTY;
       pwm_test_value_[i] = IDLE_DUTY;
 
       base_thrust_term_[i] = 0;
@@ -569,8 +558,6 @@ void AttitudeController::fourAxisCommandCallback( const spinal::FourAxisCommand 
   target_angle_[X] = cmd_msg.angles[0];
   target_angle_[Y] = cmd_msg.angles[1];
 
-  int max_yaw_term_index = max_yaw_term_index_;
-  float max_yaw_thrust_d_gain = thrust_d_gain_[max_yaw_term_index][Z];
 
   for (int i = 0; i < motor_number_; i++)
   {
@@ -580,7 +567,7 @@ void AttitudeController::fourAxisCommandCallback( const spinal::FourAxisCommand 
     // reconstruct the pi term for yaw (temporary measure for pwm saturation avoidance)
     if (max_yaw_term_index_ != -1)
     {
-      extra_yaw_pi_term_[i] = cmd_msg.angles[Z] * thrust_d_gain_[i][Z] / max_yaw_thrust_d_gain;
+      extra_yaw_pi_term_[i] = cmd_msg.angles[Z] * thrust_d_gain_[i][Z] / thrust_d_gain_[max_yaw_term_index_][Z];
     }
   }
 
@@ -1077,6 +1064,7 @@ void AttitudeController::pwmConversion()
   float base_thrust_decreasing_rate = 0;
   float yaw_decreasing_rate = 0;
   float thrust_limit = motor_info_[motor_ref_index_].max_thrust / v_factor_;
+  float water_thrust_limit = water_motor_table[water_motor_ref_index_].max_thrust / water_v_factor_;
 
   /* check saturation level 2: z control saturation */
   float max_thrust = 0;
@@ -1106,7 +1094,8 @@ void AttitudeController::pwmConversion()
     }
   if(start_control_flag_)
     {
-      float residual_term = thrust_limit - max_thrust / rotor_devider_;
+      float effective_thrust_limit = (max_thrust_index >= 2) ? water_thrust_limit : thrust_limit;
+      float residual_term = effective_thrust_limit - max_thrust / rotor_devider_;
 
       if(residual_term < 0 && base_thrust_term_[max_thrust_index] > 0)
         {
@@ -1150,8 +1139,10 @@ void AttitudeController::pwmConversion()
                     }
                 }
 
-              float residual_term_max =  thrust_limit - max_thrust / rotor_devider_;
-              float residual_term_min =  min_thrust / rotor_devider_ - min_thrust_;
+              float effective_limit_max = (max_thrust_index >= 2) ? water_thrust_limit : thrust_limit;
+              float effective_min_val = (min_thrust_index >= 2) ? 0.0f : min_thrust_;
+              float residual_term_max =  effective_limit_max - max_thrust / rotor_devider_;
+              float residual_term_min =  min_thrust / rotor_devider_ - effective_min_val;
               int thrust_index = 0;
               if (residual_term_min < residual_term_max)
                 {
@@ -1211,6 +1202,25 @@ void AttitudeController::pwmConversion()
               }
             case 1:
               {
+#ifdef FLAMINGO
+                /* Coaxial dual-rotor: 4 logical motors share 2 physical gimbals.
+                   Physical gimbal i (i<2) serves motors i (aerial) and i+2 (aquatic).
+                   Combine their force vectors to determine the shared gimbal angle. */
+                {
+                  float fx = target_thrust_[i*2];
+                  float fz = target_thrust_[i*2+1];
+                  target_thrust_[i] = ap::pythagorous2(fx, fz);
+
+                  if (i < 2) 
+                  {
+                    float combined_x = fx + target_thrust_[(i+2)*2];
+                    float combined_z = fz + target_thrust_[(i+2)*2+1];
+                    float gimbal_candidate = atan2f(-combined_x, combined_z);
+                    if (std::isfinite(gimbal_candidate))
+                      target_gimbal_angles_[i] = (target_gimbal_angles_[i] + gimbal_candidate) / 2;
+                  }
+                }
+#else
                 ap::Vector3f f_i;
                 f_i.x = target_thrust_[i*2];
                 f_i.z = target_thrust_[i*2+1];
@@ -1219,7 +1229,7 @@ void AttitudeController::pwmConversion()
 
                 /* simple lpf */
                 if(std::isfinite(gimbal_candidate)) target_gimbal_angles_[i] =(target_gimbal_angles_[i]+ gimbal_candidate)/2;
-
+#endif
                 break;
               }
             default:
@@ -1271,32 +1281,34 @@ void AttitudeController::pwmConversion()
     }
   //TODO: send target gimbal angles in real machiene
 #ifdef SIMULATION
-  //TODO: directly send target gimbal angles to gazebo
+
+  int gimbal_angle_num = 0;
   switch(gimbal_dof_)
     {
     case 2:
-      {
-        sensor_msgs::JointState gimbal_control_msg;
-        gimbal_control_msg.header.stamp = ros::Time::now();
-        for(int i = 0; i < motor_number_ / (rotor_coef_); i++){
-          gimbal_control_msg.position.push_back(target_gimbal_angles_[2*i]);
-          gimbal_control_msg.position.push_back(target_gimbal_angles_[2*i+1]);
-        }
-        gimbal_control_pub_.publish(gimbal_control_msg);    
-        break;
-      }
+      gimbal_angle_num = (motor_number_ / rotor_coef_) * 2;
+      break;
     case 1:
-      {
-        sensor_msgs::JointState gimbal_control_msg;
-        gimbal_control_msg.header.stamp = ros::Time::now();
-        for(int i = 0; i < motor_number_ / (rotor_coef_); i++){
-          gimbal_control_msg.position.push_back(target_gimbal_angles_[i]);
-        }
-        gimbal_control_pub_.publish(gimbal_control_msg);
-        break;
-      }
+#ifdef FLAMINGO
+      gimbal_angle_num = 2;  /* Only 2 physical gimbals for coaxial Flamingo */
+#else
+      gimbal_angle_num = motor_number_ / rotor_coef_;
+#endif
+      break;
     default:
       break;
+    }
+
+  if(gimbal_angle_num > 0)
+    {
+      sensor_msgs::JointState gimbal_control_msg;
+      gimbal_control_msg.header.stamp = ros::Time::now();
+      gimbal_control_msg.position.resize(gimbal_angle_num);
+      for(int i = 0; i < gimbal_angle_num; ++i)
+        {
+          gimbal_control_msg.position[i] = target_gimbal_angles_[i];
+        }
+      gimbal_control_pub_.publish(gimbal_control_msg);
     }
 
 #else
@@ -1326,7 +1338,12 @@ void AttitudeController::pwmConversion()
     case 1:
       {
         std::map<uint8_t, float> gimbal_map;
-        for(int i = 0; i < motor_number_ / (rotor_coef_); i++){
+#ifdef FLAMINGO
+        int num_gimbals = 2;  /* Only 2 physical gimbals for coaxial Flamingo */
+#else
+        int num_gimbals = motor_number_ / (rotor_coef_);
+#endif
+        for(int i = 0; i < num_gimbals; i++){
           if(start_control_flag_)
           {
           #if GX_PWM_SERVO  

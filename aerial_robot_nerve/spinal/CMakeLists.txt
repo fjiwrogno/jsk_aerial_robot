@@ -79,6 +79,7 @@ include_directories(
 )
 
 add_definitions(-DSIMULATION)
+add_definitions(-DFLAMINGO)
 
 add_library(spinal_math
   ${SPINAL_DIRS}/math/AP_Math.cpp

@@ -171,3 +171,18 @@ motor_info:
         # for simualtion
         rotor_damping_rate: 0.1 # = 0.001 / (0.01 + 0.001); 0.01: time constant; 0.001: dt
         rotor_force_noise: 0.01 # [N] but good performance in gazebo
+
+
+## 现有的问题
+- 共轴结构urdf: 由于在一个gimbal上加了两个rotor导致很多校验失败了！
+- 不确定水下能不能翻转过来以及能否成功实现dive->flip->uplift->take off的pipeline呢？
+  - 这样的话一块电池直接可以做完整个实验？！
+- 一些分析：
+  - dive：没问题！
+  - flip：从pitch flip还是从roll呢？需要非常大的P或者i_gian!
+  -             ixx="0.0160903" iyy="0.0573578" izz="0.0476113"
+  - 因为pitch的inertia几乎等于roll的inertia的三倍，而且考虑转动过程中的阻力的因素，转roll的话感觉会需要更多的cost？
+    - pitch转过去的话惯量小，pitch_control_torque = 
+    - roll的话动力强？rol_control_max_torque = 0.3 * 20 = 6Nm
+  - 翻转过后uplift：应该没问题？保持0姿态即可
+  - take off：初始时刻就需要加一定的油门然后再过渡过来

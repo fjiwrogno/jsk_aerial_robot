@@ -208,7 +208,6 @@
     <xacro:damping_factor link="thrust${self}"/>
 
     #### thrust link (virtual) for aquatic motor####
-  <!-- aquatic motor
     <link name="thrust${self + 2}">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -218,8 +217,8 @@
             ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
       </inertial>
     </link>
-    <xacro:damping_factor link="thrust${self + 2}"/> -->
-
+    <xacro:damping_factor link="thrust${self + 2}"/> 
+    
     ## joints ##
     #### rotor parent link joint (virtual) ####
     <joint name="rotor_parent_link_joint${self}" type="fixed">
@@ -239,14 +238,13 @@
     </joint>
 
     #### rotor joint (virtual) for aquatic rotor####
-    <!-- <joint name="rotor${self + 2}" type="continuous"> -->
-      <!-- <limit effort="100.0" lower="${water_min_force}" upper="${water_max_force}" velocity="0.5"/> -->
-      <!-- <parent link="rotor_parent${self}"/> -->
-      <!-- <child link="thrust${self + 2}"/> -->
-      <!-- modify this position -->
-      <!-- <origin rpy="0 0 0" xyz="0 0 -0.02"/> -->
-      <!-- <axis xyz="0 0 ${rotor_direction}"/> -->
-    <!-- </joint> -->
+    <joint name="rotor${self + 2}" type="continuous">
+      <limit effort="100.0" lower="${water_min_force}" upper="${water_max_force}" velocity="0.5"/>
+      <parent link="rotor_parent${self}"/>
+      <child link="thrust${self + 2}"/>
+      <origin rpy="0 0 0" xyz="0 0 -0.02"/>
+      <axis xyz="0 0 ${rotor_direction}"/>
+    </joint>
 
     #### hardware interface ####
     <transmission name="rotor_tran${self}">
@@ -260,7 +258,7 @@
       </actuator>
     </transmission>
 
-       <!-- #### hardware interface ####
+    #### hardware interface ####
     <transmission name="rotor_tran${self + 2}">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="rotor${self + 2}">
@@ -270,7 +268,7 @@
         <hardwareInterface>RotorInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
       </actuator>
-    </transmission> -->
+    </transmission> 
 
   </xacro:macro>
 </robot>

@@ -5,7 +5,7 @@ controller:
   gimbal_calc_in_fc : true
   underactuate: true
 
-  direct_joystick_mode: true #joystick control without mocap
+  direct_joystick_mode: false #joystick control without mocap
   joy_yaw_rate: 0.01
 
   # Throttle maps stick [0,1] → total vertical Z force (N) → target_acc_z = force / mass.

@@ -448,14 +448,15 @@ void FlamingoController::aerialControlCore()
     directJoystickControl();
   }
 
-  // In aerial mode, disable the aquatic motors (rotor index 2 and 3) by zeroing their
-  // base-thrust allocation entries.  attitude_control will detect these as inactive and
-  // set target_pwm[2/3] = WATER_MIN_DUTY (0.0).
+  // In aerial mode, disable the aquatic motors (rotor index 2 and 3) by padding their
+  // base-thrust entries with a tiny non-zero value (1e-6).  Same rationale as the
+  // underwater masking: keeps spinal's yaw saturation gate open while the per-motor
+  // PWM conversion still treats them as disabled (< 1e-5 threshold).
   int aquatic_motor_count = 2;  // motors 0 and 1 are aerial
   for (int m = aquatic_motor_count; m < motor_num_; m++)
   {
     for (int j = 0; j < rotor_coef_; j++)
-      target_base_thrust_.at(m * rotor_coef_ + j) = 0.0f;
+      target_base_thrust_.at(m * rotor_coef_ + j) = 1e-6f;
   }
 }
 
@@ -595,14 +596,17 @@ void FlamingoController::underwaterControlCore()
     }
     candidate_yaw_term_ = pid_controllers_.at(YAW).result() * max_yaw_scale;
 
-  // In underwater mode, disable the aerial motors (rotor index 0 and 1) by zeroing their
-  // base-thrust allocation entries.  attitude_control will detect these as inactive and
-  // set target_pwm[0/1] = IDLE_DUTY (0.5).
+  // In underwater mode, disable the aerial motors (rotor index 0 and 1) by padding their
+  // base-thrust entries with a tiny non-zero value.  This value (1e-6) is:
+  //   - large enough to pass the `fabs(base_thrust_term_[0]) > 0` gate in spinal's
+  //     yaw saturation logic, so yaw control is NOT suppressed;
+  //   - small enough (< 1e-5) to be detected as "disabled" by the per-motor PWM
+  //     conversion, which sets target_pwm[0/1] = IDLE_DUTY (0.5).
   int aerial_motor_count = 2;  // motors 0 and 1 are aerial
   for (int m = 0; m < aerial_motor_count; m++)
   {
     for (int j = 0; j < rotor_coef_; j++)
-      target_base_thrust_.at(m * rotor_coef_ + j) = 0.0f;
+      target_base_thrust_.at(m * rotor_coef_ + j) = 1e-6f;
   }
 }
 
