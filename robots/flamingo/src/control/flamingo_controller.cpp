@@ -289,6 +289,15 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     return;
   }
   float joy_stick_deadzone_ = 0.2;
+
+  if(joy_cmd.buttons[JOY_BUTTON_STOP] == 1)
+  {
+    navigator_->setNaviState(aerial_robot_navigation::STOP_STATE);
+    /* update the target pos(maybe not necessary) */
+    // navigator_->setTargetXyFromCurrentState();
+    double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+    navigator_->setTargetYaw(current_yaw);
+  }
   
   tf::Vector3 current_rpy = estimator_->getEuler(Frame::COG, estimate_mode_);
   tf::Vector3 omega = estimator_->getAngularVel(Frame::COG, estimate_mode_);
@@ -438,7 +447,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     }
     else
     {
-      raw_target_pitch = 0.0;
+      raw_target_pitch = estimator_->getEuler(Frame::COG, estimate_mode_).y();
     } 
   
     target_pitch_ = raw_target_pitch;
@@ -448,6 +457,10 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS]) > joy_stick_deadzone_)
     {
       raw_target_roll = -1.0 * joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle;
+    }
+    else
+    {
+      raw_target_roll = estimator_->getEuler(Frame::COG, estimate_mode_).x();
     }
 
     target_roll_ = raw_target_roll;
@@ -471,12 +484,12 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     float max_roll_angle = 0.21; // ~15 degrees
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS]) > joy_stick_deadzone_)
     {
-      target_roll_ = 3.14 - joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle; 
+      target_roll_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle; 
     }
     else
     {
       // becasue the initial rool angle is 3.14rad so currently set this value to 3.14
-      target_roll_ = 3.14;
+      target_roll_ = 0;
     }
   }
 

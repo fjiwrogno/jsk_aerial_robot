@@ -111,7 +111,7 @@ void AttitudeController::init(TIM_HandleTypeDef* htim1, TIM_HandleTypeDef* htim2
     HAL_TIM_PWM_Start(pwm_htim1_, TIM_CHANNEL_3);
     HAL_TIM_PWM_Start(pwm_htim1_, TIM_CHANNEL_4);
   }
-#if !GX_SERVO_PWM
+#if !GX_PWM_SERVO
   HAL_TIM_PWM_Start(pwm_htim2_, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(pwm_htim2_, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(pwm_htim2_, TIM_CHANNEL_3);
