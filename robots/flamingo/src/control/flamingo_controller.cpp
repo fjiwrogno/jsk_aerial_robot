@@ -320,36 +320,49 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   double mapped_total_thrust = depth_hover_thrust_;
 
 
-  if(joy_cmd.buttons[JOY_BUTTON_REAR_LEFT_1] && joy_cmd.buttons[JOY_BUTTON_REAR_RIGHT_1])
+  // Stabilize toggle: D-pad Left
+  if(joy_cmd.buttons[JOY_BUTTON_CROSS_LEFT] == 1)
   {
-    if_stablize_ = !if_stablize_;
-
-    if(if_stablize_)
+    if (!stablize_button_pressed_)
     {
-      ROS_ERROR("STABLIZED MODE IS ON!");
-    }
-    else
-    {
-      ROS_ERROR("MANUAL MODE IS ON!");
-    }
+      if_stablize_ = !if_stablize_;
+      stablize_button_pressed_ = true;
 
+      if(if_stablize_)
+        ROS_ERROR("STABLIZED MODE IS ON!");
+      else
+        ROS_ERROR("MANUAL MODE IS ON!");
+    }
+  }
+  else
+  {
+    stablize_button_pressed_ = false;
   }
   
-  if(joy_cmd.buttons[JOY_BUTTON_REAR_LEFT_2] && joy_cmd.buttons[JOY_BUTTON_REAR_RIGHT_2])
+  // Dive toggle: D-pad Right
+  if(joy_cmd.buttons[JOY_BUTTON_CROSS_RIGHT] == 1)
   {
-    if_dive_ = !if_dive_;
+    if (!dive_button_pressed_)
+    {
+      if_dive_ = !if_dive_;
+      dive_button_pressed_ = true;
 
-    if(if_dive_)
-    {
-      ROS_ERROR("DEPTH CONTROL IS ON!");
-      target_depth_ = current_depth_;
-      depth_err_i_ = 0;
-      depth_prev_err_ = 0;
+      if(if_dive_)
+      {
+        ROS_ERROR("DEPTH CONTROL IS ON!");
+        target_depth_ = current_depth_;
+        depth_err_i_ = 0;
+        depth_prev_err_ = 0;
+      }
+      else
+      {
+        ROS_ERROR("DEPTH CONTROL IS OFF");
+      }
     }
-    else
-    {
-      ROS_ERROR("DEPTH CONTROL IS OFF");
-    }
+  }
+  else
+  {
+    dive_button_pressed_ = false;
   }
   // speed mode switch
   if (joy_cmd.buttons[JOY_BUTTON_CROSS_UP] == 1)
@@ -439,11 +452,11 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     double raw_target_pitch = 0.0;
     if (joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] > joy_stick_deadzone_) 
     {
-      raw_target_pitch = current_max_pitch;
+      raw_target_pitch = -current_max_pitch;
     }
     else if (joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] < -joy_stick_deadzone_)
     {
-      raw_target_pitch = -current_max_pitch;
+      raw_target_pitch = current_max_pitch;
     }
     else
     {
@@ -456,7 +469,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     float max_roll_angle = 0.31; // ~30 degrees
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS]) > joy_stick_deadzone_)
     {
-      raw_target_roll = -1.0 * joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle;
+      raw_target_roll = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle;
     }
     else
     {
