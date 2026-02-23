@@ -234,7 +234,7 @@
       <limit effort="100.0" lower="${water_min_force}" upper="${water_max_force}" velocity="0.5"/>
       <parent link="rotor_parent${self}"/>
       <child link="thrust${self}"/>
-      <origin rpy="0 0 0" xyz="0 0 -0.02"/>
+      <origin rpy="${pi} 0 0" xyz="0 0 -0.02"/>
       <axis xyz="0 0 ${rotor_direction}"/>
     </joint>
 
