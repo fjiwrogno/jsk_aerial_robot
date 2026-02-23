@@ -352,7 +352,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     }
   }
   // speed mode switch
-  if (joy_cmd.buttons[JOY_BUTTON_CROSS_LEFT] && joy_cmd.buttons[JOY_BUTTON_CROSS_RIGHT])
+  if (joy_cmd.buttons[JOY_BUTTON_CROSS_UP] == 1)
   {
     if (!speed_mode_button_pressed_) 
     {
@@ -439,11 +439,11 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     double raw_target_pitch = 0.0;
     if (joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] > joy_stick_deadzone_) 
     {
-      raw_target_pitch = -1.0 * current_max_pitch;
+      raw_target_pitch = current_max_pitch;
     }
     else if (joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] < -joy_stick_deadzone_)
     {
-      raw_target_pitch = current_max_pitch;
+      raw_target_pitch = -current_max_pitch;
     }
     else
     {
