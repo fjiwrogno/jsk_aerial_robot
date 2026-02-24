@@ -10,15 +10,15 @@ controller:
   joy_yaw_rate: 0.01
 
   throttle_min_thrust: 0.0
-  throttle_max_thrust: 28.0
-  throttle_mid: 0.89           # hover point on stick (25/28≈0.89)
-  throttle_expo: 0.5
+  throttle_max_thrust: 56.0
+  throttle_mid: 0.52           # hover point on stick (25/28≈0.89)
+  throttle_expo: 0.15
   throttle_deadzone_bottom: 0.1
   motor_max_thrust: 28.0
 
   # Attitude stick parameters
   direct_pitch_max: 0.40       # max pitch angle (rad), ~11.5 deg
-  direct_roll_max: 0.20        # max roll angle (rad), ~11.5 deg
+  direct_roll_max: 0.40        # max roll angle (rad), ~11.5 deg
   stick_expo: 0.3              # expo for roll/pitch sticks (finer control near center)
 
   xy:

@@ -86,8 +86,8 @@ private:
   double joy_roll_cmd_;             // normalized [-1, 1] from right stick horizontal
   double joy_yaw_val_cmd_;          // normalized [-1, 1] from left stick horizontal
   double direct_yaw_target_;        // integrated yaw heading target (rad)
-  void joyCallback(const sensor_msgs::Joy::ConstPtr& msg);
-  void directJoystickControl();
+  void joyCallback(const sensor_msgs::JoyConstPtr& msg);
+  tf::Vector3 directJoystickControl();
 
   // Betaflight-style curve helpers
   double applyThrottleCurve(double normalized_input);  // input [0,1] → output [0,1]
