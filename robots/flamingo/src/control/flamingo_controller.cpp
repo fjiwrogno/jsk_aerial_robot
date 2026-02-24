@@ -144,14 +144,18 @@ void FlamingoController::controlCore()
     const double m_f_rate = flamingo_robot_model_->getMFRate();
 
     Eigen::MatrixXd wrench_map = Eigen::MatrixXd::Zero(6, 3);
-    wrench_map.block(0, 0, 3, 3) = Eigen::MatrixXd::Identity(3, 3);
+    
+    // FIX: 因为旋翼产生向下的推力，力和力矩的映射都必须乘以 -1.0
+    double thrust_dir = -1.0; 
+    wrench_map.block(0, 0, 3, 3) = thrust_dir * Eigen::MatrixXd::Identity(3, 3);
     int last_col = 0;
 
     /* calculate normal allocation */
     for (int i = 0; i < motor_num_; i++)
     {
-      wrench_map.block(3, 0, 3, 3) = aerial_robot_model::skew(rotors_origin_from_cog.at(i)) +
-                                    rotor_direction.at(i + 1) * m_f_rate * Eigen::Matrix3d::Identity();
+      // FIX: 力矩 = r x F = r x (thrust_dir * f) = thrust_dir * (r x f)
+      wrench_map.block(3, 0, 3, 3) = thrust_dir * aerial_robot_model::skew(rotors_origin_from_cog.at(i)) +
+                                    thrust_dir * rotor_direction.at(i + 1) * m_f_rate * Eigen::Matrix3d::Identity();
       full_q_mat.middleCols(last_col, 3) = wrench_map;
       last_col += 3;
     }
