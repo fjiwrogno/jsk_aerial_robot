@@ -95,7 +95,7 @@ bool FlamingoController::update()
 void FlamingoController::controlCore()
 {
     PoseLinearController::controlCore();
-    double pid_depth_w = depthControlLoop() / flamingo_robot_model_->getMass();  
+    double pid_depth_w = -1.0 * depthControlLoop() / flamingo_robot_model_->getMass();  
     tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
     tf::Vector3 target_acc_w(0, 0, pid_depth_w);
     tf::Vector3 target_acc_dash = (tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z()))).inverse() * target_acc_w;
@@ -486,7 +486,12 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
   else
   {
 
-    float current_max_pitch = 0.26; // ~15 degrees
+    double current_max_pitch = PITCH_LIMIT_LOW;
+    switch(current_speed_mode_) {
+      case SPEED_LOW:    current_max_pitch = PITCH_LIMIT_LOW; break;
+      case SPEED_MEDIUM: current_max_pitch = PITCH_LIMIT_MED; break;
+      case SPEED_HIGH:   current_max_pitch = PITCH_LIMIT_HIGH; break;
+    }
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS]) > joy_stick_deadzone_)
     {
       target_pitch_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] * current_max_pitch;

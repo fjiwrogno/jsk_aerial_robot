@@ -1274,7 +1274,7 @@ void AttitudeController::pwmConversion()
           f_i.x = target_thrust_[i * 2];
           f_i.z = target_thrust_[i * 2 + 1];
 #if REVERSE_AQUATIC_ROTOR
-          float gimbal_candidate = atan2f(-f_i.x, f_i.z);
+          float gimbal_candidate = -atan2f(-f_i.x, f_i.z);
 #else
           float gimbal_candidate = atan2f(-f_i.x, f_i.z);
 #endif
