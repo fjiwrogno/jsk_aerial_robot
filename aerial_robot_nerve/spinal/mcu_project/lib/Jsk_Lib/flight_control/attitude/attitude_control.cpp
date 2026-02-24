@@ -1218,20 +1218,27 @@ void AttitudeController::pwmConversion()
                 /* Coaxial dual-rotor: 4 logical motors share 2 physical gimbals.
                    Physical gimbal i (i<2) serves motors i (aerial) and i+2 (aquatic).
                    Combine their force vectors to determine the shared gimbal angle. */
-                {
-                  float fx = target_thrust_[i*2];
-                  float fz = target_thrust_[i*2+1];
-                  target_thrust_[i] = ap::pythagorous2(fx, fz);
+                
+                float fx = target_thrust_[i*2];
+                float fz = target_thrust_[i*2+1];
+                target_thrust_[i] = ap::pythagorous2(fx, fz);
+                bool aerial_motors_active = (fabs(base_thrust_term_[1]) > 1e-3f)
+                               || (fabs(base_thrust_term_[3]) > 1e-3f);
 
-                  if (i < 2) 
+                if (i < 2) 
+                {
+                  float combined_x = fx + target_thrust_[(i+2)*2];
+                  float combined_z = fz + target_thrust_[(i+2)*2+1];
+                  float gimbal_candidate = atan2f(-combined_x, combined_z);
+
+                  if (!aerial_motors_active)
                   {
-                    float combined_x = fx + target_thrust_[(i+2)*2];
-                    float combined_z = fz + target_thrust_[(i+2)*2+1];
-                    float gimbal_candidate = atan2f(-combined_x, combined_z);
-                    if (std::isfinite(gimbal_candidate))
-                      target_gimbal_angles_[i] = (target_gimbal_angles_[i] + gimbal_candidate) / 2;
+                    gimbal_candidate = -1.0 * gimbal_candidate;
                   }
+                  if (std::isfinite(gimbal_candidate))
+                    target_gimbal_angles_[i] = (target_gimbal_angles_[i] + gimbal_candidate) / 2;
                 }
+                
 #else
                 ap::Vector3f f_i;
                 f_i.x = target_thrust_[i*2];

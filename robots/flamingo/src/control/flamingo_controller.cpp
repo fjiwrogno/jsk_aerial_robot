@@ -462,7 +462,7 @@ void FlamingoController::aerialControlCore()
 
 void FlamingoController::underwaterControlCore()
 {
-  double pid_depth_w = depthControlLoop() / flamingo_robot_model_->getMass();  
+  double pid_depth_w = -1.0 * depthControlLoop() / flamingo_robot_model_->getMass();  
   tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
   tf::Vector3 target_acc_w(0, 0, pid_depth_w);
     tf::Vector3 target_acc_dash = (tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z()))).inverse() * target_acc_w;
@@ -511,14 +511,18 @@ void FlamingoController::underwaterControlCore()
     const double m_f_rate = flamingo_robot_model_->getMFRate();
 
     Eigen::MatrixXd wrench_map = Eigen::MatrixXd::Zero(6, 3);
-    wrench_map.block(0, 0, 3, 3) = Eigen::MatrixXd::Identity(3, 3);
+    
+    // FIX: 因为旋翼产生向下的推力，力和力矩的映射都必须乘以 -1.0
+    double thrust_dir = -1.0; 
+    wrench_map.block(0, 0, 3, 3) = thrust_dir * Eigen::MatrixXd::Identity(3, 3);
     int last_col = 0;
 
     /* calculate normal allocation */
     for (int i = 0; i < motor_num_; i++)
     {
-      wrench_map.block(3, 0, 3, 3) = aerial_robot_model::skew(rotors_origin_from_cog.at(i)) +
-                                    rotor_direction.at(i + 1) * m_f_rate * Eigen::Matrix3d::Identity();
+      // FIX: 力矩 = r x F = r x (thrust_dir * f) = thrust_dir * (r x f)
+      wrench_map.block(3, 0, 3, 3) = thrust_dir * aerial_robot_model::skew(rotors_origin_from_cog.at(i)) +
+                                    thrust_dir * rotor_direction.at(i + 1) * m_f_rate * Eigen::Matrix3d::Identity();
       full_q_mat.middleCols(last_col, 3) = wrench_map;
       last_col += 3;
     }
@@ -679,19 +683,35 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 
   if(joy_cmd.buttons[JOY_BUTTON_START] == 1)
   {
-    switchMode();
+    if (!mode_switch_button_pressed_)
+    {
+      mode_switch_button_pressed_ = true;
+      switchMode();
+      if(current_mode_ == MODE::CROSS_DOMAIN)
+      {
+        ROS_ERROR("CROSS DOMAIN MODE IS ON");
+      }
+      else
+      {
+        ROS_ERROR("UNDERWATER MODE IS ON");
+      }
+    }
+  }
+  else
+  {
+    mode_switch_button_pressed_ = false;
   }
 
+  // Dispatch to the appropriate joy handler every callback, regardless of mode switch
   if(current_mode_ == MODE::CROSS_DOMAIN)
   {
     aerialJoyCallback(msg);
-    ROS_ERROR("CROSS DOMAIN MODE IS ON");
   }
-  else 
+  else
   {
     underwaterJoyCallback(msg);
-    ROS_ERROR("UNDERWATER MODE IS ON");
   }
+
 }
 
 void FlamingoController::aerialJoyCallback(const sensor_msgs::Joy::ConstPtr& msg)
@@ -731,6 +751,15 @@ void FlamingoController::underwaterJoyCallback(const sensor_msgs::Joy::ConstPtr&
 {  
   sensor_msgs::Joy joy_cmd = joyParse(*msg);
   float joy_stick_deadzone_ = 0.2;
+
+  if(joy_cmd.buttons[JOY_BUTTON_STOP] == 1)
+  {
+    navigator_->setNaviState(aerial_robot_navigation::STOP_STATE);
+    /* update the target pos(maybe not necessary) */
+    // navigator_->setTargetXyFromCurrentState();
+    double current_yaw = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+    navigator_->setTargetYaw(current_yaw);
+  }
   
   tf::Vector3 current_rpy = estimator_->getEuler(Frame::COG, estimate_mode_);
   tf::Vector3 omega = estimator_->getAngularVel(Frame::COG, estimate_mode_);
@@ -751,39 +780,52 @@ void FlamingoController::underwaterJoyCallback(const sensor_msgs::Joy::ConstPtr&
   double mapped_total_thrust = depth_hover_thrust_;
 
 
-  if(joy_cmd.buttons[JOY_BUTTON_REAR_LEFT_1] && joy_cmd.buttons[JOY_BUTTON_REAR_RIGHT_1])
+  // Stabilize toggle: D-pad Left
+  if(joy_cmd.buttons[JOY_BUTTON_CROSS_LEFT] == 1)
   {
-    if_stablize_ = !if_stablize_;
-
-    if(if_stablize_)
+    if (!stablize_button_pressed_)
     {
-      ROS_ERROR("STABLIZED MODE IS ON!");
-    }
-    else
-    {
-      ROS_ERROR("MANUAL MODE IS ON!");
-    }
+      if_stablize_ = !if_stablize_;
+      stablize_button_pressed_ = true;
 
+      if(if_stablize_)
+        ROS_ERROR("STABLIZED MODE IS ON!");
+      else
+        ROS_ERROR("MANUAL MODE IS ON!");
+    }
+  }
+  else
+  {
+    stablize_button_pressed_ = false;
   }
   
-  if(joy_cmd.buttons[JOY_BUTTON_REAR_LEFT_2] && joy_cmd.buttons[JOY_BUTTON_REAR_RIGHT_2])
+  // Dive toggle: D-pad Right
+  if(joy_cmd.buttons[JOY_BUTTON_CROSS_RIGHT] == 1)
   {
-    if_dive_ = !if_dive_;
+    if (!dive_button_pressed_)
+    {
+      if_dive_ = !if_dive_;
+      dive_button_pressed_ = true;
 
-    if(if_dive_)
-    {
-      ROS_ERROR("DEPTH CONTROL IS ON!");
-      target_depth_ = current_depth_;
-      depth_err_i_ = 0;
-      depth_prev_err_ = 0;
-    }
-    else
-    {
-      ROS_ERROR("DEPTH CONTROL IS OFF");
+      if(if_dive_)
+      {
+        ROS_ERROR("DEPTH CONTROL IS ON!");
+        target_depth_ = current_depth_;
+        depth_err_i_ = 0;
+        depth_prev_err_ = 0;
+      }
+      else
+      {
+        ROS_ERROR("DEPTH CONTROL IS OFF");
+      }
     }
   }
+  else
+  {
+    dive_button_pressed_ = false;
+  }
   // speed mode switch
-  if (joy_cmd.buttons[JOY_BUTTON_CROSS_LEFT] && joy_cmd.buttons[JOY_BUTTON_CROSS_RIGHT])
+  if (joy_cmd.buttons[JOY_BUTTON_CROSS_UP] == 1)
   {
     if (!speed_mode_button_pressed_) 
     {
@@ -870,7 +912,7 @@ void FlamingoController::underwaterJoyCallback(const sensor_msgs::Joy::ConstPtr&
     double raw_target_pitch = 0.0;
     if (joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] > joy_stick_deadzone_) 
     {
-      raw_target_pitch = -1.0 * current_max_pitch;
+      raw_target_pitch = -current_max_pitch;
     }
     else if (joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] < -joy_stick_deadzone_)
     {
@@ -878,7 +920,7 @@ void FlamingoController::underwaterJoyCallback(const sensor_msgs::Joy::ConstPtr&
     }
     else
     {
-      raw_target_pitch = 0.0;
+      raw_target_pitch = estimator_->getEuler(Frame::COG, estimate_mode_).y();
     } 
   
     target_pitch_ = raw_target_pitch;
@@ -887,7 +929,11 @@ void FlamingoController::underwaterJoyCallback(const sensor_msgs::Joy::ConstPtr&
     float max_roll_angle = 0.31; // ~30 degrees
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS]) > joy_stick_deadzone_)
     {
-      raw_target_roll = -1.0 * joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle;
+      raw_target_roll = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle;
+    }
+    else
+    {
+      raw_target_roll = estimator_->getEuler(Frame::COG, estimate_mode_).x();
     }
 
     target_roll_ = raw_target_roll;
@@ -896,7 +942,12 @@ void FlamingoController::underwaterJoyCallback(const sensor_msgs::Joy::ConstPtr&
   else
   {
 
-    float current_max_pitch = 0.26; // ~15 degrees
+    double current_max_pitch = PITCH_LIMIT_LOW;
+    switch(current_speed_mode_) {
+      case SPEED_LOW:    current_max_pitch = PITCH_LIMIT_LOW; break;
+      case SPEED_MEDIUM: current_max_pitch = PITCH_LIMIT_MED; break;
+      case SPEED_HIGH:   current_max_pitch = PITCH_LIMIT_HIGH; break;
+    }
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS]) > joy_stick_deadzone_)
     {
       target_pitch_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS] * current_max_pitch;
@@ -911,12 +962,12 @@ void FlamingoController::underwaterJoyCallback(const sensor_msgs::Joy::ConstPtr&
     float max_roll_angle = 0.21; // ~15 degrees
     if(fabs(joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS]) > joy_stick_deadzone_)
     {
-      target_roll_ = 3.14 - joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle; 
+      target_roll_ = joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS] * max_roll_angle; 
     }
     else
     {
       // becasue the initial rool angle is 3.14rad so currently set this value to 3.14
-      target_roll_ = 3.14;
+      target_roll_ = 0;
     }
   }
 

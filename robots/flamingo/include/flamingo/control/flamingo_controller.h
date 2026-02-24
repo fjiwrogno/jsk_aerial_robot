@@ -114,6 +114,9 @@ private:
   };
   SpeedMode current_speed_mode_ = SPEED_LOW;
   bool speed_mode_button_pressed_ = false;
+  bool stablize_button_pressed_ = false;
+  bool dive_button_pressed_ = false;
+  bool mode_switch_button_pressed_ = false;
 
   // Max pitch angles for each mode (in radians)
   const double PITCH_LIMIT_LOW = 0.15;    // ~8.6 deg
