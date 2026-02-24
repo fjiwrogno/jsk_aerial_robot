@@ -3,42 +3,42 @@ motor_info:
         max_pwm: 0.85 #0.92 # = 1840 [ms], 0.85 = 1700 will consume 60a current
         min_thrust: 0 #[N]
         force_landing_thrust: 7 #[N]
-        m_f_rate: -0.0203 
+        m_f_rate: -0.0188 # 24.2: 0.0186, 23.2: 0.0185, 22.2: 0.0191
         pwm_conversion_mode: 1 # Polynominal Mode
         vel_ref_num: 4
 
         ref1:
                 voltage: 25.2
-                max_thrust: 26.3588
-                polynominal4: 1.48773731 # x 10^4
-                polynominal3: -5.58079254 # x10^3
-                polynominal2: 5.74014278 # x10^2
-                polynominal1: 5.61360996 # x10
-                polynominal0: 58.88048410 # x1
+                max_thrust: 31.7275
+                polynominal4: 0.68654801 # x 10^4
+                polynominal3: -3.83126721 # x10^3
+                polynominal2: 6.91763696 # x10^2
+                polynominal1: 2.30138744 # x10
+                polynominal0: 60.03497876 # x1
         ref2:
                 voltage: 24.2
-                max_thrust: 24.9860 #18.07
-                polynominal4: -0.49628768 # x 10^4
-                polynominal3: 5.09303222 # x10^3
-                polynominal2: -12.15569447 # x10^2
-                polynominal1: 16.32457694 # x10
-                polynominal0: 57.39893059  # x1
+                max_thrust: 31.4298 #18.07
+                polynominal4: 0.63905147 # x 10^4
+                polynominal3: -3.64968905 # x10^3
+                polynominal2: 6.80317161 # x10^2
+                polynominal1: 2.60947221 # x10
+                polynominal0: 60.09208539  # x1
         ref3:
                 voltage: 23.2
-                max_thrust: 22.6525 #17.35
-                polynominal4: -3.61914123 # x 10^4
-                polynominal3: 20.17981105  # x10^3
-                polynominal2: -34.70653457 # x10^2
-                polynominal1: 28.25552794 # x10
-                polynominal0: 55.93348594 # x1
+                max_thrust: 29.5775 #17.35
+                polynominal4: 0.75756372 # x 10^4
+                polynominal3: -4.07004437  # x10^3
+                polynominal2: 7.13100100 # x10^2
+                polynominal1: 2.98655147 # x10
+                polynominal0: 60.14898719 # x1
         ref4:
                 voltage: 22.2
-                max_thrust: 19.7972 #15.91
-                polynominal4: -11.80332335 # x 10^4
-                polynominal3: 52.59262779 # x10^3
-                polynominal2: -74.05979913 # x10^2
-                polynominal1: 44.83750591 # x10
-                polynominal0: 54.35116065 # x1
+                max_thrust: 26.5011 #15.91
+                polynominal4: 0.95134666 # x 10^4
+                polynominal3: -3.89975450 # x10^3
+                polynominal2: 4.40142443 # x10^2
+                polynominal1: 7.16376149 # x10
+                polynominal0: 59.00332169 # x1
 
         # for simualtion
         rotor_damping_rate: 0.1 # = 0.001 / (0.01 + 0.001); 0.01: time constant; 0.001: dt

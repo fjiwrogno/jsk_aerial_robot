@@ -143,7 +143,7 @@ tf::Vector3 FlamingoController::directJoystickControl()
   // Throttle     → vertical          (dash z),  range [ 0, 25] m/s²
   // Values exceeding physical motor limits are clamped (not rescaled).
   constexpr double target_acc_z_max = 25.0;
-  constexpr double target_acc_xy_max = 5.0;
+  constexpr double target_acc_xy_max = 2.5;
 
   const double mass = flamingo_robot_model_->getMass();
   const double acc_z_physical_max = motor_max_thrust_ * motor_num_ / mass;
