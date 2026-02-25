@@ -518,7 +518,7 @@ void FlamingoController::underwaterControlCore()
     Eigen::MatrixXd wrench_map = Eigen::MatrixXd::Zero(6, 3);
     
     // FIX: 因为旋翼产生向下的推力，力和力矩的映射都必须乘以 -1.0
-    double thrust_dir = -1.0; 
+    double thrust_dir = 1.0; 
     wrench_map.block(0, 0, 3, 3) = thrust_dir * Eigen::MatrixXd::Identity(3, 3);
     int last_col = 0;
 

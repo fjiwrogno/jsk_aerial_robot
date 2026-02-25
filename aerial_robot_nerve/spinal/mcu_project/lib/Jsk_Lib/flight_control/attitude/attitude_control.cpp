@@ -1233,7 +1233,7 @@ void AttitudeController::pwmConversion()
 
                   if (!aerial_motors_active)
                   {
-                    gimbal_candidate = -1.0 * gimbal_candidate;
+                    gimbal_candidate = 1.0 * gimbal_candidate;
                   }
                   if (std::isfinite(gimbal_candidate))
                     target_gimbal_angles_[i] = (target_gimbal_angles_[i] + gimbal_candidate) / 2;
