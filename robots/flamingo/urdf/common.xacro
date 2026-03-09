@@ -7,7 +7,7 @@
   <!-- the rotor -->
   <thrust_link name="thrust" />
 
-  <m_f_rate value="0.0136" /> <!-- drug torque rate -->
+  <m_f_rate value="-0.0136" /> <!-- drug torque rate -->
   <!-- aerial motor -->
   <xacro:property name="air_max_force" value="18.0" /> <!-- [N] -->
   <xacro:property name="air_min_force" value="1.0" /> <!-- [N] -->

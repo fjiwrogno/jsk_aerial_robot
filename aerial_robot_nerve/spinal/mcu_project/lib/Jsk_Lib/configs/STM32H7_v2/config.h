@@ -58,7 +58,7 @@
 // 2.1.3.1 Dynamixel Servo Control without external convertor board
 #define DYNAMIXEL_BOARDLESS_CONTROL 0
 // 2.1..3.2 Aquatic Direction
-#define REVERSE_AQUATIC_ROTOR 1
+#define REVERSE_AQUATIC_ROTOR 0
 // 2.2 State Estimate
 // 2.2.1 Attitude Estimate
 #define ATTITUDE_ESTIMATE_FLAG 1

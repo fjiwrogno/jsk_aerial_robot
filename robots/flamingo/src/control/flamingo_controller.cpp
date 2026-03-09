@@ -95,7 +95,7 @@ bool FlamingoController::update()
 void FlamingoController::controlCore()
 {
     PoseLinearController::controlCore();
-    double pid_depth_w = -1.0 * depthControlLoop() / flamingo_robot_model_->getMass();  
+    double pid_depth_w = 1.0 * depthControlLoop() / flamingo_robot_model_->getMass();  
     tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
     tf::Vector3 target_acc_w(0, 0, pid_depth_w);
     tf::Vector3 target_acc_dash = (tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z()))).inverse() * target_acc_w;
@@ -146,7 +146,7 @@ void FlamingoController::controlCore()
     Eigen::MatrixXd wrench_map = Eigen::MatrixXd::Zero(6, 3);
     
     // FIX: 因为旋翼产生向下的推力，力和力矩的映射都必须乘以 -1.0
-    double thrust_dir = -1.0; 
+    double thrust_dir = 1.0; 
     wrench_map.block(0, 0, 3, 3) = thrust_dir * Eigen::MatrixXd::Identity(3, 3);
     int last_col = 0;
 
@@ -426,7 +426,7 @@ void FlamingoController::joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
     {
       // float on the surface
       // 6.0 will fully submerged
-      mapped_total_thrust = 3.0;
+      mapped_total_thrust = 5.0;
     }
 
     // workaround: pad non-zero small value for base thrust (base_throttle) to avoid the
