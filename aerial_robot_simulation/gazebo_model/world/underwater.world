@@ -1,0 +1,134 @@
+<?xml version="1.0" ?>
+<!-- Underwater world for Flamingo aerial-aquatic simulation.
+     Self-contained: does NOT depend on GAZEBO_MODEL_PATH or uuv_gazebo_worlds models.
+     Water surface (z=0) and seabed (z=-50) are defined inline as static models.
+     The water surface is highly transparent so the robot is visible underwater. -->
+<sdf version="1.5">
+  <world name="underwater">
+
+    <physics name="default_physics" default="true" type="ode">
+      <max_step_size>0.002</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>500</real_time_update_rate>
+      <magnetic_field>34 0 -36</magnetic_field>
+      <gravity>0 0 -9.8</gravity>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>50</iters>
+          <sor>0.5</sor>
+        </solver>
+      </ode>
+    </physics>
+
+    <scene>
+      <ambient>0.3 0.4 0.5 1.0</ambient>
+      <background>0.1 0.2 0.4 1.0</background>
+      <sky>
+        <clouds><speed>12</speed></clouds>
+      </sky>
+      <shadows>1</shadows>
+      <!-- Subtle fog: objects visible up to ~60 m, fade by 100 m -->
+      <fog>
+        <color>0.1 0.2 0.4 1.0</color>
+        <type>linear</type>
+        <density>0.005</density>
+        <start>30</start>
+        <end>100</end>
+      </fog>
+    </scene>
+
+    <!-- Lighting -->
+    <light type="directional" name="sun1">
+      <pose>50 0 150 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>0.3 0.3 -1</direction>
+      <cast_shadows>true</cast_shadows>
+    </light>
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Water surface at z=0.
+         transparency: 0=opaque, 1=fully transparent. 0.85 is nearly clear.
+         Gives a barely-visible blue tint so you can see the boundary between
+         the surface and the air above without blocking the view of the robot. -->
+    <model name="water_surface">
+      <static>true</static>
+      <link name="link">
+        <visual name="surface">
+          <cast_shadows>false</cast_shadows>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <box><size>200 200 0.02</size></box>
+          </geometry>
+          <material>
+            <ambient>0.3 0.6 0.9 1.0</ambient>
+            <diffuse>0.3 0.6 0.9 1.0</diffuse>
+            <specular>0.5 0.5 0.5 1.0 20</specular>
+          </material>
+          <!-- 0.85 = 85% transparent: water surface is nearly invisible -->
+          <transparency>0.85</transparency>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Seabed at z=-50 with collision (prevents robot sinking infinitely).
+         Sandy brown color for visual reference. -->
+    <model name="seabed">
+      <static>true</static>
+      <link name="link">
+        <collision name="ground">
+          <pose>0 0 -50 0 0 0</pose>
+          <geometry>
+            <box><size>200 200 0.1</size></box>
+          </geometry>
+        </collision>
+        <visual name="ground">
+          <cast_shadows>false</cast_shadows>
+          <pose>0 0 -50 0 0 0</pose>
+          <geometry>
+            <box><size>200 200 0.1</size></box>
+          </geometry>
+          <material>
+            <ambient>0.72 0.62 0.45 1.0</ambient>
+            <diffuse>0.72 0.62 0.45 1.0</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Underwater current plugin: publishes /hydrodynamics/current_velocity -->
+    <plugin name="underwater_current_plugin" filename="libuuv_underwater_current_ros_plugin.so">
+      <namespace>hydrodynamics</namespace>
+      <constant_current>
+        <topic>current_velocity</topic>
+        <velocity>
+          <mean>0</mean>
+          <min>0</min>
+          <max>5</max>
+          <mu>0.0</mu>
+          <noiseAmp>0.0</noiseAmp>
+        </velocity>
+        <horizontal_angle>
+          <mean>0</mean>
+          <min>-3.141592653589793238</min>
+          <max>3.141592653589793238</max>
+          <mu>0.0</mu>
+          <noiseAmp>0.0</noiseAmp>
+        </horizontal_angle>
+        <vertical_angle>
+          <mean>0</mean>
+          <min>-3.141592653589793238</min>
+          <max>3.141592653589793238</max>
+          <mu>0.0</mu>
+          <noiseAmp>0.0</noiseAmp>
+        </vertical_angle>
+      </constant_current>
+    </plugin>
+
+    <plugin name="sc_interface" filename="libuuv_sc_ros_interface_plugin.so"/>
+
+  </world>
+</sdf>

@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="flamingo">
+  <xacro:arg name="robot_name" default="flamingo" />
+
+  <!-- Standard URDF kinematics -->
+  <xacro:include filename="$(find flamingo)/robots/flamingo.urdf.xacro" />
+
+  <!-- Aerial simulation plugin: spinal HW interface, IMU, magnetometer, GPS -->
+  <xacro:include filename="$(find aerial_robot_simulation)/xacro/spinal.gazebo.xacro" />
+  <xacro:gazebo_spinal robot_name="$(arg robot_name)" mag_frame="fc" />
+
+  <!-- Underwater hydrodynamics plugin.
+       This plugin applies buoyancy + Fossen-model hydrodynamic forces to listed links each
+       physics step. It is independent of AerialRobotHWSim — both coexist in the same model.
+
+       Parameters to tune for Flamingo:
+         volume          [m^3]   – governs buoyancy force = fluid_density * volume * 9.8
+                                   Flamingo mass ~3.18 kg → neutral volume in freshwater ~0.00318 m^3
+                                   Set ~10% above neutral for slight positive buoyancy.
+         center_of_buoyancy      – CoB above CoG improves pitch/roll passive stability.
+         added_mass      [6x6]   – frequency-independent added mass matrix (Fossen, 1994).
+         linear_damping  [6x1]   – linear viscous damping coefficients (diagonal).
+         quadratic_damping [6x1] – quadratic (speed-squared) drag coefficients (diagonal).
+
+       Order of DOF: [surge(x), sway(y), heave(z), roll(rx), pitch(ry), yaw(rz)]
+       Signs: negative values yield restoring (opposing-motion) forces.
+  -->
+  <gazebo>
+    <!-- The ROS wrapper assumes one configured link name contains "base_link".
+         Flamingo uses the reduced physics body named "root", so the wrapper
+         later dereferences a null HydrodynamicModel in PublishIsSubmerged().
+         The base Gazebo plugin still applies buoyancy, damping, and current. -->
+    <plugin name="uuv_plugin" filename="libuuv_underwater_object_plugin.so">
+      <fluid_density>1000.0</fluid_density>
+      <!-- Must match the topic published by the underwater_current_plugin in the .world file -->
+      <flow_velocity_topic>hydrodynamics/current_velocity</flow_velocity_topic>
+      <debug>0</debug>
+
+      <!-- Gazebo's fixed joint reduction merges root→base_link→fc→rotor_arm1/2
+           (all connected by fixed joints) into a single physics body named "root".
+           GetLink("base_link") returns null after reduction; use "root". -->
+      <link name="root">
+        <neutrally_buoyant>0</neutrally_buoyant>
+
+        <!-- Volume [m^3] — must balance the TOTAL robot mass, not just base_link.
+             The UUV plugin applies buoyancy only to the links listed here (root body),
+             but gravity acts on ALL links. Total mass breakdown:
+               base_link:          3.1799818 kg
+               gimbal_link1/2:     0.29576 × 2 = 0.59152 kg
+               virtual links:      ~0 kg
+               Total:              ~3.7715 kg
+             Neutral volume = 3.7715 / 1000 = 0.003772 m^3.
+             0.003772 = exactly neutral; increase to ~0.003850 for ~0.77 N net upward lift.
+             WARNING: setting this much above neutral (e.g. 0.008) generates +41 N net upward`
+             force that shoots the robot to the surface and causes it to tumble inverted. -->
+        <volume>0.0038</volume>
+
+        <!-- Bounding box used only for debug visualisation; does not affect force calc -->
+        <box>
+          <width>0.168</width>
+          <length>0.4671</length>
+          <height>0.33266</height>
+        </box>
+
+        <!-- Center of buoyancy in root/base_link frame [m].
+             System CoG (base_link + gimbals) ≈ z=-0.089m (gimbals at z=+0.032m raise CoG
+             above base_link CoG at -0.111m). Gimbals (revolute joints) act as pendulums
+             that create anti-restoring torques when tilted — need large CoB margin.
+             z=+0.06m: CoB is 0.149m above system CoG → ~5.5 N·m/rad restoring torque.
+             Corresponds physically to the rotor-arm level (top of robot). -->
+        <center_of_buoyancy>-0.1326 0.002 0.06</center_of_buoyancy>
+
+
+        <hydrodynamic_model>
+          <type>fossen</type>
+
+          <!-- Added mass [kg, kg·m^2] – 6×6 matrix, row-major.
+               Rough estimate: ~30% of displaced mass per translational axis,
+               much smaller for rotational. Refine with system identification. -->
+          <added_mass>
+             1.0  0    0    0    0    0
+             0    1.0  0    0    0    0
+             0    0    1.5  0    0    0
+             0    0    0    0.01 0    0
+             0    0    0    0    0.05 0
+             0    0    0    0    0    0.05
+          </added_mass>
+
+          <!-- Linear damping [N·s/m, N·m·s/rad] – diagonal 6-vector.
+               Initial estimate from Stokes drag; tune empirically. -->
+          <linear_damping>
+            -5 -5 -10 -0.5 -0.5 -0.5
+          </linear_damping>
+
+          <!-- Quadratic damping [N·s²/m², N·m·s²/rad²] – diagonal 6-vector.
+               Dominant at higher speeds. Estimate: 0.5 * Cd * rho * A per axis.
+               Frontal area ~0.168*0.333 = 0.056 m² → coeff ~28; lateral ~0.47*0.333 = 0.157 m² → ~79 -->
+          <quadratic_damping>
+            -30 -80 -80 -3 -3 -3
+          </quadratic_damping>
+        </hydrodynamic_model>
+      </link>
+
+    </plugin>
+  </gazebo>
+
+</robot>

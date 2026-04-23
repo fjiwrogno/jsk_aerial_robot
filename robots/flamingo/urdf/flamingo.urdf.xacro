@@ -4,16 +4,8 @@
 
   <xacro:macro name="flamingo_center_link" params="child1 child2">
     ## link
-    #### root link (vitrual) ####
-    <link name="root">
-      <inertial>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="0.00001"/>
-        <inertia
-            ixx="0.000001" iyy="0.000001" izz="0.000001"
-            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
-      </inertial>
-    </link>
+    #### root link (virtual dummy frame for KDL) ####
+    <link name="root"/>
 
     #### base link ####
     <link name="base_link">
