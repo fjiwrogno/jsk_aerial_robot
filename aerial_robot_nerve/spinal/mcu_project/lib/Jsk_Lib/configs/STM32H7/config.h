@@ -81,6 +81,8 @@
 //2.3 Flight Control
 #define FLIGHT_CONTROL_FLAG 1
 #define DSHOT 0
+// bi-directional (3D mode ESC) pwm on pwm_htim2_ (motor index 4~7). see attitude_control.h for details.
+#define BIDIRECTIONAL_PWM2 0
 //* Do not change following code!!!
 ///////////////////////////////////
 #if !ATTITUDE_ESTIMATE_FLAG

@@ -103,6 +103,34 @@ void AttitudeController::init(TIM_HandleTypeDef* htim1, TIM_HandleTypeDef* htim2
       HAL_TIM_PWM_Start(pwm_htim1_, TIM_CHANNEL_4);
     }
 
+#if BIDIRECTIONAL_PWM2
+  /* bi-directional pwm: configure the frequency of pwm_htim2_ by code rather than CubeIDE.
+     1MHz tick makes CCR unit be 1us, so the pulse width is decoupled from PWM2_FREQ */
+  HAL_TIM_PWM_Stop(pwm_htim2_, TIM_CHANNEL_1);
+  HAL_TIM_Base_Stop(pwm_htim2_);
+  HAL_TIM_Base_DeInit(pwm_htim2_);
+
+  uint32_t pwm_htim2_clock = HAL_RCC_GetPCLK1Freq() * 2; // TIM4 is on APB1, timer clock = 2 x PCLK1
+  pwm_htim2_->Init.Prescaler = pwm_htim2_clock / PWM2_TICK_FREQ - 1;
+  pwm_htim2_->Init.CounterMode = TIM_COUNTERMODE_UP;
+  pwm_htim2_->Init.Period = PWM2_TICK_FREQ / PWM2_FREQ - 1;
+
+  TIM_OC_InitTypeDef sConfigOC2 = {0};
+  sConfigOC2.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC2.Pulse = (uint32_t)PWM2_NEUTRAL_PULSE_US; // zero thrust (1.5ms) from the first pulse
+  sConfigOC2.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC2.OCFastMode = TIM_OCFAST_DISABLE;
+
+  while(HAL_TIM_Base_Init(pwm_htim2_) != HAL_OK);
+  while(HAL_TIM_PWM_Init(pwm_htim2_) != HAL_OK);
+  while(HAL_TIM_PWM_ConfigChannel(pwm_htim2_, &sConfigOC2, TIM_CHANNEL_1) != HAL_OK);
+  while(HAL_TIM_PWM_ConfigChannel(pwm_htim2_, &sConfigOC2, TIM_CHANNEL_2) != HAL_OK);
+  while(HAL_TIM_PWM_ConfigChannel(pwm_htim2_, &sConfigOC2, TIM_CHANNEL_3) != HAL_OK);
+  while(HAL_TIM_PWM_ConfigChannel(pwm_htim2_, &sConfigOC2, TIM_CHANNEL_4) != HAL_OK);
+
+  HAL_TIM_Base_Start(pwm_htim2_);
+#endif
+
   HAL_TIM_PWM_Start(pwm_htim2_,TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(pwm_htim2_,TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(pwm_htim2_,TIM_CHANNEL_3);
@@ -258,10 +286,19 @@ void AttitudeController::pwmsControl(void)
       pwm_htim1_->Instance->CCR4 = (uint32_t)(target_pwm_[3] * pwm_htim1_->Init.Period);
     }
 
+#if BIDIRECTIONAL_PWM2
+  /* bi-directional pwm: target_pwm in [0,1] -> pulse width in [1.0ms, 2.0ms], 0.5 -> 1.5ms (zero thrust).
+     CCR unit is 1us (PWM2_TICK_FREQ), so the pulse width is independent of PWM2_FREQ */
+  pwm_htim2_->Instance->CCR1 = (uint32_t)pulseFromPwm(target_pwm_[4]);
+  pwm_htim2_->Instance->CCR2 = (uint32_t)pulseFromPwm(target_pwm_[5]);
+  pwm_htim2_->Instance->CCR3 = (uint32_t)pulseFromPwm(target_pwm_[6]);
+  pwm_htim2_->Instance->CCR4 = (uint32_t)pulseFromPwm(target_pwm_[7]);
+#else
   pwm_htim2_->Instance->CCR1 = (uint32_t)(target_pwm_[4] * pwm_htim2_->Init.Period);
   pwm_htim2_->Instance->CCR2 = (uint32_t)(target_pwm_[5] * pwm_htim2_->Init.Period);
   pwm_htim2_->Instance->CCR3 = (uint32_t)(target_pwm_[6] * pwm_htim2_->Init.Period);
   pwm_htim2_->Instance->CCR4 = (uint32_t)(target_pwm_[7] * pwm_htim2_->Init.Period);
+#endif
 
 #endif
 }
@@ -413,6 +450,32 @@ void AttitudeController::update(void)
 
       if(force_landing_flag_)
         {
+#if BIDIRECTIONAL_PWM2
+          /* uni-directional rotors: decrease the average thrust toward force_landing_thrust_ */
+          uint16_t uni_motor_number = motor_number_ < PWM2_MOTOR_START_INDEX ? motor_number_ : PWM2_MOTOR_START_INDEX;
+          if(uni_motor_number > 0)
+            {
+              float total_thrust = 0;
+              /* sum */
+              for(int i = 0; i < uni_motor_number; i++) total_thrust += base_thrust_term_[i];
+              /* average */
+              float average_thrust = total_thrust / uni_motor_number;
+
+              if(average_thrust > force_landing_thrust_)
+                {
+                  for(int i = 0; i < uni_motor_number; i++)
+                    base_thrust_term_[i] -= (base_thrust_term_[i] / average_thrust * FORCE_LANDING_INTEGRAL);
+                }
+            }
+
+          /* bi-directional rotors on pwm_htim2_: decay the thrust toward zero regardless of the sign */
+          for(int i = PWM2_MOTOR_START_INDEX; i < motor_number_; i++)
+            {
+              if(base_thrust_term_[i] > FORCE_LANDING_INTEGRAL) base_thrust_term_[i] -= FORCE_LANDING_INTEGRAL;
+              else if(base_thrust_term_[i] < -FORCE_LANDING_INTEGRAL) base_thrust_term_[i] += FORCE_LANDING_INTEGRAL;
+              else base_thrust_term_[i] = 0;
+            }
+#else
           float total_thrust = 0;
           /* sum */
           for(int i = 0; i < motor_number_; i++) total_thrust += base_thrust_term_[i];
@@ -424,6 +487,7 @@ void AttitudeController::update(void)
               for(int i = 0; i < motor_number_; i++)
                 base_thrust_term_[i] -= (base_thrust_term_[i] / average_thrust * FORCE_LANDING_INTEGRAL);
             }
+#endif
         }
     }
   /* target thrust -> target pwm -> HAL */
@@ -510,7 +574,16 @@ void AttitudeController::fourAxisCommandCallback( const spinal::FourAxisCommand 
   if(force_landing_flag_)
     {
       float total_thrust = 0;
-      for(int i = 0; i < motor_number_; i++) total_thrust += cmd_msg.base_thrust[i];
+      for(int i = 0; i < motor_number_; i++)
+        {
+#if BIDIRECTIONAL_PWM2
+          /* bi-directional rotors on pwm_htim2_ can generate negative thrust, evaluate the magnitude */
+          if(i >= PWM2_MOTOR_START_INDEX) total_thrust += fabs(cmd_msg.base_thrust[i]);
+          else total_thrust += cmd_msg.base_thrust[i];
+#else
+          total_thrust += cmd_msg.base_thrust[i];
+#endif
+        }
       float average_thrust = total_thrust / motor_number_;
       if(average_thrust < force_landing_thrust_) return;
     }
@@ -726,6 +799,9 @@ void AttitudeController::pwmTestCallback(const spinal::PwmTest& pwm_msg)
       return;
     }
 
+  /* nothing to apply (empty pwms while not in test mode): avoid reading pwms[0] out of bounds */
+  if(pwm_msg.pwms_length == 0) return;
+
   if(pwm_msg.motor_index_length)
     {
       /*Individual test mode*/
@@ -736,8 +812,18 @@ void AttitudeController::pwmTestCallback(const spinal::PwmTest& pwm_msg)
         }
       for(int i = 0; i < pwm_msg.motor_index_length; i++){
         int motor_index = pwm_msg.motor_index[i];
-                /*fail safe*/
-        if (pwm_msg.pwms[i] >= IDLE_DUTY && pwm_msg.pwms[i] <= MAX_PWM)
+        /* reject out-of-range index from ros msg to avoid out-of-bounds write */
+        if(motor_index < 0 || motor_index >= MAX_MOTOR_NUMBER)
+          {
+            nh_->logwarn("pwm test: motor index out of range");
+            continue;
+          }
+        /* fail safe: bi-directional rotors on pwm_htim2_ accept the reverse range
+           0.0 (1.0ms, full reverse) ~ 0.5 (1.5ms, stop) ~ 1.0 (2.0ms, full forward);
+           uni-directional ones keep the original [IDLE_DUTY, MAX_PWM] constraint.
+           IDLE_DUTY (0.5) is the safe fall back for both (idle / neutral) */
+        float min_pwm_value = isBidirectionalRotor(motor_index) ? 0.0f : IDLE_DUTY;
+        if (pwm_msg.pwms[i] >= min_pwm_value && pwm_msg.pwms[i] <= MAX_PWM)
           {
             pwm_test_value_[motor_index] = pwm_msg.pwms[i];
           }
@@ -752,8 +838,9 @@ void AttitudeController::pwmTestCallback(const spinal::PwmTest& pwm_msg)
     {
       /*Simultaneous test mode*/
       for(int i = 0; i < MAX_MOTOR_NUMBER; i++){
-        /*fail safe*/
-        if (pwm_msg.pwms[0] >= IDLE_DUTY && pwm_msg.pwms[0] <= MAX_PWM)
+        /* fail safe: bi-directional rotors accept [0,1] (0.5 = neutral), uni-directional keep [IDLE_DUTY, MAX_PWM] */
+        float min_pwm_value = isBidirectionalRotor(i) ? 0.0f : IDLE_DUTY;
+        if (pwm_msg.pwms[0] >= min_pwm_value && pwm_msg.pwms[0] <= MAX_PWM)
           {
             pwm_test_value_[i] = pwm_msg.pwms[0];
           }
@@ -874,6 +961,36 @@ bool AttitudeController::activated()
   else return false;
 }
 
+#if BIDIRECTIONAL_PWM2
+float AttitudeController::convertBiDirectional(float thrust)
+{
+  /* piecewise linear conversion for bi-directional rotors on pwm_htim2_,
+     based on the ApiSqueen X3 underwater thruster table (24V, thrust[kgf] x 9.8 -> [N]).
+     the forward/reversal characteristics are asymmetric, and 1.4ms ~ 1.6ms is the dead band of the ESC */
+  static const float forward_thrust[] = {0.0f, 1.96f, 3.92f, 6.86f, 9.8f, 11.76f, 14.7f, 17.64f, 19.6f, 25.48f}; // [N]
+  static const float forward_pulse[] = {1500.0f, 1600.0f, 1650.0f, 1700.0f, 1750.0f, 1800.0f, 1850.0f, 1900.0f, 1950.0f, 2000.0f}; // [us]
+  static const float reverse_thrust[] = {0.0f, 1.96f, 2.94f, 4.9f, 6.86f, 8.82f, 9.8f, 11.76f, 13.72f, 14.7f}; // [N] (magnitude)
+  static const float reverse_pulse[] = {1500.0f, 1400.0f, 1350.0f, 1300.0f, 1250.0f, 1200.0f, 1150.0f, 1100.0f, 1050.0f, 1000.0f}; // [us]
+  static const int table_size = sizeof(forward_thrust) / sizeof(forward_thrust[0]);
+
+  float scaled_thrust = v_factor_ * fabs(thrust) / rotor_devider_;
+  const float* thrust_table = (thrust >= 0) ? forward_thrust : reverse_thrust;
+  const float* pulse_table = (thrust >= 0) ? forward_pulse : reverse_pulse;
+
+  float pulse = pulse_table[table_size - 1]; // saturation at full thrust
+  for (int i = 1; i < table_size; i++)
+    {
+      if (scaled_thrust <= thrust_table[i])
+        {
+          pulse = pulse_table[i - 1] + (pulse_table[i] - pulse_table[i - 1]) * (scaled_thrust - thrust_table[i - 1]) / (thrust_table[i] - thrust_table[i - 1]);
+          break;
+        }
+    }
+
+  return (pulse - PWM2_MIN_PULSE_US) / (PWM2_MAX_PULSE_US - PWM2_MIN_PULSE_US);
+}
+#endif
+
 void AttitudeController::pwmConversion()
 {
   auto convert = [this](float target_thrust)
@@ -978,6 +1095,10 @@ void AttitudeController::pwmConversion()
   int max_thrust_index = 0;
   for(int i = 0; i < motor_number_ / rotor_coef_; i++)
     {
+      /* bi-directional rotors on pwm_htim2_ can generate negative thrust and do not follow
+         the uni-directional motor model (thrust_limit), so exclude them from the saturation check.
+         note: bi-directional rotors assume the plain rotor configuration (gimbal_dof_ = 0, rotor_coef_ = 1) */
+      if(isBidirectionalRotor(i)) continue;
       float thrust;
       switch(gimbal_dof_)
         {
@@ -1018,6 +1139,9 @@ void AttitudeController::pwmConversion()
               int min_thrust_index = 0;
               for(int i = 0; i < motor_number_ / (rotor_coef_); i++)
                 {
+                  /* exclude bi-directional rotors on pwm_htim2_ (same reason as the level 2 check):
+                     their negative thrust would pull min_thrust down and wrongly kill the yaw control */
+                  if(isBidirectionalRotor(i)) continue;
                   float thrust;
                   switch(gimbal_dof_)
                     {
@@ -1121,11 +1245,31 @@ void AttitudeController::pwmConversion()
               break;
             }
 
+#if BIDIRECTIONAL_PWM2
+          if(isBidirectionalRotor(i))
+            {
+              /* bi-directional rotor on pwm_htim2_: keep the sign of thrust, 0.5 means zero thrust (1.5ms) */
+              target_pwm_[i] = convertBiDirectional(target_thrust_[i]);
+
+              /* constraint: symmetric range, min_duty_/max_duty_ are for uni-directional rotors */
+              if(target_pwm_[i] < 0.0f) target_pwm_[i] = 0.0f;
+              else if(target_pwm_[i] > 1.0f) target_pwm_[i] = 1.0f;
+            }
+          else
+            {
+              target_pwm_[i] = convert(target_thrust_[i]);
+
+              /* constraint */
+              if(target_pwm_[i] < min_duty_) target_pwm_[i]  = min_duty_;
+              else if(target_pwm_[i]  > max_duty_) target_pwm_[i]  = max_duty_;
+            }
+#else
           target_pwm_[i] = convert(target_thrust_[i]);
 
           /* constraint */
           if(target_pwm_[i] < min_duty_) target_pwm_[i]  = min_duty_;
           else if(target_pwm_[i]  > max_duty_) target_pwm_[i]  = max_duty_;
+#endif
         }
 
       /* for ros */

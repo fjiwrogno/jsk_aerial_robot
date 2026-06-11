@@ -54,6 +54,22 @@
 
 #define MAX_MOTOR_NUMBER 10
 
+/* bi-directional pwm for pwm_htim2_ (motor index 4~7, e.g. underwater thruster with 3D mode ESC).
+   target_pwm in [0, 1] maps linearly to [PWM2_MIN_PULSE_US, PWM2_MAX_PULSE_US]:
+   0.0 -> 1.0ms (full reverse), 0.5 -> 1.5ms (zero thrust), 1.0 -> 2.0ms (full forward).
+   set BIDIRECTIONAL_PWM2 to 1 in the board config.h to enable; default off keeps the
+   original duty-based pwm_htim2_ behavior (e.g. motors 4~7 of multilink robots, SIMULATION) */
+#ifndef BIDIRECTIONAL_PWM2
+  #define BIDIRECTIONAL_PWM2 0
+#endif
+#define PWM2_FREQ 200 // [Hz], AM32/ArduSub field default for thrusters; HW timer PWM costs no CPU, tune 50/200/400 on the bench. upper bound ~490Hz (a 2ms pulse must fit one period)
+#define PWM2_TICK_FREQ 1000000 // 1MHz timer tick -> CCR unit = 1us, decoupled from PWM2_FREQ
+#define PWM2_MIN_PULSE_US 1000.0f
+#define PWM2_NEUTRAL_PULSE_US 1500.0f
+#define PWM2_MAX_PULSE_US 2000.0f
+#define PWM2_MOTOR_START_INDEX 4
+#define PWM2_MOTOR_END_INDEX 8 // pwm_htim2_ drives CH1-4 = motor index 4~7 only
+
 /* fail safe */
 #define FLIGHT_COMMAND_TIMEOUT 500 //500ms
 #define MAX_TILT_ANGLE 1.0f // rad
@@ -234,6 +250,9 @@ private:
   void pwmTestCallback(const spinal::PwmTest& pwm_msg);
   void pwmConversion(void);
   void pwmsControl(void);
+#if BIDIRECTIONAL_PWM2
+  float convertBiDirectional(float thrust);
+#endif
 
   void reset(void);
 
@@ -243,6 +262,20 @@ private:
     if (input > limit) return limit;
     else if(input < -limit) return -limit;
     else return input;
+  }
+
+  /* a motor is a bi-directional (3D ESC) rotor on pwm_htim2_ iff the feature is enabled
+     and its index is within the pwm_htim2_ channel range (4~7). folds to false (zero cost)
+     when BIDIRECTIONAL_PWM2 is 0. */
+  bool isBidirectionalRotor(int i) const
+  {
+    return BIDIRECTIONAL_PWM2 && i >= PWM2_MOTOR_START_INDEX && i < PWM2_MOTOR_END_INDEX;
+  }
+
+  /* normalized [0,1] target pwm -> pulse width [PWM2_MIN_PULSE_US, PWM2_MAX_PULSE_US] (0.5 -> 1.5ms neutral) */
+  float pulseFromPwm(float pwm) const
+  {
+    return PWM2_MIN_PULSE_US + pwm * (PWM2_MAX_PULSE_US - PWM2_MIN_PULSE_US);
   }
 
 #ifdef SIMULATION
