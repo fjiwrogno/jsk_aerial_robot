@@ -16,6 +16,7 @@
   <exec_depend>aerial_robot_control</exec_depend>
   <exec_depend>aerial_robot_model</exec_depend>
   <exec_depend>aerial_robot_msgs</exec_depend>
+  <exec_depend>aerial_robot_rc</exec_depend>
   <exec_depend>aerial_robot_simulation</exec_depend>
   <exec_depend>dragon</exec_depend>
   <exec_depend>gimbalrotor</exec_depend>

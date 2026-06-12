@@ -1,0 +1,16 @@
+# SBUS to USB 2 converter (Qilinlog), 35-byte decoded protocol
+# note: the serial port is NOT set here -- the launch file always overrides it,
+# pass port:=/dev/... to roslaunch instead
+baud_rate: 115200
+poll_rate: 200.0
+status_rate: 1.0
+
+# no valid frame within this period -> publish rc/raw with failsafe=true at 20 Hz
+serial_timeout: 0.5
+# no serial bytes at all within this period -> close and reopen the device
+byte_timeout: 1.0
+
+# flag byte bit assignment, must fit in 0x01-0xFF
+# (converter manual; confirm with the transmitter-off test, see README)
+failsafe_mask: 0x10
+frame_lost_mask: 0x20

@@ -8,6 +8,9 @@
 # Icon must end with two \r
 Icon
 
+/dev_goal/
+/reference/
+/.vscode/
 
 # Thumbnails
 ._*

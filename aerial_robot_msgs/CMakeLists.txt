@@ -22,6 +22,7 @@ add_message_files(FILES
   WrenchAllocationMatrix.msg
   ApplyWrench.msg
   ForceList.msg
+  RcRaw.msg
 )
 
 ## Generate added messages and services
@@ -31,6 +32,5 @@ generate_messages(DEPENDENCIES std_msgs geometry_msgs)
 catkin_package(
   CATKIN_DEPENDS std_msgs geometry_msgs message_runtime
 )
-
 
 

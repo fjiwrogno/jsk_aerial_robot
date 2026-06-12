@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="robot_name" default="/" />
+  <arg name="port" default="/dev/ttyUSB0" />
+  <arg name="config" default="$(find aerial_robot_rc)/config/sbus2usb.yaml" />
+
+  <node pkg="aerial_robot_rc" type="sbus2usb_rc_node" name="sbus2usb_rc_node" ns="$(arg robot_name)" output="screen">
+    <rosparam file="$(arg config)" command="load" />
+    <param name="port" value="$(arg port)" />
+  </node>
+</launch>
