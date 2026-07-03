@@ -1,264 +1,350 @@
 <?xml version="1.0"?>
 <robot
-    xmlns:xacro="http://www.ros.org/wiki/xacro" name="nami_link" >
+    xmlns:xacro="http://www.ros.org/wiki/xacro" name="nami" >
 
   <xacro:macro name="nami_center_link" params="child1 child2 child3 child4">
-    ## dummy
+    <!-- link -->
+    <!-- root link (virtual) -->
     <link name="root">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <mass value="0.00001"/>
         <inertia
-            ixx="0.000001" ixy="0.0" ixz="0.0"
-            iyy="0.000001" iyz="0.0"
-            izz="0.000001"/>
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
       </inertial>
     </link>
-    <joint name="root_joint" type="fixed">
-      <parent link="root"/>
-      <child link="base_link"/>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <axis xyz="0 0 1"/>
-    </joint>
 
-    ## link
-    <link name="base_link">
+    <!-- base link head (without spinal on) -->
+    <link name="base_link_head">
       <inertial>
-        <origin xyz="0.0 0.0 0.0165" rpy="0 0 0"/>
-        <mass value="0.1753"/>
+      <!-- the relative pos of cog compared to the origin of this link  -->
+      <!-- because right now the origin of base_link has been configured to  the base_link of solidworks-->
+        <origin xyz="0.18668 -0.00002 -0.0409" rpy="0 0 0"/>
+        <mass value="0.89542"/>
         <inertia
-            ixx="0.0004" iyy="0.0004" izz="0.0008"
-            ixy="0.00000" ixz="0.0000" iyz="0.00000"/>
+            ixx="0.0132295" iyy="0.0505483" izz="0.042343"
+            ixy="-0.0000062" ixz="0.0001472" iyz="0.0000005"/>
       </inertial>
       <visual>
-        <origin xyz="0 0 -0.0165" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://nami/urdf/quad/mesh/base_link.STL"/>
+          <mesh filename="package://nami/urdf/quad/mesh/base_link_head.dae" scale="1 1 1"/>
+          <origin xyz="0.032 -0.01550 0.01850" rpy="0 0 0"/>
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0.18668 -0.00002 -0.0409" rpy="0 0 0"/>
         <geometry>
-          <box size="0.25 0.25 0.035"/>
+          <box size="0.4045 0.1325 0.2"/>
         </geometry>
       </collision>
     </link>
+    <xacro:damping_factor link="base_link_head"/>
 
-    <xacro:damping_factor link="base_link"/>
+    <link name="virtual_base_link_tail">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.00001"/>
+        <inertia
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
+      </inertial>
+    </link>  
 
+    <!-- base link tail (with spinal on top of it) -->
+    <link name="base_link_tail">
+      <inertial>
+        <origin xyz="-0.0782550708 -0.0206739351 0.0236593713" rpy="0 0 0"/>
+        <mass value="2.76613"/>
+        <inertia
+            ixx="0.0132295" iyy="0.0505483" izz="0.042343"
+            ixy="-0.0000062" ixz="0.0001472" iyz="0.0000005"/>
+      </inertial>
+      <visual>
+        <geometry>
+          <mesh filename="package://nami/urdf/quad/mesh/base_link_tail.dae" scale="1 1 1"/>
+          <origin xyz="0.07523 0.02053 0.04926" rpy="0 0 0"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.0782550708 0.0206739351 0.0236593713"  rpy="0 0 0"/>
+        <geometry>
+          <box size="0.3935 0.1985 0.2"/>
+        </geometry>
+      </collision>
+    </link>
+    <xacro:damping_factor link="base_link_tail"/>
+
+    <!-- rotor coord link (virtual) -->
+    <link name="rotor_arm${child1}">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.00001"/>
+        <inertia
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
+      </inertial>
+    </link>
+
+    <link name="rotor_arm${child2}">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.00001"/>
+        <inertia
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
+      </inertial>
+    </link>
+
+    <link name="rotor_arm${child3}">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.00001"/>
+        <inertia
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
+      </inertial>
+    </link>
+
+    <link name="rotor_arm${child4}">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.00001"/>
+        <inertia
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
+      </inertial>
+    </link>
+
+    <!-- fcu frame -->
     <link name="fc">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <mass value="0.00001"/>
         <inertia
-            ixx="0.000001" ixy="0.0" ixz="0.0"
-            iyy="0.000001" iyz="0.0"
-            izz="0.000001"/>
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
       </inertial>
     </link>
+
+    <!-- joints -->
+    <!-- fixed frames (virtual) -->
+    <joint name="root_joint" type="fixed">
+      <parent link="root"/>
+      <child link="base_link_tail"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
     <joint name="fc_joint" type="fixed">
+      <parent link="base_link_tail"/>
       <child link="fc"/>
-      <parent link="base_link"/>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin xyz="-0.01168 0.02586 0.12094" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
-    ## rotor arms
-    <link name="rotor_arm${child1}">
-      <inertial>
-        <origin xyz="0.0486 0 0.0161" rpy="0 0 0"/>
-        <mass value="0.088"/>
-        <inertia
-            ixx="0.000001" ixy="0.0" ixz="0.0"
-            iyy="0.0001" iyz="0.0"
-            izz="0.0001"/>
-      </inertial>
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <mesh filename="package://nami/urdf/quad/mesh/rotor_arm.STL"/>
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="0.131 0.0325 0.065"/>
-        </geometry>
-      </collision>
-    </link>
-    <joint name="base_arm_joint${child1}" type="fixed">
-      <parent link="base_link"/>
+        <!-- virtual yaw joint of baselink -->
+    <joint name="virtual_yaw_joint" type="fixed">
+      <parent link="base_link_tail"/>
+      <child link="virtual_base_link_tail"/>
+      <origin xyz="0.07523 0.02054 0.02027" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+    </joint>
+
+    <!-- yaw joint of baselink -->
+    <joint name="yaw_joint" type="revolute">
+      <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
+      <parent link="virtual_base_link_tail"/>
+      <child link="base_link_head"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <dynamics damping="0.8" friction="0.0"/>
+    </joint>
+
+    <!-- rotor coord link joint (virtual) -->
+    <!-- the forward link -->
+    <joint name="rotor_coord_joint${child1}" type="fixed">
+      <parent link="base_link_head" />
       <child link="rotor_arm${child1}"/>
-      <origin rpy="0 0 ${pi/4}" xyz="0.051 0.051 0.0"/>
+      <origin xyz="0.2035 0.1825 0.0075" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
-    <link name="rotor_arm${child2}">
-      <inertial>
-        <origin xyz="0.0486 0 0.0161" rpy="0 0 0"/>
-        <mass value="0.088"/>
-        <inertia
-            ixx="0.000001" ixy="0.0" ixz="0.0"
-            iyy="0.0001" iyz="0.0"
-            izz="0.0001"/>
-      </inertial>
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <mesh filename="package://nami/urdf/quad/mesh/rotor_arm.STL"/>
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="0.131 0.0325 0.065"/>
-        </geometry>p
-      </collision>
-    </link>
-    <joint name="base_arm_joint${child2}" type="fixed">
-      <parent link="base_link"/>
+    <joint name="rotor_coord_joint${child2}" type="fixed">
+      <parent link="base_link_head"/>
       <child link="rotor_arm${child2}"/>
-      <origin rpy="0 0 ${pi*3.0/4.0}" xyz="-0.051 0.051 0.0"/>
+      <origin xyz="0.2035 -0.18327 0.0075" rpy="0 0 ${pi}"/>
       <axis xyz="0 0 1"/>
     </joint>
 
-    <link name="rotor_arm${child3}">
-      <inertial>
-        <origin xyz="0.0486 0 0.0161" rpy="0 0 0"/>
-        <mass value="0.088"/>
-        <inertia
-            ixx="0.000001" ixy="0.0" ixz="0.0"
-            iyy="0.0001" iyz="0.0"
-            izz="0.0001"/>
-      </inertial>
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <mesh filename="package://nami/urdf/quad/mesh/rotor_arm.STL"/>
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="0.131 0.0325 0.065"/>
-        </geometry>
-      </collision>
-    </link>
-    <joint name="base_arm_joint${child3}" type="fixed">
-      <parent link="base_link"/>
+    <joint name="rotor_coord_joint${child3}" type="fixed">
+      <parent link="base_link_tail"/>
       <child link="rotor_arm${child3}"/>
-      <origin rpy="0 0 ${pi*5.0/4.0}" xyz="-0.051 -0.051 0.0"/>
+      <origin xyz="-0.14977 -0.16196 0.0277" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
-
-    <link name="rotor_arm${child4}">
-      <inertial>
-        <origin xyz="0.0486 0 0.0161" rpy="0 0 0"/>
-        <mass value="0.088"/>
-        <inertia
-            ixx="0.000001" ixy="0.0" ixz="0.0"
-            iyy="0.0001" iyz="0.0"
-            izz="0.0001"/>
-      </inertial>
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <mesh filename="package://nami/urdf/quad/mesh/rotor_arm.STL"/>
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="0.131 0.0325 0.065"/>
-        </geometry>
-      </collision>
-    </link>
-    <joint name="base_arm_joint${child4}" type="fixed">
-      <parent link="base_link"/>
+  
+    <joint name="rotor_coord_joint${child4}" type="fixed">
+      <parent link="base_link_tail"/>
       <child link="rotor_arm${child4}"/>
-      <origin rpy="0 0 ${-pi/4.0}" xyz="0.051 -0.051 0.0"/>
+      <origin xyz="-0.14977 0.19504 0.0277" rpy="0 0 ${pi}"/>
       <axis xyz="0 0 1"/>
     </joint>
 
+    <!-- gimbal link joint -->
+    <joint name="gimbal${child1}" type="fixed">
+      <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
+      <parent link="rotor_arm${child1}"/>
+      <child link="gimbal_link_forward${child1}"/>
+      <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
+      <axis xyz="1 0 0"/>
+      <dynamics damping="0.8" friction="0.0"/>
+    </joint>
+
+    <joint name="gimbal${child2}" type="fixed">
+      <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
+      <parent link="rotor_arm${child2}"/>
+      <child link="gimbal_link_backward${child2}"/>
+      <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
+      <axis xyz="1 0 0"/>
+      <dynamics damping="0.8" friction="0.0"/>
+    </joint>
+  
+  <joint name="gimbal${child3}" type="fixed">
+      <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
+      <parent link="rotor_arm${child3}"/>
+      <child link="gimbal_link_forward${child3}"/>
+      <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
+      <axis xyz="1 0 0"/>
+      <dynamics damping="0.8" friction="0.0"/>
+    </joint>
+
+    <joint name="gimbal${child4}" type="fixed">
+      <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
+      <parent link="rotor_arm${child4}"/>
+      <child link="gimbal_link_backward${child4}"/>
+      <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
+      <axis xyz="1 0 0"/>
+      <dynamics damping="0.8" friction="0.0"/>
+    </joint>
+
+    <!-- yaw joint between two body links-->
+    <transmission name="yaw_tran">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="yaw_joint">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="servo">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>2</mechanicalReduction>
+      </actuator>
+    </transmission>
     <xacro:friction self="base_link"/>
   </xacro:macro>
 
-  <xacro:macro name="nami_thrust_link" params="self rotor_direction">
-    ## link
-    #### rotor parent link (virtual) ####
-    <link name="gimbal_link${self}">
+
+  <xacro:macro name="nami_thrust_link_forward" params="self rotor_direction">
+    <!-- link -->
+    <!-- rotor link -->
+    <link name="gimbal_link_forward${self}">
+    <!-- this link's cordinate is the actual gimbal -->
       <inertial>
-        <origin xyz="0.018 0.00 0.00438" rpy="0 0 0"/>
-        <mass value="0.1095"/>
+        <origin xyz="0.0328427 -0.0000782 -0.0167858" rpy="0 0 0"/>
+        <mass value="0.27076"/>
         <inertia
-            ixx="0.00002989" iyy="0.00002848" izz="0.0002698"
-            ixy="0.0000" ixz="-0.0000" iyz="0.00000"/>
+            ixx="0.0007257" iyy="0.0007451" izz="0.0000987"
+            ixy="0.0000007" ixz="-0.0000189" iyz="-0.0000001"/>
       </inertial>
-      <collision>
-        <origin xyz="0.0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <cylinder radius="0.018" length="0.033"/>
-        </geometry>
-      </collision>
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 0.058" rpy="0 0 ${-pi/2}"/>
         <geometry>
-          <mesh filename="package://nami/urdf/quad/mesh/rotor_module.STL"/>
+          <mesh filename="package://nami/urdf/quad/mesh/AerialRotor.dae"/>
         </geometry>
       </visual>
+      <collision>
+        <origin xyz="0.036 0 -0.006" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.12662" length="0.1578"/>
+        </geometry>
+      </collision>
     </link>
-    <xacro:damping_factor link="gimbal_link${self}"/>
+    <xacro:damping_factor link="gimbal_link_forward${self}"/>
+  
+  <!--aquatic rotor link  -->
+    <link name="aquatic_rotor${self}">
+    <!-- this link's cordinate is the actual gimbal -->
+      <inertial>
+        <origin xyz="0.0328427 -0.0000782 -0.0167858" rpy="0 0 0"/>
+        <mass value="0.27076"/>
+        <inertia
+            ixx="0.0007257" iyy="0.0007451" izz="0.0000987"
+            ixy="0.0000007" ixz="-0.0000189" iyz="-0.0000001"/>
+      </inertial>
+      <visual>
+        <origin xyz="-0.00342 -0.00766 0.005" rpy="0 0 ${-pi/2}"/>
+        <geometry>
+          <mesh filename="package://nami/urdf/quad/mesh/AquaticRotor.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.036 0 -0.006" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.12662" length="0.1578"/>
+        </geometry>
+      </collision>
+    </link>
 
-    ## rotor parent link (virtual)
-    <link name="rotor_parent${self}">
+    <joint name="aquatic_parent_forward${self}" type="fixed">
+      <parent link="gimbal_link_forward${self}"/>
+      <child link="aquatic_rotor${self}"/>
+      <origin xyz="-0.0755 -0.0396 -0.0176" rpy="${3*pi/2} 0 0"/>
+      <axis xyz="1 0 0"/>
+    </joint>
+
+    <!-- rotor parent link (virtual) -->
+    <link name="rotor_parent_forward${self}">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <mass value="0.00001"/>
         <inertia
-            ixx="0.000001" ixy="0.0" ixz="0.0"
-            iyy="0.000001" iyz="0.0"
-            izz="0.000001"/>
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
       </inertial>
     </link>
 
-    ## thrust link (virtual)
+    <!-- thrust link (virtual) -->
     <link name="thrust${self}">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <mass value="0.00001"/>
         <inertia
-            ixx="0.001" ixy="0.0" ixz="0.0"
-            iyy="0.001" iyz="0.0"
-            izz="0.001"/>
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
       </inertial>
     </link>
     <xacro:damping_factor link="thrust${self}"/>
 
-    #### joints ####
-
-    #### rotor fixed mount (gimbal_dof = 0: rotors are rigidly fixed, no per-rotor servo) ####
-    <joint name="gimbal${self}" type="fixed">
-      <parent link="rotor_arm${self}"/>
-      <child link="gimbal_link${self}"/>
-      <origin rpy="0 0 0" xyz="0.077 0 0.0385"/>
-    </joint>
-    #### rotor parent link joint (virtual) ####
+    <!-- joints -->
+    <!-- rotor parent link joint (virtual) -->
     <joint name="rotor_parent_link_joint${self}" type="fixed">
-      <parent link="gimbal_link${self}"/>
-      <child link="rotor_parent${self}"/>
-      <origin rpy="0 0 0" xyz="0.018 0.00 0.00438"/>
-      <axis xyz="0 0 ${rotor_direction}"/>
+      <parent link="gimbal_link_forward${self}"/>
+      <child link="rotor_parent_forward${self}"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
     </joint>
 
-    #### rotor joint (virtual) ####
+    <!-- rotor joint (virtual) -->
     <joint name="rotor${self}" type="continuous">
+    <!-- should change the min and max force in motor_info.yaml file -->
       <limit effort="100.0" lower="${min_force}" upper="${max_force}" velocity="0.5"/>
-      <parent link="rotor_parent${self}"/>
+      <parent link="rotor_parent_forward${self}"/>
       <child link="thrust${self}"/>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <axis xyz="0 0 ${rotor_direction}"/>
     </joint>
 
+
+    <!-- hardware interface -->
+    <!-- gimbal joint -->
     <transmission name="rotor_tran${self}">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="rotor${self}">
@@ -269,6 +355,124 @@
         <mechanicalReduction>1</mechanicalReduction>
       </actuator>
     </transmission>
+  </xacro:macro>
 
+  
+  <xacro:macro name="nami_thrust_link_backward" params="self rotor_direction">
+    <!-- link -->
+    <!-- rotor link -->
+    <link name="gimbal_link_backward${self}">
+    <!-- this link's cordinate is the actual gimbal -->
+      <inertial>
+        <origin xyz="0.0328427 -0.0000782 -0.0167858" rpy="0 0 0"/>
+        <mass value="0.27076"/>
+        <inertia
+            ixx="0.0007257" iyy="0.0007451" izz="0.0000987"
+            ixy="0.0000007" ixz="-0.0000189" iyz="-0.0000001"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0.058" rpy="0 0 ${-pi/2}"/>
+        <geometry>
+          <mesh filename="package://nami/urdf/quad/mesh/AerialRotor.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.036 0 -0.006" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.12662" length="0.1578"/>
+        </geometry>
+      </collision>
+    </link>
+    <xacro:damping_factor link="gimbal_link_backward${self}"/>
+  
+  <!--aquatic rotor link  -->
+    <link name="aquatic_rotor${self}">
+    <!-- this link's cordinate is the actual gimbal -->
+      <inertial>
+        <origin xyz="0.0328427 -0.0000782 -0.0167858" rpy="0 0 0"/>
+        <mass value="0.27076"/>
+        <inertia
+            ixx="0.0007257" iyy="0.0007451" izz="0.0000987"
+            ixy="0.0000007" ixz="-0.0000189" iyz="-0.0000001"/>
+      </inertial>
+      <visual>
+        <origin xyz="0.00342 0.00766 0.005" rpy="0 0 ${pi/2}"/>
+        <geometry>
+          <mesh filename="package://nami/urdf/quad/mesh/AquaticRotor.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.036 0 -0.006" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.12662" length="0.1578"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- rotor parent link (virtual) -->
+    <link name="rotor_parent${self}">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.00001"/>
+        <inertia
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
+      </inertial>
+    </link>
+
+    <!-- thrust link (virtual) -->
+    <link name="thrust${self}">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.00001"/>
+        <inertia
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
+      </inertial>
+    </link>
+    <xacro:damping_factor link="thrust${self}"/>
+
+    <joint name="aquatic_parent_backward${self}" type="fixed">
+      <parent link="gimbal_link_backward${self}"/>
+      <child link="aquatic_rotor${self}"/>
+      <origin xyz="-0.0755 0.0396 -0.0176" rpy="${-3*pi/2} 0 0"/>
+      <axis xyz="1 0 0"/>
+    </joint>
+
+    <!-- joints -->
+    <!-- rotor parent link joint (virtual) -->
+    <joint name="rotor_parent_link_joint${self}" type="fixed">
+      <parent link="gimbal_link_backward${self}"/>
+      <child link="rotor_parent${self}"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+    </joint>
+
+<!-- We could first only config the aerial one, then migrate to aquatic one?
+I mean, first finish the cross domain flight, then focus on aquatic motion?
+In this way, maybe less pressure -->
+<!--  -->
+    <!-- rotor joint (virtual) -->
+    <joint name="rotor${self}" type="continuous">
+    <!-- should change the min and max force in motor_info.yaml file -->
+      <limit effort="100.0" lower="${min_force}" upper="${max_force}" velocity="0.5"/>
+      <parent link="rotor_parent${self}"/>
+      <child link="thrust${self}"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <axis xyz="0 0 ${rotor_direction}"/>
+    </joint>
+
+    <!-- hardware interface -->
+    <!-- gimbal joint -->
+    <transmission name="rotor_tran${self}">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="rotor${self}">
+        <hardwareInterface>RotorInterface</hardwareInterface>
+      </joint>
+      <actuator name="rotor_actuator${self}">
+        <hardwareInterface>RotorInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
   </xacro:macro>
 </robot>

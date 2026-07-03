@@ -6,9 +6,9 @@
   <xacro:include filename="$(find nami)/urdf/quad/common.xacro" />
 
   <xacro:nami_center_link child1="1" child2="2" child3="3" child4="4"/>
-  <xacro:nami_thrust_link self="1" rotor_direction="1"/>
-  <xacro:nami_thrust_link self="2" rotor_direction="-1"/>
-  <xacro:nami_thrust_link self="3" rotor_direction="1"/>
-  <xacro:nami_thrust_link self="4" rotor_direction="-1"/>
+  <xacro:nami_thrust_link_forward self="1" rotor_direction="1"/>
+  <xacro:nami_thrust_link_backward self="2" rotor_direction="-1"/>
+  <xacro:nami_thrust_link_forward self="3" rotor_direction="1"/>
+  <xacro:nami_thrust_link_backward self="4" rotor_direction="-1"/>
 
 </robot>
