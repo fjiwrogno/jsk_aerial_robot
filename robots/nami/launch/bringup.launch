@@ -36,10 +36,13 @@
    <rosparam file="$(arg config_dir)/RobotModel.yaml" command="load" />
 
    ###########  Motor Config  ###########
-   <rosparam file="$(arg config_dir)/MotorInfo.yaml" command="load" />
+   <rosparam file="$(arg config_dir)/MotorInfoDShot.yaml" command="load" />
 
    ###########  Battery Config  ###########
    <rosparam file="$(arg config_dir)/Battery.yaml" command="load" />
+
+   ###########  Servo Config  ###########
+   <rosparam file="$(arg config_dir)/$(arg airframe)/Servo.yaml" command="load" />
 
    ###########  Control  ###########
    <rosparam file="$(arg config_dir)/$(arg airframe)/NamiControl.yaml" command="load" unless="$(arg simulation)"/>
@@ -73,6 +76,9 @@
     <arg name="rviz_init_pose" value="$(arg config_dir)/RvizInit.yaml" />
     <arg name="need_joint_state" value="false" if ="$(eval arg('simulation') or arg('real_machine'))"/>
   </include >
+
+  ###########  Servo Bridge  ###########
+  <node pkg="aerial_robot_model" type="servo_bridge_node" name="servo_bridge" ns="$(arg robot_ns)" output="screen" />
 
   ##########  Sensors  ##########
   <include file="$(find nami)/launch/include/sensors.launch.xml" >

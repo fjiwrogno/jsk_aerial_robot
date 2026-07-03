@@ -151,6 +151,7 @@
 
     <!-- yaw joint of baselink -->
     <joint name="yaw_joint" type="revolute">
+  <!-- //TODO Modify the joint limits according to the cad model -->
       <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
       <parent link="virtual_base_link_tail"/>
       <child link="base_link_head"/>
@@ -234,7 +235,7 @@
       </actuator>
     </transmission>
     <xacro:friction self="base_link_head"/>
-    <xacro:friction self="base_link_tai"/>
+    <xacro:friction self="base_link_tail"/>
   </xacro:macro>
 
 

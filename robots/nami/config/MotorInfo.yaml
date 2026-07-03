@@ -3,7 +3,7 @@ motor_info:
         max_pwm: 0.92 #0.92 # = 1840 [ms]             
         min_thrust: 0 #[N]
         force_landing_thrust: 7 #[N]
-        m_f_rate: 0 # should be zero, because of the dual rotor
+        m_f_rate:  # should be zero, because of the dual rotor
         pwm_conversion_mode: 1 # Polynominal Mode
         vel_ref_num: 4
         
