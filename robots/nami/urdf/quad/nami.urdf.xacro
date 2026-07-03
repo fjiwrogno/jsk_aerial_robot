@@ -27,9 +27,9 @@
             ixy="-0.0000062" ixz="0.0001472" iyz="0.0000005"/>
       </inertial>
       <visual>
+        <origin xyz="0.032 -0.01550 0.01850" rpy="0 0 0"/>
         <geometry>
           <mesh filename="package://nami/urdf/quad/mesh/base_link_head.dae" scale="1 1 1"/>
-          <origin xyz="0.032 -0.01550 0.01850" rpy="0 0 0"/>
         </geometry>
       </visual>
       <collision>
@@ -61,9 +61,9 @@
             ixy="-0.0000062" ixz="0.0001472" iyz="0.0000005"/>
       </inertial>
       <visual>
+        <origin xyz="0.07523 0.02053 0.04926" rpy="0 0 0"/>
         <geometry>
           <mesh filename="package://nami/urdf/quad/mesh/base_link_tail.dae" scale="1 1 1"/>
-          <origin xyz="0.07523 0.02053 0.04926" rpy="0 0 0"/>
         </geometry>
       </visual>
       <collision>
@@ -138,7 +138,7 @@
     <joint name="fc_joint" type="fixed">
       <parent link="base_link_tail"/>
       <child link="fc"/>
-      <origin xyz="-0.01168 0.02586 0.12094" rpy="0 0 0"/>
+      <origin xyz="-0.0183192 0.02586 0.12004" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -147,7 +147,6 @@
       <parent link="base_link_tail"/>
       <child link="virtual_base_link_tail"/>
       <origin xyz="0.07523 0.02054 0.02027" rpy="0 0 0"/>
-      <axis xyz="0 0 1"/>
     </joint>
 
     <!-- yaw joint of baselink -->
@@ -172,21 +171,21 @@
     <joint name="rotor_coord_joint${child2}" type="fixed">
       <parent link="base_link_head"/>
       <child link="rotor_arm${child2}"/>
-      <origin xyz="0.2035 -0.18327 0.0075" rpy="0 0 ${pi}"/>
+      <origin xyz="0.2035 -0.1825 0.0075" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="rotor_coord_joint${child3}" type="fixed">
       <parent link="base_link_tail"/>
       <child link="rotor_arm${child3}"/>
-      <origin xyz="-0.14977 -0.16196 0.0277" rpy="0 0 0"/>
+      <origin xyz="-0.16627 -0.16196 0.02777" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
   
     <joint name="rotor_coord_joint${child4}" type="fixed">
       <parent link="base_link_tail"/>
       <child link="rotor_arm${child4}"/>
-      <origin xyz="-0.14977 0.19504 0.0277" rpy="0 0 ${pi}"/>
+      <origin xyz="-0.16627 0.20304 0.02777" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -196,8 +195,7 @@
       <parent link="rotor_arm${child1}"/>
       <child link="gimbal_link_forward${child1}"/>
       <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
-      <axis xyz="1 0 0"/>
-      <dynamics damping="0.8" friction="0.0"/>
+      <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="gimbal${child2}" type="fixed">
@@ -205,26 +203,23 @@
       <parent link="rotor_arm${child2}"/>
       <child link="gimbal_link_backward${child2}"/>
       <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
-      <axis xyz="1 0 0"/>
-      <dynamics damping="0.8" friction="0.0"/>
+      <axis xyz="0 0 1"/>
     </joint>
   
   <joint name="gimbal${child3}" type="fixed">
       <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
       <parent link="rotor_arm${child3}"/>
       <child link="gimbal_link_forward${child3}"/>
-      <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
-      <axis xyz="1 0 0"/>
-      <dynamics damping="0.8" friction="0.0"/>
+      <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
+      <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="gimbal${child4}" type="fixed">
       <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
       <parent link="rotor_arm${child4}"/>
       <child link="gimbal_link_backward${child4}"/>
-      <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
-      <axis xyz="1 0 0"/>
-      <dynamics damping="0.8" friction="0.0"/>
+      <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
+      <axis xyz="0 0 1"/>
     </joint>
 
     <!-- yaw joint between two body links-->
@@ -238,7 +233,8 @@
         <mechanicalReduction>2</mechanicalReduction>
       </actuator>
     </transmission>
-    <xacro:friction self="base_link"/>
+    <xacro:friction self="base_link_head"/>
+    <xacro:friction self="base_link_tai"/>
   </xacro:macro>
 
 
@@ -296,7 +292,7 @@
     <joint name="aquatic_parent_forward${self}" type="fixed">
       <parent link="gimbal_link_forward${self}"/>
       <child link="aquatic_rotor${self}"/>
-      <origin xyz="-0.0755 -0.0396 -0.0176" rpy="${3*pi/2} 0 0"/>
+      <origin xyz="-0.0755 -0.0396 -0.0176" rpy="${-pi/4} 0 0"/>
       <axis xyz="1 0 0"/>
     </joint>
 
@@ -410,7 +406,7 @@
     </link>
 
     <!-- rotor parent link (virtual) -->
-    <link name="rotor_parent${self}">
+    <link name="rotor_parent_backward${self}">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <mass value="0.00001"/>
@@ -435,7 +431,7 @@
     <joint name="aquatic_parent_backward${self}" type="fixed">
       <parent link="gimbal_link_backward${self}"/>
       <child link="aquatic_rotor${self}"/>
-      <origin xyz="-0.0755 0.0396 -0.0176" rpy="${-3*pi/2} 0 0"/>
+      <origin xyz="-0.0755 0.0396 -0.0176" rpy="${pi/4} 0 0"/>
       <axis xyz="1 0 0"/>
     </joint>
 
@@ -443,7 +439,7 @@
     <!-- rotor parent link joint (virtual) -->
     <joint name="rotor_parent_link_joint${self}" type="fixed">
       <parent link="gimbal_link_backward${self}"/>
-      <child link="rotor_parent${self}"/>
+      <child link="rotor_parent_backward${self}"/>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
@@ -456,7 +452,7 @@ In this way, maybe less pressure -->
     <joint name="rotor${self}" type="continuous">
     <!-- should change the min and max force in motor_info.yaml file -->
       <limit effort="100.0" lower="${min_force}" upper="${max_force}" velocity="0.5"/>
-      <parent link="rotor_parent${self}"/>
+      <parent link="rotor_parent_backward${self}"/>
       <child link="thrust${self}"/>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <axis xyz="0 0 ${rotor_direction}"/>
