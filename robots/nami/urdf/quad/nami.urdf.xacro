@@ -20,11 +20,11 @@
       <inertial>
       <!-- the relative pos of cog compared to the origin of this link  -->
       <!-- because right now the origin of base_link has been configured to  the base_link of solidworks-->
-        <origin xyz="0.18668 -0.00002 -0.0409" rpy="0 0 0"/>
-        <mass value="0.89542"/>
+        <origin xyz="0.186933 -0.000016 -0.042086" rpy="0 0 0"/>
+        <mass value="0.940089"/>
         <inertia
-            ixx="0.0132295" iyy="0.0505483" izz="0.042343"
-            ixy="-0.0000062" ixz="0.0001472" iyz="0.0000005"/>
+            ixx="0.001164" iyy="0.006858" izz="0.006443"
+            ixy="-0.000002" ixz="-0.000515" iyz="0.000001"/>
       </inertial>
       <visual>
         <origin xyz="0.032 -0.01550 0.01850" rpy="0 0 0"/>
@@ -32,8 +32,8 @@
           <mesh filename="package://nami/urdf/quad/mesh/base_link_head.dae" scale="1 1 1"/>
         </geometry>
       </visual>
-      <collision>
-        <origin xyz="0.18668 -0.00002 -0.0409" rpy="0 0 0"/>
+      <collision>`
+        <origin xyz="0.186933 -0.000016 -0.042086" rpy="0 0 0"/>
         <geometry>
           <box size="0.4045 0.1325 0.2"/>
         </geometry>
@@ -54,11 +54,11 @@
     <!-- base link tail (with spinal on top of it) -->
     <link name="base_link_tail">
       <inertial>
-        <origin xyz="-0.0782550708 -0.0206739351 0.0236593713" rpy="0 0 0"/>
-        <mass value="2.76613"/>
+        <origin xyz="-0.0811138 0.02019128 0.0206661" rpy="0 0 0"/>
+        <mass value="1.6950211"/>
         <inertia
-            ixx="0.0132295" iyy="0.0505483" izz="0.042343"
-            ixy="-0.0000062" ixz="0.0001472" iyz="0.0000005"/>
+            ixx="0.0080266" iyy="0.0245560" izz="0.0188846"
+            ixy="-0.0000106" ixz="0.0062218" iyz="-0.0000356"/>
       </inertial>
       <visual>
         <origin xyz="0.07523 0.02053 0.04926" rpy="0 0 0"/>
@@ -67,7 +67,7 @@
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0.0782550708 0.0206739351 0.0236593713"  rpy="0 0 0"/>
+        <origin xyz="-0.0811138 0.02019128 0.0206661"  rpy="0 0 0"/>
         <geometry>
           <box size="0.3935 0.1985 0.2"/>
         </geometry>
@@ -138,7 +138,7 @@
     <joint name="fc_joint" type="fixed">
       <parent link="base_link_tail"/>
       <child link="fc"/>
-      <origin xyz="-0.0183192 0.02586 0.12004" rpy="0 0 0"/>
+      <origin xyz="0.0183193 0.0284366 0.1200359" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -245,11 +245,11 @@
     <link name="gimbal_link_forward${self}">
     <!-- this link's cordinate is the actual gimbal -->
       <inertial>
-        <origin xyz="0.0328427 -0.0000782 -0.0167858" rpy="0 0 0"/>
-        <mass value="0.27076"/>
+        <origin xyz="-0.011008 0.000169 0.023330" rpy="0 0 0"/>
+        <mass value="0.186457"/>
         <inertia
-            ixx="0.0007257" iyy="0.0007451" izz="0.0000987"
-            ixy="0.0000007" ixz="-0.0000189" iyz="-0.0000001"/>
+            ixx="0.000201" iyy="0.000347" izz="0.000450"
+            ixy="-0.000002" ixz="0.000004" iyz="0.000000"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0.058" rpy="0 0 ${-pi/2}"/>
@@ -258,7 +258,7 @@
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0.036 0 -0.006" rpy="0 0 0"/>
+        <origin xyz="-0.011008 0.000169 0.023330" rpy="0 0 0"/>
         <geometry>
           <cylinder radius="0.12662" length="0.1578"/>
         </geometry>
@@ -270,11 +270,11 @@
     <link name="aquatic_rotor${self}">
     <!-- this link's cordinate is the actual gimbal -->
       <inertial>
-        <origin xyz="0.0328427 -0.0000782 -0.0167858" rpy="0 0 0"/>
-        <mass value="0.27076"/>
+        <origin xyz="0.001352 -0.000410 -0.045541" rpy="0 0 0"/>
+        <mass value="0.14360"/>
         <inertia
-            ixx="0.0007257" iyy="0.0007451" izz="0.0000987"
-            ixy="0.0000007" ixz="-0.0000189" iyz="-0.0000001"/>
+            ixx="0.000227" iyy="0.000224" izz="0.000037"
+            ixy="0.000000" ixz="-0.000003" iyz="0.000001"/>
       </inertial>
       <visual>
         <origin xyz="-0.00342 -0.00766 0.005" rpy="0 0 ${-pi/2}"/>
@@ -283,7 +283,7 @@
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0.036 0 -0.006" rpy="0 0 0"/>
+        <origin xyz="0.001352 -0.000410 -0.045541" rpy="0 0 0"/>
         <geometry>
           <cylinder radius="0.12662" length="0.1578"/>
         </geometry>
@@ -361,11 +361,11 @@
     <link name="gimbal_link_backward${self}">
     <!-- this link's cordinate is the actual gimbal -->
       <inertial>
-        <origin xyz="0.0328427 -0.0000782 -0.0167858" rpy="0 0 0"/>
-        <mass value="0.27076"/>
+        <origin xyz="-0.011008 0.000169 0.023330" rpy="0 0 0"/>
+        <mass value="0.186457"/>
         <inertia
-            ixx="0.0007257" iyy="0.0007451" izz="0.0000987"
-            ixy="0.0000007" ixz="-0.0000189" iyz="-0.0000001"/>
+            ixx="0.000201" iyy="0.000347" izz="0.000450"
+            ixy="-0.000002" ixz="0.000004" iyz="0.000000"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0.058" rpy="0 0 ${-pi/2}"/>
@@ -374,7 +374,7 @@
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0.036 0 -0.006" rpy="0 0 0"/>
+        <origin xyz="-0.011008 0.000169 0.023330" rpy="0 0 0"/>
         <geometry>
           <cylinder radius="0.12662" length="0.1578"/>
         </geometry>
@@ -386,11 +386,11 @@
     <link name="aquatic_rotor${self}">
     <!-- this link's cordinate is the actual gimbal -->
       <inertial>
-        <origin xyz="0.0328427 -0.0000782 -0.0167858" rpy="0 0 0"/>
-        <mass value="0.27076"/>
+        <origin xyz="0.001352 -0.000410 -0.045541" rpy="0 0 0"/>
+        <mass value="0.14360"/>
         <inertia
-            ixx="0.0007257" iyy="0.0007451" izz="0.0000987"
-            ixy="0.0000007" ixz="-0.0000189" iyz="-0.0000001"/>
+            ixx="0.000227" iyy="0.000224" izz="0.000037"
+            ixy="0.000000" ixz="-0.000003" iyz="0.000001"/>
       </inertial>
       <visual>
         <origin xyz="0.00342 0.00766 0.005" rpy="0 0 ${pi/2}"/>
@@ -399,7 +399,7 @@
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0.036 0 -0.006" rpy="0 0 0"/>
+        <origin xyz="0.001352 -0.000410 -0.045541" rpy="0 0 0"/>
         <geometry>
           <cylinder radius="0.12662" length="0.1578"/>
         </geometry>

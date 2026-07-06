@@ -6,8 +6,8 @@
   <baselink name="fc" />
   <thrust_link name="thrust" />
 
-  <m_f_rate value="-0.0172" /> <!-- drug torque rate -->
-  <xacro:property name="max_force" value="18.0" /> <!-- [N] -->
+  <m_f_rate value="-0.0068" /> <!-- drug torque rate -->
+  <xacro:property name="max_force" value="18.2494" /> <!-- [N] -->
   <xacro:property name="min_force" value="1.0" /> <!-- [N] -->
 
 
