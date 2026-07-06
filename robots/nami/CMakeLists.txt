@@ -33,7 +33,7 @@ target_link_libraries(nami_robot_model ${catkin_LIBRARIES})
 add_library(nami_navigation src/nami_navigation.cpp)
 target_link_libraries(nami_navigation ${catkin_LIBRARIES})
 
-install(DIRECTORY config plugins launch
+install(DIRECTORY config plugins launch scripts
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   USE_SOURCE_PERMISSIONS
   )

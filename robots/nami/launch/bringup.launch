@@ -21,6 +21,8 @@
   <arg name="robot_id" default="" />
   <arg name="robot_ns" value="nami$(arg robot_id)" />
   <arg name="airframe" default="quad" />
+  <arg name="lqi" default="False" /> # run the generic LQI controller instead of nami_controller, to obtain reference gains for PID tuning
+  <arg name="lqi_tuned" default="False" /> # run nami_controller with the LQI-derived PID gains (NamiControl_sim_lqi_tuned.yaml)
 
   ###########  Parameters  ###########
   <group ns="$(arg robot_ns)">
@@ -45,8 +47,10 @@
    <rosparam file="$(arg config_dir)/$(arg airframe)/Servo.yaml" command="load" />
 
    ###########  Control  ###########
-   <rosparam file="$(arg config_dir)/$(arg airframe)/NamiControl.yaml" command="load" unless="$(arg simulation)"/>
-   <rosparam file="$(arg config_dir)/$(arg airframe)/NamiControl_sim.yaml" command="load" if="$(arg simulation)"/>
+   <rosparam file="$(arg config_dir)/$(arg airframe)/NamiControl_lqi.yaml" command="load" if="$(arg lqi)"/>
+   <rosparam file="$(arg config_dir)/$(arg airframe)/NamiControl_sim_lqi_tuned.yaml" command="load" if="$(eval arg('lqi_tuned') and not arg('lqi'))"/>
+   <rosparam file="$(arg config_dir)/$(arg airframe)/NamiControl.yaml" command="load" unless="$(eval arg('simulation') or arg('lqi') or arg('lqi_tuned'))"/>
+   <rosparam file="$(arg config_dir)/$(arg airframe)/NamiControl_sim.yaml" command="load" if="$(eval arg('simulation') and not arg('lqi') and not arg('lqi_tuned'))"/>
 
    ###########  Sensor Fusion  ###########
    <rosparam file="$(arg config_dir)/StateEstimation.yaml" command="load" />

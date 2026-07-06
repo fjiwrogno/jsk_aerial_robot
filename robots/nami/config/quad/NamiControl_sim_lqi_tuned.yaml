@@ -1,0 +1,80 @@
+## PID gains for nami_controller converted from LQI feedback gains.
+## Source record : LqiGainsRecord_20260706_232403.yaml
+## Conversion    : rosrun nami lqi_gains_to_pid.py  (see the script header for the math)
+##   - z          : (sum of per-rotor gains) / mass          -> [m/s^2 per m]
+##   - roll/pitch : (rotor torque gain about the axis) / I   -> [rad/s^2 per rad]
+##   - yaw        : counter-torque (m_f_rate) based          -> [rad/s^2 per rad]
+##   Model: mass 3.955 kg, Ixx 0.0428, Iyy 0.1943, Izz 0.2145 [kg m^2]
+## roll/pitch are configured separately because Ixx and Iyy differ by ~4.5x.
+##
+## IMPORTANT: attitude gains are sent to spinal as int16 with x1000 scaling
+## (setAttitudeGains / RollPitchYawTerm.msg), so any roll/pitch/yaw gain must be
+## <= 32.767 or it silently overflows and destabilizes the attitude loop.
+## The raw LQI-equivalent values (roll p278.4/i27.0/d88.5, pitch p75.1/i7.3/d26.0)
+## exceed this cap, so below they are scaled per-axis to p=30 keeping P:I:D ratios.
+##
+## Usage (simulation test with nami_controller):
+##   roslaunch nami bringup.launch real_machine:=false simulation:=true lqi_tuned:=true
+
+aerial_robot_control_name: aerial_robot_control/nami_controller
+
+controller:
+  torque_allocation_matrix_inv_pub_interval: 0.05
+  wrench_allocation_matrix_pub_interval: 0.1
+  gimbal_calc_in_fc : false
+  gimbal_dof: 0         # fixed rotors (no per-rotor gimbal) -> nami
+  underactuate: true    # 4 fixed vertical rotors cannot produce lateral force; tilt the body
+
+  xy: # LQI does not provide xy gains; kept from NamiControl_sim.yaml
+    p_gain: 2.0
+    i_gain: 0.05
+    d_gain: 1.7
+    limit_sum: 4.0
+    limit_p: 12.0
+    limit_i: 12.0
+    limit_d: 12.0
+
+  z: # from LQI (previous: 5.0 / 1.0 / 2.5)
+    p_gain: 4.90
+    i_gain: 2.26
+    d_gain: 4.18
+    limit_err_p: 1.0
+    limit_sum: 25.0
+    limit_p: 25.0
+    limit_i: 25.0
+    limit_d: 25.0
+    force_landing_descending_rate: -0.5
+
+  roll_pitch:
+    start_integration_height: 0.01
+    # no p_gain here on purpose: gains are set per-axis below
+
+  roll: # LQI-equivalent p278.4/i27.0/d88.5 scaled by 30/278.4 for the int16 cap
+    p_gain: 30.0
+    i_gain: 2.91
+    d_gain: 9.54
+    limit_sum: 40.0
+    limit_p: 40.0
+    limit_i: 10.0
+    limit_d: 40.0
+
+  pitch: # LQI-equivalent p75.1/i7.3/d26.0 scaled by 30/75.1 for the int16 cap
+    p_gain: 30.0
+    i_gain: 2.90
+    d_gain: 10.39
+    limit_sum: 40.0
+    limit_p: 40.0
+    limit_i: 10.0
+    limit_d: 40.0
+
+  yaw: # from LQI (previous: 5.0 / 1.0 / 2.0); yaw authority via m_f_rate is weak,
+       # the physically achievable ang acc is only about 1.2 rad/s^2
+    p_gain: 0.72
+    i_gain: 0.045
+    d_gain: 1.28
+    limit_err_p: 0.4
+    limit_sum: 2.0
+    limit_p: 2.0
+    limit_i: 1.0
+    limit_d: 2.0
+    need_d_control: true

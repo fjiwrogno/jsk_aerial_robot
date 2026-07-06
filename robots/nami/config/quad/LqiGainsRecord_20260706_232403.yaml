@@ -1,0 +1,60 @@
+# LQI gains recorded from /nami/debug/four_axes/gain
+# date: 2026-07-06T23:24:03.848625
+# rotor num: 4
+
+# Raw per-rotor LQI feedback gains: rotor thrust [N] per unit state error.
+lqi_raw_gains:
+  roll:
+    p: [15.9344, -15.9044, -16.7043, 16.7295]
+    i: [1.5484, -1.5455, -1.6133, 1.6158]
+    d: [4.5292, -4.5194, -5.8443, 5.8516]
+  pitch:
+    p: [-17.0187, -17.0279, 15.6875, 15.6853]
+    i: [-1.6441, -1.6450, 1.5152, 1.5150]
+    d: [-5.8768, -5.8813, 5.4529, 5.4496]
+  yaw:
+    p: [-5.7789, 5.7767, -5.5570, 5.5586]
+    i: [-0.3611, 0.3610, -0.3459, 0.3460]
+    d: [-10.1398, 10.1369, -10.0472, 10.0499]
+  z:
+    p: [4.6376, 4.6457, 5.0475, 5.0393]
+    i: [2.1408, 2.1445, 2.3276, 2.3239]
+    d: [3.9532, 3.9602, 4.3087, 4.3016]
+
+# Aggregated per-axis values:
+#   z          : sum over rotors -> total-thrust level, directly comparable to controller/z
+#   roll/pitch/yaw : mean of per-rotor absolute gains -> order-of-magnitude reference only
+#                    (torque-level gains additionally depend on the rotor moment arms)
+lqi_aggregated:
+  z:
+    p_gain: 19.3701
+    i_gain: 8.9368
+    d_gain: 16.5237
+  roll:
+    p_gain: 16.3181
+    i_gain: 1.5808
+    d_gain: 5.1861
+  pitch:
+    p_gain: 16.3548
+    i_gain: 1.5798
+    d_gain: 5.6652
+  yaw:
+    p_gain: 5.6678
+    i_gain: 0.3535
+    d_gain: 10.0935
+
+# PID gains on the rosparam server at record time. NOTE: when recording from the
+# LQI session, z/yaw values are unused defaults; compare against NamiControl.yaml instead.
+current_pid:
+  xy:
+    p_gain: 2.0
+    i_gain: 0.05
+    d_gain: 1.7
+  z:
+    p_gain: 0.01
+    i_gain: 0.01
+    d_gain: 0.15
+  yaw:
+    p_gain: 0.01
+    i_gain: 0.01
+    d_gain: 0.15
