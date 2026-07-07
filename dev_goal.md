@@ -1,0 +1,21 @@
+## dev goal
+
+我想实现在gazebo中进行水下运动的仿真
+现在缺少仿真环境
+我已经成功安装了uuv simulator，一个开源的水下gazebo仿真环境，路径位于/home/cc/Research/simulator/uuv_sim
+我希望实现基本的水下动力学仿真，框架参考uuv simulator并为我的nami package进行测试
+这些是为了我之后的来测试水下控制算法的
+ler.cpp中经过一系列的校验转换为rotor的pwm实现控制。但是目前我认为该系统只兼容单向rotor，请解决这一点。如果无法
+
+## dev_goal2
+
+- 请定义一个水下模式，以此来区分现有的aerial flight，下面所有的开发都是为了水下模式准备的。
+- 先直接参考aquatic_flamingo分支的实现方法，仍然使用系统中的pid来实现。 + 参考ardupilot中的ardusub，实现水中的姿态控制和深度控制，
+- 水下的thrust由nami中的aquatic_rotor link产生，thrust方向就是该link的z轴方向。aerial rotor此时完全不作为actuator参与到水下的控制中
+- 水下用的actuator为双向型rotor，即可以产生沿着+z和-z方向的force。这里请参考dev/bi_directional_pwm的实现。
+- 此时的控制只接受imu的姿态反馈和深度计的反馈，没有xyz的反馈。如果uuv simulator中有depth sensor的拓展，请在urdf中为我也加入，位置与fc link的位置保持一致即可
+- 世界系下的xyz通过替换controller中的target_acc_w来实现。这里也可以参考ardusub的实现，如果更好的话。yaw直接映射joystick的指令为期望的yaw指令
+- 请保持最小代码改动，易于后期修改。对于attitude_controller.cpp，其实际运行在底层的飞控单片机上，所以请尽量减少其的改动。以及原有的系统，是在上层计算出期望姿态角和base_thrust_term之后，在attitude_control使用较少的代码改动实现兼容的程序，请直接对于nami underwater mode hard coding以达到单一模式下可行。我认为首先对于base_thrust_term需要允许其出现负数的情况,以及对于最后target_thrust转为target_pwm的转换，对于双向rotor的情形，请考虑合理的代码设计
+- 前进、左移、下潜、yaw的转动等期望指令请直接写一个python脚本使得可以用pc端直接来检验，然后在控制端进行解析。
+- 上述的代码需要同时实现可以在gazebo中仿真和在实机中运行检验。请参考当前aerial flight时系统使用#define simulation来实现这一目的的代码设计
+- 上述完成后请先在gazebo underwater scence中 test
