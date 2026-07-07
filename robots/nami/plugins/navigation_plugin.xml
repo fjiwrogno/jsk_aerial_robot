@@ -1,0 +1,5 @@
+<library path="lib/libnami_navigation">
+  <class name="aerial_robot_navigation/nami_navigation" type="aerial_robot_navigation::NamiNavigator" base_class_type="aerial_robot_navigation::BaseNavigator">
+    <description>plugin for nami navigation </description>
+  </class>
+</library>

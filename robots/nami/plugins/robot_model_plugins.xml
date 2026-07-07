@@ -1,0 +1,5 @@
+<library path="lib/libnami_robot_model">
+  <class name="nami_robot_model" type="NamiRobotModel" base_class_type="aerial_robot_model::RobotModel">
+    <description>plugin for nami robot model </description>
+  </class>
+</library>

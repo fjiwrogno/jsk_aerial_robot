@@ -1,0 +1,5 @@
+<library path="lib/libnami_controller">
+  <class name="aerial_robot_control/nami_controller" type="aerial_robot_control::NamiController" base_class_type="aerial_robot_control::ControlBase">
+    <description>plugin for nami control </description>
+  </class>
+</library>
