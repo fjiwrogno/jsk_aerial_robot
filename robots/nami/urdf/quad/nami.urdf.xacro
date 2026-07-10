@@ -138,7 +138,7 @@
     <joint name="fc_joint" type="fixed">
       <parent link="base_link_tail"/>
       <child link="fc"/>
-      <origin xyz="0.0183193 0.0284366 0.1200359" rpy="0 0 0"/>
+      <origin xyz="0.0183193 0.0284366 0.1300359" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
