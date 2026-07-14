@@ -54,11 +54,11 @@
     <!-- base link tail (with spinal on top of it) -->
     <link name="base_link_tail">
       <inertial>
-        <origin xyz="-0.0811138 0.02019128 0.0206661" rpy="0 0 0"/>
+        <origin xyz="-0.0169110 0.0200899 0.0630640" rpy="0 0 0"/>
         <mass value="1.6950211"/>
         <inertia
-            ixx="0.0080266" iyy="0.0245560" izz="0.0188846"
-            ixy="-0.0000106" ixz="0.0062218" iyz="-0.0000356"/>
+            ixx="0.0040010" iyy="0.0098791" izz="0.0076315"
+            ixy="0.0000156" ixz="0.0004014" iyz="-0.0000250"/>
       </inertial>
       <visual>
         <origin xyz="0.07523 0.02053 0.04926" rpy="0 0 0"/>
@@ -67,7 +67,7 @@
         </geometry>
       </visual>
       <collision>
-        <origin xyz="-0.0811138 0.02019128 0.0206661"  rpy="0 0 0"/>
+        <origin xyz="-0.0169110 0.0200899 0.0630640"  rpy="0 0 0"/>
         <geometry>
           <box size="0.3935 0.1985 0.2"/>
         </geometry>
