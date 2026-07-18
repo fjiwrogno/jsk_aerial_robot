@@ -19,3 +19,4 @@ ler.cpp中经过一系列的校验转换为rotor的pwm实现控制。但是目�
 - 前进、左移、下潜、yaw的转动等期望指令请直接写一个python脚本使得可以用pc端直接来检验，然后在控制端进行解析。
 - 上述的代码需要同时实现可以在gazebo中仿真和在实机中运行检验。请参考当前aerial flight时系统使用#define simulation来实现这一目的的代码设计
 - 上述完成后请先在gazebo underwater scence中 test
+- 控制方法、期望指令的映射、无位置反馈的水下指令映射的实现可以参考uuv sim和ardupilot中ardusub的代码实现

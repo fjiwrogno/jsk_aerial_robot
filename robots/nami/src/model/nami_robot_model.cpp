@@ -21,12 +21,18 @@ void NamiRobotModel::updateRobotModelImpl(const KDL::JntArray& joint_positions)
   transformable::RobotModel::updateRobotModelImpl(joint_positions);
   const auto seg_tf_map = getSegmentsTf();
 
-  /* get local coords of thrust links */
+  /* get local coords of thrust links:
+     motor 0~3 = aerial rotors (frame: rotor_arm1..4, thrust along +z),
+     motor 4~7 = aquatic rotors (frame: aquatic_rotor1..4, thrust along their tilted z) */
   for (int i = 0; i < getRotorNum(); ++i)
   {
-    std::string thrust = "rotor_arm" + std::to_string(i + 1);
+    std::string thrust_frame;
+    if (i < 4)
+      thrust_frame = "rotor_arm" + std::to_string(i + 1);
+    else
+      thrust_frame = "aquatic_rotor" + std::to_string(i - 3);
     KDL::Frame f;
-    fk_solver.JntToCart(joint_positions, f, thrust);
+    fk_solver.JntToCart(joint_positions, f, thrust_frame);
     thrust_coords_rot_[i] = cog_frame.Inverse() * f.M;
   }
 }

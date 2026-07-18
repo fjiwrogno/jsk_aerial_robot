@@ -1,5 +1,8 @@
 #include <nami/control/nami_controller.h>
 
+#include <algorithm>
+#include <cmath>
+
 using namespace std;
 
 namespace aerial_robot_control
@@ -16,8 +19,21 @@ void NamiController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
 {
   PoseLinearController::initialize(nh, nhp, robot_model, estimator, navigator, ctrl_loop_rate);
   nami_robot_model_ = boost::dynamic_pointer_cast<NamiRobotModel>(robot_model);
+  nami_navigator_ = boost::dynamic_pointer_cast<aerial_robot_navigation::NamiNavigator>(navigator);
 
   NamiController::rosParamInit();
+
+  if (current_mode_ == UNDERWATER)
+  {
+    if (!nami_navigator_)
+      ROS_ERROR("[nami] underwater mode needs NamiNavigator (depth / target depth interface)");
+    loadUnderwaterGains();
+    ROS_INFO("[nami] controller starts in UNDERWATER mode: motor 0~%d masked, motor %d~%d active",
+             aerial_motor_num_ - 1, aerial_motor_num_, motor_num_ - 1);
+    if (surgeAllocation())
+      ROS_INFO("[nami] surge allocation mode: rows (Fx, Fz, roll, yaw); pitch passive, "
+               "lateral stick ignored, surge acc clamped to +-%.2f m/s^2", surge_acc_limit_);
+  }
 
   rotor_coef_ = gimbal_dof_ + 1;  // number of virtual rotors in each rotor arm
 
@@ -49,6 +65,90 @@ void NamiController::rosParamInit()
   getParam<bool>(control_nh, "gimbal_calc_in_fc", gimbal_calc_in_fc_, true);
   getParam<bool>(control_nh, "hovering_approximate", hovering_approximate_, false);
   getParam<bool>(control_nh, "underactuate", underactuate_, false);
+
+  bool underwater_mode;
+  getParam<bool>(nh_, "underwater_mode", underwater_mode, false);
+  current_mode_ = underwater_mode ? UNDERWATER : AERIAL;
+  getParam<int>(control_nh, "aerial_motor_num", aerial_motor_num_, 4);
+
+  if (current_mode_ == UNDERWATER && !gimbal_calc_in_fc_)
+  {
+    /* the gimbal_calc_in_fc=false path sends target_full_thrust_ (a norm, always
+       non-negative) and would drop the sign of the bi-directional aquatic thrust */
+    ROS_WARN("[nami] underwater mode forces gimbal_calc_in_fc=true (signed base thrust needed)");
+    gimbal_calc_in_fc_ = true;
+  }
+
+  ros::NodeHandle uw_nh(nh_, "underwater");
+  getParam<bool>(uw_nh, "surge_allocation", surge_allocation_, false);
+  getParam<double>(uw_nh, "surge_acc_limit", surge_acc_limit_, 1.0);
+  getParam<double>(uw_nh, "depth_p_gain", depth_p_gain_, 20.0);
+  getParam<double>(uw_nh, "depth_i_gain", depth_i_gain_, 0.0);
+  getParam<double>(uw_nh, "depth_d_gain", depth_d_gain_, 0.0);
+  getParam<double>(uw_nh, "depth_i_limit", depth_i_limit_, 2.0);
+  getParam<double>(uw_nh, "depth_hover_thrust", depth_hover_thrust_, -0.4);
+  getParam<double>(uw_nh, "depth_thrust_limit", depth_thrust_limit_, 10.0);
+  getParam<double>(uw_nh, "depth_d_lpf_rate", depth_d_lpf_rate_, 0.6);
+}
+
+void NamiController::loadUnderwaterGains()
+{
+  /* underwater gain set from the underwater/controller/* namespace (flamingo
+     test/cross_domain convention); each gain falls back to the aerial value if absent */
+  ros::NodeHandle uw_control_nh(nh_, "underwater/controller");
+  auto loadGains = [&](const std::string& ns, const std::vector<int>& axes) {
+    ros::NodeHandle gain_nh(uw_control_nh, ns);
+    for (int axis : axes)
+    {
+      double p, i, d;
+      getParam<double>(gain_nh, "p_gain", p, pid_controllers_.at(axis).getPGain());
+      getParam<double>(gain_nh, "i_gain", i, pid_controllers_.at(axis).getIGain());
+      getParam<double>(gain_nh, "d_gain", d, pid_controllers_.at(axis).getDGain());
+      pid_controllers_.at(axis).setGains(p, i, d);
+      pid_controllers_.at(axis).reset();
+    }
+  };
+  loadGains("xy", {X, Y});
+  loadGains("z", {Z});
+  loadGains("roll_pitch", {ROLL, PITCH});
+  loadGains("yaw", {YAW});
+  /* the new attitude gains reach spinal via setAttitudeGains() inside reset() on activation */
+}
+
+double NamiController::depthControlLoop()
+{
+  /* hand-written depth PID (flamingo dev/aquatic_flamingo skeleton, signed z convention):
+     returns the desired total vertical force [N] in the world frame (negative = downward).
+     depth_hover_thrust_ trims the residual buoyancy (nami is slightly positive buoyant). */
+  if (!nami_navigator_ || !nami_navigator_->getDepthSensorReady())
+    return 0;  // no depth feedback yet: neutral output
+
+  const double now = ros::Time::now().toSec();
+  double dt = (depth_prev_stamp_ > 0) ? (now - depth_prev_stamp_) : 0;
+  depth_prev_stamp_ = now;
+
+  const double err = nami_navigator_->getTargetDepth() - nami_navigator_->getCurrentDepth();
+
+  if (dt > 0 && dt < 0.2)
+  {
+    depth_err_i_ += err * dt;
+    depth_err_i_ = std::max(-depth_i_limit_, std::min(depth_i_limit_, depth_err_i_));
+    const double err_d = (err - depth_prev_err_) / dt;
+    depth_err_d_filtered_ = depth_d_lpf_rate_ * depth_err_d_filtered_ + (1 - depth_d_lpf_rate_) * err_d;
+  }
+  depth_prev_err_ = err;
+
+  double total_thrust = depth_hover_thrust_ + depth_p_gain_ * err + depth_i_gain_ * depth_err_i_ +
+                        depth_d_gain_ * depth_err_d_filtered_;
+
+  /* tilt compensation: keep the vertical force component while the body tilts */
+  const double tilt_factor = 1.0 / std::max(0.7, cos(rpy_.x()) * cos(rpy_.y()));
+  total_thrust *= tilt_factor;
+
+  /* symmetric clamp: bi-directional aquatic rotors can push both up and down */
+  total_thrust = std::max(-depth_thrust_limit_, std::min(depth_thrust_limit_, total_thrust));
+
+  return total_thrust;
 }
 
 bool NamiController::update()
@@ -70,6 +170,14 @@ void NamiController::controlCore()
   tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
   tf::Vector3 target_acc_w(pid_controllers_.at(X).result(), pid_controllers_.at(Y).result(),
                            pid_controllers_.at(Z).result());
+
+  if (current_mode_ == UNDERWATER)
+  {
+    /* z: replace the estimator-based Z PID with the depth loop (only IMU + depth
+       sensor feedback underwater); x/y results are the pure teleop acc feedforward
+       since the navigator pins ACC_CONTROL_MODE */
+    target_acc_w.setZ(depthControlLoop() / nami_robot_model_->getMass());
+  }
   tf::Vector3 target_acc_dash = (tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z()))).inverse() * target_acc_w;
   tf::Vector3 target_acc_cog = uav_rot.inverse() * target_acc_w;
   Eigen::VectorXd target_wrench_acc_cog = Eigen::VectorXd::Zero(6);
@@ -141,6 +249,14 @@ void NamiController::controlCore()
   std::vector<Eigen::MatrixXd> masked_rot;
   for (int i = 0; i < motor_num_; i++)
   {
+    /* mode masking: the inactive motor group (aquatic in AERIAL, aerial in UNDERWATER)
+       gets a zero column so the pseudo-inverse allocates it no force at all */
+    if (!isMotorActive(i))
+    {
+      masked_rot.push_back(Eigen::MatrixXd::Zero(3, rotor_coef_));
+      continue;
+    }
+
     tf::Quaternion r;
     tf::quaternionKDLToTF(thrust_coords_rot.at(i), r);
     Eigen::Matrix3d conv_cog_from_thrust;
@@ -177,25 +293,75 @@ void NamiController::controlCore()
   /* extract controlled axis  */
   if (underactuate_)
   {
-    target_wrench_acc_cog = target_wrench_acc_cog.tail(4);  // z, roll, pitch, yaw
-    integrated_map = integrated_map.bottomRows(4);          // z, roll, pitch, yaw
+    if (surgeAllocation())
+    {
+      /* surge mode: allocate (Fx, Fz, tau_x, tau_z). the aquatic thrust axes span
+         the body x-z plane, so (Fx, Fz, tau_y) share only two DoFs (front/rear pair
+         sums) and one of the three must be dependent -> drop tau_y (pitch rights
+         itself on the CoB-above-CoG buoyancy moment) and regulate Fx instead of
+         leaving it free-running (the cause of the constant forward drift) */
+      Eigen::VectorXd wrench(4);
+      wrench << std::max(-surge_acc_limit_, std::min(surge_acc_limit_, target_wrench_acc_cog(0))),
+          target_wrench_acc_cog(2), target_wrench_acc_cog(3), target_wrench_acc_cog(5);
+      Eigen::MatrixXd map(4, integrated_map.cols());
+      map.row(0) = integrated_map.row(0);  // Fx
+      map.row(1) = integrated_map.row(2);  // Fz
+      map.row(2) = integrated_map.row(3);  // tau_x
+      map.row(3) = integrated_map.row(5);  // tau_z
+      target_wrench_acc_cog = wrench;
+      integrated_map = map;
+    }
+    else
+    {
+      target_wrench_acc_cog = target_wrench_acc_cog.tail(4);  // z, roll, pitch, yaw
+      integrated_map = integrated_map.bottomRows(4);          // z, roll, pitch, yaw
+    }
   }
 
   /* vectoring force mapping */
   Eigen::MatrixXd integrated_map_inv = aerial_robot_model::pseudoinverse(integrated_map);
-  integrated_map_inv_trans_ = integrated_map_inv.leftCols(underactuate_ ? 1 : 3);
-  integrated_map_inv_rot_ = integrated_map_inv.rightCols(3);
-  if (underactuate_)
-    target_vectoring_f_trans_ = integrated_map_inv_trans_ * target_wrench_acc_cog(0);
+  if (surgeAllocation())
+  {
+    integrated_map_inv_trans_ = integrated_map_inv.leftCols(2);  // Fx, Fz
+    /* spinal expects the torque allocation columns in (roll, pitch, yaw) order;
+       pitch has no allocation channel in this mode -> zero column (its spinal
+       gains are also zeroed in setAttitudeGains) */
+    Eigen::MatrixXd rot = Eigen::MatrixXd::Zero(integrated_map_inv.rows(), 3);
+    rot.col(0) = integrated_map_inv.col(2);
+    rot.col(2) = integrated_map_inv.col(3);
+    integrated_map_inv_rot_ = rot;
+    target_vectoring_f_trans_ = integrated_map_inv_trans_ * target_wrench_acc_cog.head(2);
+    target_vectoring_f_rot_ = integrated_map_inv.rightCols(2) * target_wrench_acc_cog.tail(2);
+  }
   else
-    target_vectoring_f_trans_ = integrated_map_inv_trans_ * target_wrench_acc_cog.topRows(3);
-  target_vectoring_f_rot_ = integrated_map_inv_rot_ * target_wrench_acc_cog.bottomRows(3);  // debug
+  {
+    integrated_map_inv_trans_ = integrated_map_inv.leftCols(underactuate_ ? 1 : 3);
+    integrated_map_inv_rot_ = integrated_map_inv.rightCols(3);
+    if (underactuate_)
+      target_vectoring_f_trans_ = integrated_map_inv_trans_ * target_wrench_acc_cog(0);
+    else
+      target_vectoring_f_trans_ = integrated_map_inv_trans_ * target_wrench_acc_cog.topRows(3);
+    target_vectoring_f_rot_ = integrated_map_inv_rot_ * target_wrench_acc_cog.bottomRows(3);  // debug
+  }
   last_col = 0;
 
   /* under actuated axis  */
   if (underactuate_)
   {
-    if (hovering_approximate_)
+    if (surgeAllocation())
+    {
+      /* surge mode: forward motion comes from the Fx allocation row, not from a
+         pitch tilt; sway has no thrust authority at all (axes span x-z only), so
+         the lateral stick is ignored instead of commanding a useless (reversed-
+         direction) roll. both attitude targets stay level. */
+      target_roll_ = 0;
+      target_pitch_ = 0;
+      navigator_->setTargetRoll(0);
+      navigator_->setTargetPitch(0);
+    }
+    /* underwater: always use the hovering approximation. the exact atan2 mapping
+       diverges to +-90 deg when target_acc_dash.z ~ 0 (neutral buoyancy) */
+    else if (hovering_approximate_ || current_mode_ == UNDERWATER)
     {
       target_roll_ = -target_acc_dash.y() / aerial_robot_estimation::G;
       target_pitch_ = target_acc_dash.x() / aerial_robot_estimation::G;
@@ -232,12 +398,25 @@ void NamiController::controlCore()
     {
       target_base_thrust_.at(rotor_coef_ * i) = f_i[0];  // rotor_coef_ == 1: scalar thrust per rotor
     }
+    /* yaw column: index 3 both in the legacy layout (z, roll, pitch, yaw) and in
+       the surge layout (Fx, Fz, roll, yaw) */
     if (integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW)) > max_yaw_scale)
       max_yaw_scale = integrated_map_inv(i, (underactuate_ ? YAW - 2 : YAW));  // underactuated: yaw col is shifted
 
     last_col += rotor_coef_;
   }
   candidate_yaw_term_ = pid_controllers_.at(YAW).result() * max_yaw_scale;
+
+  /* overwrite the inactive motor group with the mask thrust: passes the spinal yaw
+     saturation gate (fabs > 0) but is judged as disabled by the pwm conversion */
+  for (int i = 0; i < motor_num_; i++)
+  {
+    if (!isMotorActive(i))
+    {
+      for (int j = 0; j < rotor_coef_; j++)
+        target_base_thrust_.at(rotor_coef_ * i + j) = MASKED_MOTOR_THRUST;
+    }
+  }
 
   /* calculate target full thrusts and gimbal angles (considering full components)*/
   last_col = 0;
@@ -320,6 +499,27 @@ void NamiController::sendFourAxisCommand()
     flight_command_data.base_thrust = target_full_thrust_;
   }
 
+  /* never publish a non-finite command: a NaN/inf here propagates into every motor
+     thrust on spinal (observed as physics blow-up in simulation). skip this cycle
+     (spinal keeps the previous command; its 500ms timeout is the final fallback)
+     and dump the yaw-term decomposition to locate the numerical source. */
+  bool corrupted = !std::isfinite(flight_command_data.angles[0]) ||
+                   !std::isfinite(flight_command_data.angles[1]) ||
+                   !std::isfinite(flight_command_data.angles[2]);
+  for (const auto& t : flight_command_data.base_thrust)
+    corrupted = corrupted || !std::isfinite(t);
+  if (corrupted)
+  {
+    ROS_ERROR_THROTTLE(1.0,
+                       "[nami] non-finite four-axis command, skipped. angles=(%f %f %f) "
+                       "yaw pid: p=%f i=%f d=%f result=%f target_yaw=%f yaw=%f",
+                       flight_command_data.angles[0], flight_command_data.angles[1],
+                       flight_command_data.angles[2], pid_controllers_.at(YAW).getPTerm(),
+                       pid_controllers_.at(YAW).getITerm(), pid_controllers_.at(YAW).getDTerm(),
+                       pid_controllers_.at(YAW).result(), target_rpy_.z(), rpy_.z());
+    return;
+  }
+
   flight_cmd_pub_.publish(flight_command_data);
 }
 
@@ -353,8 +553,14 @@ void NamiController::sendTorqueAllocationMatrixInv()
   spinal::TorqueAllocationMatrixInv torque_allocation_matrix_inv_msg;
   torque_allocation_matrix_inv_msg.rows.resize(motor_num_ * rotor_coef_);
   Eigen::MatrixXd torque_allocation_matrix_inv = integrated_map_inv_rot_;
-  if (torque_allocation_matrix_inv.cwiseAbs().maxCoeff() > INT16_MAX * 0.001f)
-    ROS_ERROR("Torque Allocation Matrix overflow");
+  const double alloc_max = torque_allocation_matrix_inv.cwiseAbs().maxCoeff();
+  if (!std::isfinite(alloc_max) || alloc_max > INT16_MAX * 0.001f)
+  {
+    /* a non-finite/overflowed matrix (e.g. near-singular allocation pseudo-inverse)
+       must not reach the int16 rosserial fields; keep the previous matrix on spinal */
+    ROS_ERROR_THROTTLE(1.0, "Torque Allocation Matrix overflow (max %f), not published", alloc_max);
+    return;
+  }
   for (unsigned int i = 0; i < motor_num_ * rotor_coef_; i++)
   {
     torque_allocation_matrix_inv_msg.rows.at(i).x = torque_allocation_matrix_inv(i, 0) * 1000;
@@ -367,15 +573,29 @@ void NamiController::sendTorqueAllocationMatrixInv()
 void NamiController::setAttitudeGains()
 {
   spinal::RollPitchYawTerms rpy_gain_msg;  // for rosserial
-  /* to flight controller via rosserial scaling by 1000 */
+  /* to flight controller via rosserial scaling by 1000; the msg fields are int16,
+     so any gain above 32.7 would silently overflow into a NEGATIVE gain on spinal
+     (positive feedback -> violent divergence). Clamp and complain instead. */
+  auto scaled_gain = [](double gain) {
+    double v = gain * 1000;
+    if (std::abs(v) > INT16_MAX)
+    {
+      ROS_ERROR("attitude gain %.1f overflows the int16 rosserial field (max 32.7), clamped", gain);
+      v = std::copysign(INT16_MAX, v);
+    }
+    return static_cast<int16_t>(v);
+  };
   rpy_gain_msg.motors.resize(1);
-  rpy_gain_msg.motors.at(0).roll_p = pid_controllers_.at(ROLL).getPGain() * 1000;
-  rpy_gain_msg.motors.at(0).roll_i = pid_controllers_.at(ROLL).getIGain() * 1000;
-  rpy_gain_msg.motors.at(0).roll_d = pid_controllers_.at(ROLL).getDGain() * 1000;
-  rpy_gain_msg.motors.at(0).pitch_p = pid_controllers_.at(PITCH).getPGain() * 1000;
-  rpy_gain_msg.motors.at(0).pitch_i = pid_controllers_.at(PITCH).getIGain() * 1000;
-  rpy_gain_msg.motors.at(0).pitch_d = pid_controllers_.at(PITCH).getDGain() * 1000;
-  rpy_gain_msg.motors.at(0).yaw_d = pid_controllers_.at(YAW).getDGain() * 1000;
+  rpy_gain_msg.motors.at(0).roll_p = scaled_gain(pid_controllers_.at(ROLL).getPGain());
+  rpy_gain_msg.motors.at(0).roll_i = scaled_gain(pid_controllers_.at(ROLL).getIGain());
+  rpy_gain_msg.motors.at(0).roll_d = scaled_gain(pid_controllers_.at(ROLL).getDGain());
+  /* surge allocation mode has no tau_y channel: silence the spinal pitch PID so
+     its integrator does not wind up against an actuator that no longer exists */
+  const bool no_pitch_channel = surgeAllocation();
+  rpy_gain_msg.motors.at(0).pitch_p = no_pitch_channel ? 0 : scaled_gain(pid_controllers_.at(PITCH).getPGain());
+  rpy_gain_msg.motors.at(0).pitch_i = no_pitch_channel ? 0 : scaled_gain(pid_controllers_.at(PITCH).getIGain());
+  rpy_gain_msg.motors.at(0).pitch_d = no_pitch_channel ? 0 : scaled_gain(pid_controllers_.at(PITCH).getDGain());
+  rpy_gain_msg.motors.at(0).yaw_d = scaled_gain(pid_controllers_.at(YAW).getDGain());
   rpy_gain_pub_.publish(rpy_gain_msg);
 }
 }  // namespace aerial_robot_control

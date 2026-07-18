@@ -38,6 +38,9 @@
     <param name="estimation/mode" value= "$(arg sim_estimate_mode)" if="$(arg simulation)" />
     <param name="estimation/mode" value= "$(arg estimate_mode)" if="$(arg real_machine)"/>
 
+    ###########  Underwater Mode  ###########
+    <param name="underwater_mode" value="$(arg underwater)" />
+
    ###########  Robot Model  ###########
    <rosparam file="$(arg config_dir)/RobotModel.yaml" command="load" />
 
@@ -65,7 +68,7 @@
   </group>
 
   ###########  Base Platform  ###########
-  <node pkg="aerial_robot_base" type="aerial_robot_base_node" name="aerial_robot_base_node" ns="$(arg robot_ns)" output="screen" >
+  <node pkg="aerial_robot_base" type="aerial_robot_base_node" name="aerial_robot_base_node" ns="$(arg robot_ns)" output="screen" launch-prefix="$(optenv NAMI_LAUNCH_PREFIX)" >
     <param name="tf_prefix" value="$(arg robot_ns)"/>
     <param name="param_verbose" value="false"/>
     <param name="main_rate" value="40"/>
@@ -92,6 +95,7 @@
     <arg name="real_machine" value="$(arg real_machine)" />
     <arg name="simulation" value="$(arg simulation)" />
     <arg name="robot_ns" value="$(arg robot_ns)" />
+    <arg name="underwater" value="$(arg underwater)" />
   </include >
 
   ########## Simulation in Gazebo #########

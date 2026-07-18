@@ -10,6 +10,11 @@
   <xacro:property name="max_force" value="18.2494" /> <!-- [N] -->
   <xacro:property name="min_force" value="1.0" /> <!-- [N] -->
 
+  <!-- aquatic rotor (ApiSqueen X3, 24V): asymmetric bi-directional thrust range,
+       endpoints taken from the convertBiDirectional table in dev/bi_directional_pwm -->
+  <xacro:property name="aquatic_max_forward_force" value="25.48" /> <!-- [N] -->
+  <xacro:property name="aquatic_max_reverse_force" value="14.7" /> <!-- [N] -->
+
 
   <!-- friction -->
   <xacro:macro name="friction" params="self">

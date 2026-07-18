@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+<!-- Visual-only reference pole grid (2 m spacing) so translation is visible on
+     the chase-cam video. No collision elements: the robot passes through freely. -->
+<sdf version="1.6">
+  <model name="demo_grid">
+    <static>true</static>
+    <link name="link">
+      <visual name="pole_0">
+        <pose>-1 -3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_1">
+        <pose>-1 -1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_2">
+        <pose>-1 1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_3">
+        <pose>-1 3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_4">
+        <pose>1 -3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_5">
+        <pose>1 -1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_6">
+        <pose>1 1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_7">
+        <pose>1 3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_8">
+        <pose>3 -3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_9">
+        <pose>3 -1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_10">
+        <pose>3 1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_11">
+        <pose>3 3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_12">
+        <pose>5 -3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_13">
+        <pose>5 -1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_14">
+        <pose>5 1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_15">
+        <pose>5 3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_16">
+        <pose>7 -3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_17">
+        <pose>7 -1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_18">
+        <pose>7 1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_19">
+        <pose>7 3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_20">
+        <pose>9 -3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_21">
+        <pose>9 -1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_22">
+        <pose>9 1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_23">
+        <pose>9 3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_24">
+        <pose>11 -3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_25">
+        <pose>11 -1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_26">
+        <pose>11 1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_27">
+        <pose>11 3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_28">
+        <pose>13 -3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_29">
+        <pose>13 -1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_30">
+        <pose>13 1 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+      <visual name="pole_31">
+        <pose>13 3 -1.5 0 0 0</pose>
+        <geometry><cylinder><radius>0.04</radius><length>3.0</length></cylinder></geometry>
+        <material><ambient>1.0 0.45 0.1 1</ambient><diffuse>1.0 0.45 0.1 1</diffuse></material>
+      </visual>
+    </link>
+  </model>
+</sdf>

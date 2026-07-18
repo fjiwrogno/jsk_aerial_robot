@@ -368,13 +368,24 @@ namespace gazebo_ros_control
             gazebo::physics::LinkPtr parent_link  = sim_rotors_.at(j)->GetParent();
             gazebo::physics::LinkPtr child_link  = sim_rotors_.at(j)->GetChild();
 
+            /* a single non-finite force would irreversibly blow up the physics world
+               (e.g. a transient NaN/inf from the attitude controller output).
+               isfinite, not isnan: an inf slips through isnan and is just as fatal */
+            const double force = rotor.getForce();
+            const auto torque = rotor.getTorque();
+            if (!std::isfinite(force) ||
+                !std::isfinite(torque.x()) || !std::isfinite(torque.y()) || !std::isfinite(torque.z()))
+              {
+                ROS_ERROR_THROTTLE(1.0, "simulation: non-finite rotor wrench force=%f torque=(%f,%f,%f) on %s, skip applying",
+                                   force, torque.x(), torque.y(), torque.z(), sim_rotors_.at(j)->GetName().c_str());
+                continue;
+              }
+
 #if GAZEBO_MAJOR_VERSION >= 8
-            child_link->AddRelativeForce(ignition::math::Vector3d(0, 0, rotor.getForce()));
-            auto  torque = rotor.getTorque();
+            child_link->AddRelativeForce(ignition::math::Vector3d(0, 0, force));
             parent_link->AddRelativeTorque(ignition::math::Vector3d(torque.x(), torque.y(), torque.z()));
 #else
-            child_link->AddRelativeForce(gazebo::math::Vector3(0, 0, rotor.getForce()));
-            auto  torque = rotor.getTorque();
+            child_link->AddRelativeForce(gazebo::math::Vector3(0, 0, force));
             parent_link->AddRelativeTorque(gazebo::math::Vector3(torque.x(), torque.y(), torque.z()));
 #endif
             sim_rotors_.at(j)->SetVelocity(0, rotor.getSpeed());

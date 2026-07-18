@@ -308,13 +308,17 @@
       </inertial>
     </link>
 
-    <!-- thrust link (virtual) -->
+    <!-- thrust link (virtual).
+         0.01 kg instead of the usual 1e-5: even force-free, a 1e-5 kg body on a
+         continuous joint sits in the same ODE constraint island as the ~3 kg hydro
+         bodies underwater and the extreme mass ratio intermittently NaNs the LCP
+         solve (see the aquatic thrust link note). -->
     <link name="thrust${self}">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="0.00001"/>
+        <mass value="0.01"/>
         <inertia
-            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixx="0.00001" iyy="0.00001" izz="0.00001"
             ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
       </inertial>
     </link>
@@ -417,13 +421,17 @@
       </inertial>
     </link>
 
-    <!-- thrust link (virtual) -->
+    <!-- thrust link (virtual).
+         0.01 kg instead of the usual 1e-5: even force-free, a 1e-5 kg body on a
+         continuous joint sits in the same ODE constraint island as the ~3 kg hydro
+         bodies underwater and the extreme mass ratio intermittently NaNs the LCP
+         solve (see the aquatic thrust link note). -->
     <link name="thrust${self}">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="0.00001"/>
+        <mass value="0.01"/>
         <inertia
-            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixx="0.00001" iyy="0.00001" izz="0.00001"
             ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
       </inertial>
     </link>
@@ -467,6 +475,69 @@ In this way, maybe less pressure -->
         <hardwareInterface>RotorInterface</hardwareInterface>
       </joint>
       <actuator name="rotor_actuator${self}">
+        <hardwareInterface>RotorInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+  </xacro:macro>
+
+  <!-- aquatic rotor actuator (logical motor ${motor_id} = unit ${self} + 4).
+       Thrust acts along the z axis of aquatic_rotor${self} (tilted +-45 deg about x).
+       Bi-directional: joint limit lower is negative so the gazebo rotor saturation
+       (EffortRotorSaturationHandle) admits reverse thrust; on the real machine these
+       map to motor 4~7 on pwm_htim2 (dev/bi_directional_pwm, 1500us neutral). -->
+  <xacro:macro name="nami_aquatic_actuator" params="self motor_id rotor_direction">
+    <!-- rotor parent link (virtual) -->
+    <link name="rotor_parent_aquatic${self}">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.00001"/>
+        <inertia
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
+      </inertial>
+    </link>
+
+    <joint name="rotor_parent_aquatic_joint${self}" type="fixed">
+      <parent link="aquatic_rotor${self}"/>
+      <child link="rotor_parent_aquatic${self}"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- thrust link (virtual).
+         NOT the usual 1e-5 kg: these links take the full bi-directional aquatic
+         thrust (up to ~25 N) while the parent bodies carry large hydrodynamic
+         forces underwater. A 1e-5 kg link gives ODE a ~1:3e5 mass ratio in the
+         constraint island, which intermittently fails the LCP solve and NaN-crashes
+         gazebo (uuv plugin acceleration assert). 0.01 kg keeps the physics healthy
+         and only adds 40 g to the model. -->
+    <link name="thrust${motor_id}">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.01"/>
+        <inertia
+            ixx="0.00001" iyy="0.00001" izz="0.00001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
+      </inertial>
+    </link>
+    <xacro:damping_factor link="thrust${motor_id}"/>
+
+    <!-- rotor joint (virtual): asymmetric bi-directional force range -->
+    <joint name="rotor${motor_id}" type="continuous">
+      <limit effort="100.0" lower="-${aquatic_max_reverse_force}" upper="${aquatic_max_forward_force}" velocity="0.5"/>
+      <parent link="rotor_parent_aquatic${self}"/>
+      <child link="thrust${motor_id}"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <axis xyz="0 0 ${rotor_direction}"/>
+    </joint>
+
+    <!-- hardware interface -->
+    <transmission name="rotor_tran${motor_id}">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="rotor${motor_id}">
+        <hardwareInterface>RotorInterface</hardwareInterface>
+      </joint>
+      <actuator name="rotor_actuator${motor_id}">
         <hardwareInterface>RotorInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
       </actuator>

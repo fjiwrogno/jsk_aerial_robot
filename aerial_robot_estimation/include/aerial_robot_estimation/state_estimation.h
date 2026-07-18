@@ -397,6 +397,9 @@ namespace aerial_robot_estimation
     inline const double getImuLatestTimeStamp()
     {
       boost::lock_guard<boost::mutex> lock(queue_mutex_);
+      /* the queue stays empty until IMU bias calibration calls setQueueSize()
+         (qu_size_ starts at 0, so every push is popped immediately) */
+      if(timestamp_qu_.empty()) return 0;
       return timestamp_qu_.back();
     }
 

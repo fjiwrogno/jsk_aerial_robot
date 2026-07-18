@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!-- Static underwater observation camera for demo video recording.
+     Spawn (pose set on the spawn_model call):
+       rosrun gazebo_ros spawn_model -sdf -file demo_cam.sdf -model demo_cam \
+         -x 4.0 -y -4.0 -z -1.2 -Y 2.356
+     Publishes /demo_cam/image_raw at 20 Hz. -->
+<sdf version="1.6">
+  <model name="demo_cam">
+    <static>true</static>
+    <link name="link">
+      <sensor type="camera" name="cam">
+        <update_rate>20.0</update_rate>
+        <camera>
+          <horizontal_fov>1.2</horizontal_fov>
+          <image>
+            <width>1280</width>
+            <height>720</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>150</far>
+          </clip>
+        </camera>
+        <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+          <alwaysOn>true</alwaysOn>
+          <updateRate>20.0</updateRate>
+          <cameraName>demo_cam</cameraName>
+          <imageTopicName>image_raw</imageTopicName>
+          <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+          <frameName>demo_cam_link</frameName>
+        </plugin>
+      </sensor>
+    </link>
+  </model>
+</sdf>

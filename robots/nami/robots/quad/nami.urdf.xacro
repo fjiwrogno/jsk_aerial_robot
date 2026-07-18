@@ -11,4 +11,10 @@
   <xacro:nami_thrust_link_forward self="3" rotor_direction="1"/>
   <xacro:nami_thrust_link_backward self="4" rotor_direction="-1"/>
 
+  <!-- aquatic actuators: logical motor 4~7 (thrust5..8), used only in underwater mode -->
+  <xacro:nami_aquatic_actuator self="1" motor_id="5" rotor_direction="1"/>
+  <xacro:nami_aquatic_actuator self="2" motor_id="6" rotor_direction="-1"/>
+  <xacro:nami_aquatic_actuator self="3" motor_id="7" rotor_direction="1"/>
+  <xacro:nami_aquatic_actuator self="4" motor_id="8" rotor_direction="-1"/>
+
 </robot>

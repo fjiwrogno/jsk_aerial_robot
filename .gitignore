@@ -112,3 +112,6 @@ tags
 # mujoco
 MUJOCO_LOG.txt
 robots/**/mujoco
+
+# nami underwater demo recordings (bags / videos / plots)
+robots/nami/demo_output/

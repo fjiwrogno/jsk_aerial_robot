@@ -3,6 +3,7 @@
   <arg name="real_machine" default="false" />
   <arg name="simulation" default="false" />
   <arg name="robot_ns" default="nami" />
+  <arg name="underwater" default="false" />
 
   <group ns="$(arg robot_ns)">
 
@@ -14,10 +15,18 @@
           <arg name="serial_port" value="/dev/flight_controller" />
           <arg name="serial_baud" value="921600" />
         </include>
+
+        <!-- depth sensor (ms5837): publishes depth_sensor_node/depth (PointStamped,
+             point.z signed, negative underwater), consumed by NamiNavigator -->
+        <node pkg="ms5837_ros" type="ms5837_node.py" name="depth_sensor_node"
+              output="screen" if="$(arg underwater)" />
       </group>
 
-      <!-- mocap -->
-      <include file="$(find aerial_robot_base)/launch/external_module/mocap.launch" />
+      <!-- mocap: aerial only. underwater there is no mocap coverage, and a mocap
+           stream that starts and then drops (e.g. brief surface capture) trips the
+           sensor health check (unhealth_level 3 -> automatic force landing) -->
+      <include file="$(find aerial_robot_base)/launch/external_module/mocap.launch"
+               unless="$(arg underwater)" />
     </group>
 
     <!-- basic configuration for sensors (e.g. noise sigma) -->

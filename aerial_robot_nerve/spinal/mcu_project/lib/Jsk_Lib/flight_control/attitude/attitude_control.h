@@ -54,6 +54,24 @@
 
 #define MAX_MOTOR_NUMBER 10
 
+/* bi-directional pwm for pwm_htim2_ (motor index 4~7, e.g. underwater thruster with 3D mode ESC).
+   target_pwm in [0, 1] maps linearly to [PWM2_MIN_PULSE_US, PWM2_MAX_PULSE_US]:
+   0.0 -> 1.0ms (full reverse), 0.5 -> 1.5ms (zero thrust), 1.0 -> 2.0ms (full forward).
+   set BIDIRECTIONAL_PWM2 to 1 in the board config.h to enable; default off keeps the
+   original duty-based pwm_htim2_ behavior (e.g. motors 4~7 of multilink robots, SIMULATION).
+   the saturation-check guards below stay active in simulation via the runtime rosparam
+   substitute so the mixed aerial/aquatic thrust vector is handled there too. */
+#ifndef BIDIRECTIONAL_PWM2
+  #define BIDIRECTIONAL_PWM2 0
+#endif
+#define PWM2_FREQ 200 // [Hz], AM32/ArduSub field default for thrusters; HW timer PWM costs no CPU, tune 50/200/400 on the bench. upper bound ~490Hz (a 2ms pulse must fit one period)
+#define PWM2_TICK_FREQ 1000000 // 1MHz timer tick -> CCR unit = 1us, decoupled from PWM2_FREQ
+#define PWM2_MIN_PULSE_US 1000.0f
+#define PWM2_NEUTRAL_PULSE_US 1500.0f
+#define PWM2_MAX_PULSE_US 2000.0f
+#define PWM2_MOTOR_START_INDEX 4
+#define PWM2_MOTOR_END_INDEX 8 // pwm_htim2_ drives CH1-4 = motor index 4~7 only
+
 /* fail safe */
 #define FLIGHT_COMMAND_TIMEOUT 500 //500ms
 #define MAX_TILT_ANGLE 1.0f // rad
@@ -234,6 +252,9 @@ private:
   void pwmTestCallback(const spinal::PwmTest& pwm_msg);
   void pwmConversion(void);
   void pwmsControl(void);
+#if BIDIRECTIONAL_PWM2
+  float convertBiDirectional(float thrust);
+#endif
 
   void reset(void);
 
@@ -245,11 +266,41 @@ private:
     else return input;
   }
 
+  /* a motor is a bi-directional (3D ESC) rotor iff the feature is enabled and its index is
+     in the pwm_htim2_ channel range. on the board this folds to a compile-time constant;
+     in simulation the shared plugin serves every robot, so it is a runtime rosparam
+     (bidirectional_motor_start/end, default off) set only by underwater-capable robots. */
+  bool isBidirectionalRotor(int i) const
+  {
+#ifdef SIMULATION
+    if (sim_bidirectional_motor_start_ >= 0)
+      return i >= sim_bidirectional_motor_start_ && i < sim_bidirectional_motor_end_;
+#endif
+    return BIDIRECTIONAL_PWM2 && i >= PWM2_MOTOR_START_INDEX && i < PWM2_MOTOR_END_INDEX;
+  }
+
+  bool hasBidirectionalRotors() const
+  {
+#ifdef SIMULATION
+    if (sim_bidirectional_motor_start_ >= 0) return true;
+#endif
+    return BIDIRECTIONAL_PWM2;
+  }
+
+  /* normalized [0,1] target pwm -> pulse width [PWM2_MIN_PULSE_US, PWM2_MAX_PULSE_US] (0.5 -> 1.5ms neutral) */
+  float pulseFromPwm(float pwm) const
+  {
+    return PWM2_MIN_PULSE_US + pwm * (PWM2_MAX_PULSE_US - PWM2_MIN_PULSE_US);
+  }
+
 #ifdef SIMULATION
   uint32_t HAL_GetTick(){ return ros::Time::now().toSec() * 1000; }
 public:
   float DELTA_T;
   double prev_time_;
+private:
+  int sim_bidirectional_motor_start_;
+  int sim_bidirectional_motor_end_;
 #endif
 };
 #endif

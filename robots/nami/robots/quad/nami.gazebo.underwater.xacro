@@ -5,9 +5,78 @@
   <!-- Standard URDF kinematics -->
   <xacro:include filename="$(find nami)/robots/quad/nami.urdf.xacro" />
 
+  <!-- ============== Added mass, baked as real inertia (underwater only) ==============
+       The uuv plugin's own <added_mass> computes the force from a numerically
+       differentiated acceleration of the previous step (explicit feedback, EMA
+       alpha=0.3 hard-coded, documented as oscillatory in HydrodynamicModel.cc).
+       Combined with nami's 1e-5 kg virtual thrust links and the yaw_joint two-body
+       coupling it intermittently blows up ODE ("Linear or angular accelerations
+       are invalid" assert), even at scaling 0.1.
+       Instead we bake the added mass into ballast links that gazebo's fixed-joint
+       lumping merges into the two physics bodies: real inertia is handled
+       implicitly by the LCP solver = unconditionally stable. Translational added
+       mass becomes isotropic (mean of the diagonal estimate); rotational added
+       mass is represented exactly by the inertia tensor. The buoyancy volumes in
+       the uuv plugin below are enlarged by dm/rho so the static trim is unchanged
+       (physical added mass carries no weight; here the extra weight and extra
+       buoyancy cancel). Bonus: robot_description mass now includes the added mass,
+       so the controller's force allocation compensates it automatically. -->
+
+  <!-- tail body: trans diag(0.7 0.9 1.5) -> mean ~1.0 kg; rot diag(0.01 0.02 0.02) -->
+  <link name="added_mass_ballast_tail">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.02" iyz="0" izz="0.02"/>
+    </inertial>
+  </link>
+  <joint name="added_mass_ballast_tail_joint" type="fixed">
+    <parent link="root"/>
+    <child link="added_mass_ballast_tail"/>
+    <!-- at the tail body CoG so the lumped CoG does not move -->
+    <origin xyz="-0.105 0.020 0.023" rpy="0 0 0"/>
+  </joint>
+
+  <!-- head body: trans diag(0.5 0.6 1.0) -> mean ~0.7 kg; rot diag(0.005 0.015 0.015) -->
+  <link name="added_mass_ballast_head">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.7"/>
+      <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.015" iyz="0" izz="0.015"/>
+    </inertial>
+  </link>
+  <joint name="added_mass_ballast_head_joint" type="fixed">
+    <parent link="base_link_head"/>
+    <child link="added_mass_ballast_head"/>
+    <origin xyz="0.194 0.000 -0.022" rpy="0 0 0"/>
+  </joint>
+
   <!-- Aerial simulation plugin: spinal HW interface, IMU, magnetometer, GPS -->
   <xacro:include filename="$(find aerial_robot_simulation)/xacro/spinal.gazebo.xacro" />
   <xacro:gazebo_spinal robot_name="$(arg robot_name)" mag_frame="fc" />
+
+  <!-- Depth sensor (uuv_simulator SubseaPressure, model plugin).
+       Publishes sensor_msgs/FluidPressure [kPa] on <robot_namespace>/pressure.
+       Depth is recovered as z = -(P - standard_pressure) / kPa_per_meter (signed, z<0 underwater).
+       link_name must be a physics body that survives fixed-joint reduction, so we use
+       "root" (the tail body containing fc; constant ~0.12 m offset to fc is absorbed
+       because the target depth is initialized from the current reading).
+       noise_sigma/amplitude start at 0 for clean bring-up - add noise when tuning. -->
+  <gazebo>
+    <plugin name="subsea_pressure_plugin" filename="libuuv_gazebo_ros_subsea_pressure_plugin.so">
+      <robot_namespace>$(arg robot_name)</robot_namespace>
+      <link_name>root</link_name>
+      <sensor_topic>pressure</sensor_topic>
+      <update_rate>50</update_rate>
+      <saturation>3000</saturation>
+      <noise_sigma>0.0</noise_sigma>
+      <noise_amplitude>0.0</noise_amplitude>
+      <estimate_depth_on>false</estimate_depth_on>
+      <standard_pressure>101.325</standard_pressure>
+      <kPa_per_meter>9.80638</kPa_per_meter>
+      <enable_gazebo_messages>false</enable_gazebo_messages>
+    </plugin>
+  </gazebo>
 
   <!-- Underwater hydrodynamics plugin (uuv_simulator).
        Applies buoyancy + Fossen-model hydrodynamic forces to the listed links each
@@ -42,13 +111,14 @@
       <debug>0</debug>
 
       <!-- ================= tail-side body (physics body "root") =================
-           mass 2.355 kg -> neutral volume 0.002355 m^3 in freshwater.
-           volume set ~1% above neutral for slight positive buoyancy (~0.25 N up).
+           mass 2.355 kg + 1.0 kg baked added-mass ballast = 3.355 kg
+           -> neutral volume 0.003355 m^3 in freshwater; set ~1% above neutral
+           for slight positive buoyancy (~0.35 N up).
            WARNING: buoyancy applies only while the link is below z=0, and the
            robot is ejected to the surface if volume is set far above neutral. -->
       <link name="root">
         <neutrally_buoyant>0</neutrally_buoyant>
-        <volume>0.00238</volume>
+        <volume>0.00349</volume>
 
         <!-- Bounding box used only for debug visualisation; no effect on forces -->
         <box>
@@ -66,23 +136,25 @@
         <hydrodynamic_model>
           <type>fossen</type>
 
-          <!-- Added mass [kg, kg*m^2] - 6x6 row-major, diagonal approximation.
-               Translational ~30% of displaced mass (heave larger: flat body +
-               two rotor discs). Rotational terms kept small. Refine by system
-               identification. -->
+          <!-- Added mass: kept ZERO here. The plugin computes it from a numerically
+               differentiated acceleration (explicit feedback) which intermittently
+               NaN-crashed ODE even at scaling 0.1. The physical added mass
+               (trans diag(0.7 0.9 1.5), rot diag(0.01 0.02 0.02)) is baked into the
+               added_mass_ballast_tail link instead - see the note at the top. -->
           <added_mass>
-             0.7  0    0    0    0    0
-             0    0.9  0    0    0    0
-             0    0    1.5  0    0    0
-             0    0    0    0.01 0    0
-             0    0    0    0    0.02 0
-             0    0    0    0    0    0.02
+             0 0 0 0 0 0
+             0 0 0 0 0 0
+             0 0 0 0 0 0
+             0 0 0 0 0 0
+             0 0 0 0 0 0
+             0 0 0 0 0 0
           </added_mass>
 
           <!-- Linear damping [N*s/m, N*m*s/rad] - diagonal 6-vector.
-               Stokes-drag scale; mainly suppresses slow drift. -->
+               Raised from the pure Stokes estimate to damp the added-mass
+               feedback oscillation (see note above). -->
           <linear_damping>
-            -5 -5 -10 -0.5 -0.5 -0.5
+            -8 -8 -15 -0.8 -0.8 -0.8
           </linear_damping>
 
           <!-- Quadratic damping [N*s^2/m^2, N*m*s^2/rad^2] - diagonal 6-vector.
@@ -97,10 +169,11 @@
       </link>
 
       <!-- ================= head-side body ("base_link_head") =================
-           mass 1.600 kg -> neutral volume 0.001600 m^3; set ~1% above. -->
+           mass 1.600 kg + 0.7 kg baked added-mass ballast = 2.300 kg
+           -> neutral volume 0.002300 m^3; set ~1% above. -->
       <link name="base_link_head">
         <neutrally_buoyant>0</neutrally_buoyant>
-        <volume>0.00162</volume>
+        <volume>0.002329</volume>
 
         <box>
           <width>0.133</width>
@@ -115,13 +188,16 @@
         <hydrodynamic_model>
           <type>fossen</type>
 
+          <!-- kept ZERO: the physical added mass (trans diag(0.5 0.6 1.0),
+               rot diag(0.005 0.015 0.015)) is baked into added_mass_ballast_head
+               as real inertia - see the note at the top. -->
           <added_mass>
-             0.5  0    0    0    0    0
-             0    0.6  0    0    0    0
-             0    0    1.0  0    0    0
-             0    0    0    0.005 0    0
-             0    0    0    0    0.015 0
-             0    0    0    0    0    0.015
+             0 0 0 0 0 0
+             0 0 0 0 0 0
+             0 0 0 0 0 0
+             0 0 0 0 0 0
+             0 0 0 0 0 0
+             0 0 0 0 0 0
           </added_mass>
 
           <linear_damping>
