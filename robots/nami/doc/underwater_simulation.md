@@ -194,7 +194,7 @@ python3 $(rospack find nami)/scripts/plot_underwater_demo.py /path/to/out
 ## 已知局限性
 
 1. **参数为估算值**：附加质量与阻尼基于几何粗估，实际值需实验/CFD 辨识。
-2. **仿真不经过 PWM 路径**：仿真施力走 `getForce()=target_thrust_`，双向推力靠 URDF rotor joint limit 钳位；实机的推力→PWM 转换（ApiSqueen X3 表、1500μs 中点）由 Phase B 合并 `dev/bi_directional_pwm`（commit `9cc0648fe`）提供。
+2. **仿真不经过 PWM 路径**：仿真施力走 `getForce()=target_thrust_`，双向推力靠 URDF rotor joint limit 钳位；实机的推力→PWM 转换（ApiSqueen X3 表、1500μs 中点、200Hz）已由 `dev/bi_directional_pwm` 合并进本分支（2026-07-19，台架实机验证通过）。注意：双向转换关系**固定**（24V 表、无 `v_factor_` 电压自适应，与空中电机不同，按设计）；混合构型下被掩码的空中电机在实机被强制 armed-stop（1ms）而非 min_duty 怠速（此差异仿真不可见）。实机准备详见 [underwater_real_machine_test.md](underwater_real_machine_test.md)。
 3. **无自由液面效应**：uuv_simulator 不模拟水-空气界面，水面附近（跨介质过渡段）动力学不准。
 4. **yaw_joint 水下负载**：两刚体各自受浮力/阻尼，舵机 effort 限制（6.6 Nm）能否持位需仿真观察。
 5. **恒定前向漂移（surge 力泄漏，已定量确认）**：aquatic rotor 推力轴全部位于机体 x-z 平面（绕 y ±45°），任何前后推力不平衡都直接产生机体 +x/−x 净力；而 underactuate 分配只提取 (z, roll, pitch, yaw) 四行，x 力不在方程中。深度保持稳态下，控制器 base thrust + spinal roll/pitch 积分配平项合成的机体系净力实测为 (+2.62, 0.00, −1.24) N，与 0.16 m/s 漂速下的水阻 2.61 N 精确平衡（误差 0.2%）。电机关闭后漂速立即归零，排除外部流场因素。**这不是 pitch 姿态控制问题**（保持段 pitch RMSE 0.76°）。改进方向：把 x 力行纳入分配（前后差动直接控 surge），或对漂移做速度闭环。分配自由度的完整数学分析（为什么 5 个量只能选 4 个、该选哪 4 个）见 [underwater_allocation_analysis.md](underwater_allocation_analysis.md)。

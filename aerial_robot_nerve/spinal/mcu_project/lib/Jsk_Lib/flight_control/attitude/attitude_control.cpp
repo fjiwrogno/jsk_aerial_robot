@@ -1011,14 +1011,16 @@ float AttitudeController::convertBiDirectional(float thrust)
 {
   /* piecewise linear conversion for bi-directional rotors on pwm_htim2_,
      based on the ApiSqueen X3 underwater thruster table (24V, thrust[kgf] x 9.8 -> [N]).
-     the forward/reversal characteristics are asymmetric, and 1.4ms ~ 1.6ms is the dead band of the ESC */
+     the forward/reversal characteristics are asymmetric, and 1.4ms ~ 1.6ms is the dead band of the ESC.
+     the relation is FIXED by design (real-machine validated at the 24V table point):
+     no battery-voltage adaptation (v_factor_) unlike the uni-directional motors */
   static const float forward_thrust[] = {0.0f, 1.96f, 3.92f, 6.86f, 9.8f, 11.76f, 14.7f, 17.64f, 19.6f, 25.48f}; // [N]
   static const float forward_pulse[] = {1500.0f, 1600.0f, 1650.0f, 1700.0f, 1750.0f, 1800.0f, 1850.0f, 1900.0f, 1950.0f, 2000.0f}; // [us]
   static const float reverse_thrust[] = {0.0f, 1.96f, 2.94f, 4.9f, 6.86f, 8.82f, 9.8f, 11.76f, 13.72f, 14.7f}; // [N] (magnitude)
   static const float reverse_pulse[] = {1500.0f, 1400.0f, 1350.0f, 1300.0f, 1250.0f, 1200.0f, 1150.0f, 1100.0f, 1050.0f, 1000.0f}; // [us]
   static const int table_size = sizeof(forward_thrust) / sizeof(forward_thrust[0]);
 
-  float scaled_thrust = v_factor_ * fabs(thrust) / rotor_devider_;
+  float scaled_thrust = fabs(thrust) / rotor_devider_;
   const float* thrust_table = (thrust >= 0) ? forward_thrust : reverse_thrust;
   const float* pulse_table = (thrust >= 0) ? forward_pulse : reverse_pulse;
 
@@ -1310,7 +1312,17 @@ void AttitudeController::pwmConversion()
             }
 
 #if BIDIRECTIONAL_PWM2
-          if(isBidirectionalRotor(i))
+          if(hasBidirectionalRotors() && !isBidirectionalRotor(i) &&
+             fabs(base_thrust_term_[rotor_coef_ * i]) < 1e-5f)
+            {
+              /* masked (inactive) uni-directional motor of the mixed aerial/aquatic
+                 configuration (underwater mode masks the air motors with 1e-6 N):
+                 force the armed-stop output (1ms zero throttle) instead of clamping
+                 to min_duty_, which would idle-spin the air props underwater.
+                 an active uni motor never has |base thrust| below 1e-5 N in flight. */
+              target_pwm_[i] = IDLE_DUTY;
+            }
+          else if(isBidirectionalRotor(i))
             {
               /* bi-directional rotor on pwm_htim2_: keep the sign of thrust, 0.5 means zero thrust (1.5ms) */
               target_pwm_[i] = convertBiDirectional(target_thrust_[i]);
@@ -1336,8 +1348,12 @@ void AttitudeController::pwmConversion()
 #endif
         }
 
-      /* for ros */
-      pwms_msg_.motor_value[i] = (target_pwm_[i] * 2000);
+      /* for ros: report the real pulse width for bi-directional rotors
+         (target_pwm 0.5 -> 1500us neutral), duty x 2000 for the others */
+      if(isBidirectionalRotor(i))
+        pwms_msg_.motor_value[i] = (uint16_t)pulseFromPwm(target_pwm_[i]);
+      else
+        pwms_msg_.motor_value[i] = (target_pwm_[i] * 2000);
     }
   //TODO: send target gimbal angles in real machiene
 #ifdef SIMULATION
