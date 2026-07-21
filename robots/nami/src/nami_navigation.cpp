@@ -42,6 +42,18 @@ void NamiNavigator::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
 
   if (underwater_mode_)
   {
+    /* underwater there is no world-frame xyz/altitude estimate (depth is fed
+       straight to the controller), so do not gate arming/takeoff on it */
+    require_pos_estimate_ = false;
+
+    /* the base class also subscribes to "joy" (BaseNavigator::joyStickControl) with
+       the standard aerial mapping (arming, position/velocity nav, force landing).
+       Underwater that conflicts with the Flamingo-mapped joyCallback below, so shut
+       it down and let joyCallback be the only joystick handler: motion via cmd_vel,
+       D-pad for the mode toggle, and STOP for an emergency disarm. Arming/takeoff
+       stay on the keyboard (aerial_robot_base keyboard_command.py / underwater_teleop). */
+    joy_stick_sub_.shutdown();
+
     underwater_cmd_sub_ = nh_.subscribe("underwater/cmd_vel", 1, &NamiNavigator::underwaterCmdCallback, this);
     joy_sub_ = nh_.subscribe("joy", 1, &NamiNavigator::joyCallback, this, ros::TransportHints().tcpNoDelay());
     surge_allocation_sub_ =

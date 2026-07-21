@@ -154,14 +154,26 @@ python3 $(rospack find nami)/scripts/plot_underwater_demo.py /tmp/nami_demo
 
 ### 4.4 手动遥操作
 
-```bash
-# 键盘（w/s 前后, a/d 左右, r/f 上浮/下潜, q/e 偏航;
-#        1=arm, 2=takeoff/深度保持, l=land, 0=halt, x=归零, m=切换模式）
-rosrun nami underwater_teleop.py
+**推荐工作流（实机）**：状态命令走标准键盘、运动/急停走手柄，两者分工不冲突。
 
-# 手柄（Flamingo 同款映射，需 joystick:=true 启动）：
-#   左摇杆上下=前后, 左摇杆左右=左右, 右摇杆上下=上浮/下潜, 右摇杆左右=yaw,
-#   十字键左=切换模式, STOP=急停
+```bash
+# A) 状态：标准键盘（arm/takeoff/land/halt）——实机验证的入口
+rosrun aerial_robot_base keyboard_command.py
+#   r = arming(上电)   t = takeoff(进入深度保持)   h = halt(急停)   （l = land）
+#   注意用 r/t/h，不是 underwater_teleop 的 1/2/0
+
+# B) 运动 + 急停：手柄（Flamingo 同款映射，需 joystick:=true 启动）
+#   左摇杆上下 = 前后,  左摇杆左右 = 左右(FORWARD 模式忽略),
+#   右摇杆上下 = 上浮/下潜,  右摇杆左右 = yaw,
+#   十字键左 = 切换 ATTITUDE+DEPTH / FORWARD,  STOP = 紧急 disarm(急停)
+#   注意：手柄不做 arming/takeoff（那是键盘的活）；水下已关掉基类的标准手柄
+#         映射，只保留这套水下映射，避免两套映射冲突。
+```
+
+```bash
+# 一体式键盘替代（arm/takeoff/运动/深度/模式全在一个脚本，也可用）
+# w/s 前后, a/d 左右, r/f 上浮/下潜, q/e 偏航; 1=arm, 2=takeoff, l=land, 0=halt, x=归零, m=切换模式
+rosrun nami underwater_teleop.py
 ```
 
 ### 4.5 三种方式切换控制模式

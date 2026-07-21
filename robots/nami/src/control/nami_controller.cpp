@@ -170,7 +170,30 @@ bool NamiController::update()
     gimbal_dof_pub_.publish(msg);
   }
 
-  return PoseLinearController::update();
+  bool active = PoseLinearController::update();
+
+  /* underwater, the controller only becomes active at TAKEOFF; before that
+     (ARM_ON, armed but not flying) no four_axes/command is published, so spinal
+     drives every armed motor to its idle throttle -> the air rotors (0~3) would
+     spin up in the water. Publish the masked idle command while armed-but-inactive
+     so the air group is held at armed-stop (mask -> IDLE_DUTY) and the aquatic
+     rotors stay at the 1.5 ms neutral pulse. */
+  if (!active && current_mode_ == UNDERWATER &&
+      navigator_->getNaviState() == aerial_robot_navigation::ARM_ON_STATE)
+    sendUnderwaterIdleCommand();
+
+  return active;
+}
+
+void NamiController::sendUnderwaterIdleCommand()
+{
+  for (int i = 0; i < motor_num_; i++)
+    for (int j = 0; j < rotor_coef_; j++)
+      target_base_thrust_.at(rotor_coef_ * i + j) = isMotorActive(i) ? 0.0f : MASKED_MOTOR_THRUST;
+  target_roll_ = 0;
+  target_pitch_ = 0;
+  candidate_yaw_term_ = 0;
+  sendFourAxisCommand();
 }
 
 void NamiController::controlCore()

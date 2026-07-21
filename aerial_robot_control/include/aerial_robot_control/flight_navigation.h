@@ -312,6 +312,13 @@ namespace aerial_robot_navigation
     double gps_waypoint_check_du_;
     double gps_waypoint_threshold_;
 
+    /* gate arming and takeoff on a valid world-frame position/altitude estimate.
+       default true keeps the original behaviour for every robot; a derived class
+       with no such estimate (e.g. nami underwater, where depth is fed straight to
+       the controller and there is no xy estimation) sets it false so it can still
+       arm and take off. */
+    bool require_pos_estimate_ = true;
+
     /* teleop */
     bool teleop_flag_;
     bool xy_control_flag_;
@@ -373,21 +380,24 @@ namespace aerial_robot_navigation
     {
       if(getNaviState() == TAKEOFF_STATE) return;
 
-      /* check xy position error in initial state */
-      double pos_x_error = getTargetPos().x() - estimator_->getPos(Frame::COG, estimate_mode_).x();
-      double pos_y_error = getTargetPos().y() - estimator_->getPos(Frame::COG, estimate_mode_).y();
-      double pos_xy_error_dist = std::sqrt(pos_x_error * pos_x_error + pos_y_error * pos_y_error);
-      if(pos_xy_error_dist > takeoff_xy_pos_tolerance_)
+      /* check xy position error in initial state (skipped without a position estimate) */
+      if(require_pos_estimate_)
         {
-          ROS_ERROR_STREAM("initial xy error distance: " << pos_xy_error_dist << " is larger than threshold " << takeoff_xy_pos_tolerance_ << ". switch back to ARM_OFF_STATE");
-          setNaviState(STOP_STATE);
-        }
+          double pos_x_error = getTargetPos().x() - estimator_->getPos(Frame::COG, estimate_mode_).x();
+          double pos_y_error = getTargetPos().y() - estimator_->getPos(Frame::COG, estimate_mode_).y();
+          double pos_xy_error_dist = std::sqrt(pos_x_error * pos_x_error + pos_y_error * pos_y_error);
+          if(pos_xy_error_dist > takeoff_xy_pos_tolerance_)
+            {
+              ROS_ERROR_STREAM("initial xy error distance: " << pos_xy_error_dist << " is larger than threshold " << takeoff_xy_pos_tolerance_ << ". switch back to ARM_OFF_STATE");
+              setNaviState(STOP_STATE);
+            }
 
-      /* check difference in height between arming and takeoff */
-      if(fabs(init_height_ - estimator_->getPos(Frame::COG, estimate_mode_).z()) > takeoff_z_pos_tolerance_)
-        {
-          ROS_ERROR_STREAM("difference between init height and current height: " << fabs(init_height_ - estimator_->getPos(Frame::COG, estimate_mode_).z()) << " is larger than threshold " << takeoff_z_pos_tolerance_ << ". switch back to ARM_OFF_STATE");
-          setNaviState(STOP_STATE);
+          /* check difference in height between arming and takeoff */
+          if(fabs(init_height_ - estimator_->getPos(Frame::COG, estimate_mode_).z()) > takeoff_z_pos_tolerance_)
+            {
+              ROS_ERROR_STREAM("difference between init height and current height: " << fabs(init_height_ - estimator_->getPos(Frame::COG, estimate_mode_).z()) << " is larger than threshold " << takeoff_z_pos_tolerance_ << ". switch back to ARM_OFF_STATE");
+              setNaviState(STOP_STATE);
+            }
         }
 
       if(getNaviState() == ARM_ON_STATE)
@@ -401,7 +411,7 @@ namespace aerial_robot_navigation
     {
       /* z(altitude) */
       /* check whether there is the fusion for the altitude */
-      if(!estimator_->getStateStatus(State::Z_BASE, estimate_mode_))
+      if(require_pos_estimate_ && !estimator_->getStateStatus(State::Z_BASE, estimate_mode_))
         {
           ROS_ERROR("Flight Navigation: No correct sensor fusion for z(altitude), can not fly");
           return;

@@ -101,6 +101,7 @@ private:
   void controlCore() override;
   void sendCmd() override;
   void sendFourAxisCommand();
+  void sendUnderwaterIdleCommand();  // hold air rotors at armed-stop while armed-but-inactive
   void sendGimbalCommand();
   void sendTorqueAllocationMatrixInv();
   void setAttitudeGains();

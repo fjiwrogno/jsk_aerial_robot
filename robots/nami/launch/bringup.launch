@@ -11,8 +11,11 @@
   <arg name="headless" default="True" />
   <arg name="underwater" default="False" />
   <arg name="joystick" default="False" />
-  <arg name="worldtype" default="$(find aerial_robot_simulation)/gazebo_model/world/empty.world" unless="$(arg underwater)" />
-  <arg name="worldtype" default="$(find uuv_gazebo_worlds)/worlds/ocean_waves.world" if="$(arg underwater)" />
+  <!-- uuv_gazebo_worlds is only needed for the underwater SIMULATION; a real
+       machine (real_machine=true) must not resolve $(find uuv_gazebo_worlds) so
+       it can run without uuv_simulator installed. -->
+  <arg name="worldtype" default="$(find uuv_gazebo_worlds)/worlds/ocean_waves.world" if="$(eval arg('simulation') and arg('underwater'))" />
+  <arg name="worldtype" default="$(find aerial_robot_simulation)/gazebo_model/world/empty.world" unless="$(eval arg('simulation') and arg('underwater'))" />
   <arg name="launch_gazebo" default="True" />
   <arg name="direct_model" default="False" />
   <arg name="direct_model_name" />
@@ -116,10 +119,10 @@
        and file://Media/... material scripts - both env vars are required. -->
   <env name="GAZEBO_MODEL_PATH"
        value="$(find uuv_gazebo_worlds)/models:$(optenv GAZEBO_MODEL_PATH)"
-       if="$(arg underwater)" />
+       if="$(eval arg('simulation') and arg('underwater'))" />
   <env name="GAZEBO_RESOURCE_PATH"
        value="$(find uuv_gazebo_worlds):$(optenv GAZEBO_RESOURCE_PATH)"
-       if="$(arg underwater)" />
+       if="$(eval arg('simulation') and arg('underwater'))" />
 
   <include file="$(find aerial_robot_simulation)/launch/gazebo.launch" if = "$(eval arg('simulation') and not arg('real_machine'))" >
     <arg name="robot_ns" default="$(arg robot_ns)" />
