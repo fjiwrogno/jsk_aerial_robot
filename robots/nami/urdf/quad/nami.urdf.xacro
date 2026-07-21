@@ -55,7 +55,7 @@
     <link name="base_link_tail">
       <inertial>
         <origin xyz="-0.0169110 0.0200899 0.0630640" rpy="0 0 0"/>
-        <mass value="1.6950211"/>
+        <mass value="1.073"/>
         <inertia
             ixx="0.0040010" iyy="0.0098791" izz="0.0076315"
             ixy="0.0000156" ixz="0.0004014" iyz="-0.0000250"/>
@@ -165,28 +165,28 @@
     <joint name="rotor_coord_joint${child1}" type="fixed">
       <parent link="base_link_head" />
       <child link="rotor_arm${child1}"/>
-      <origin xyz="0.2035 0.1825 0.0075" rpy="0 0 0"/>
+      <origin xyz="0.2105 0.1945 0.007" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="rotor_coord_joint${child2}" type="fixed">
       <parent link="base_link_head"/>
       <child link="rotor_arm${child2}"/>
-      <origin xyz="0.2035 -0.1825 0.0075" rpy="0 0 0"/>
+      <origin xyz="0.2105 -0.2025 0.007" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="rotor_coord_joint${child3}" type="fixed">
       <parent link="base_link_tail"/>
       <child link="rotor_arm${child3}"/>
-      <origin xyz="-0.16627 -0.16196 0.02777" rpy="0 0 0"/>
+      <origin xyz="-0.20427 -0.18336 0.02777" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
   
     <joint name="rotor_coord_joint${child4}" type="fixed">
       <parent link="base_link_tail"/>
       <child link="rotor_arm${child4}"/>
-      <origin xyz="-0.16627 0.20304 0.02777" rpy="0 0 0"/>
+      <origin xyz="-0.20427 0.22304 0.02777" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
