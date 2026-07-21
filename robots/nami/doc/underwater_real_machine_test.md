@@ -40,7 +40,8 @@ armed-stop 占空比和双向电机的中点，惯例自洽；定时器初始化
 启动：`roslaunch nami bringup.launch rm:=true underwater:=true`
 （会自动：加载 `NamiControl.yaml` 的 underwater 段、启动 ms5837 节点、不启动 mocap）
 
-- [ ] **深度计**：`rostopic echo /nami/depth_sensor_node/depth` 有 100Hz 数据；
+- [ ] **深度计**：`rostopic hz /nami/depth_sensor_node/depth` 稳定在约 50Hz，
+      `rostopic echo /nami/depth_sensor_node/depth` 的 z 在下潜时为负；
       手持传感器下压水杯验证 z 变负；`rosservice call /nami/depth_sensor_node/calibrate` 归零。
 - [ ] **PWM 中点**：上电未 arm 时 4 个水下电调收到 1500μs（示波器或电调不响铃提示）。
 - [ ] **pwm test 单电机**：`rostopic pub /nami/pwm_test spinal/PwmTest ...` 逐个电机给
@@ -101,6 +102,9 @@ roslaunch nami bringup.launch rm:=true underwater:=true
 
 # 键盘遥操作
 rosrun nami underwater_teleop.py
+
+# joystick 遥操作（在 bringup 命令加 joystick:=true 自动启动 joy_node）
+roslaunch nami bringup.launch rm:=true underwater:=true joystick:=true
 
 # 数据记录（与仿真同一套绘图工具链）
 rosrun nami underwater_demo.py _out_dir:=/tmp/pool_test   # 或手动 rosbag record

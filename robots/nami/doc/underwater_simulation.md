@@ -164,6 +164,9 @@ roslaunch nami bringup.launch sim:=true underwater:=true
 # 键盘遥操作（w/s 前后, a/d 左右, r/f 上浮/下潜, q/e 偏航; 1=start 2=进入深度保持 l=land 0=halt）
 rosrun nami underwater_teleop.py
 
+# 或使用与 aquatic Flamingo 相同的摇杆轴映射
+roslaunch nami bringup.launch sim:=true underwater:=true joystick:=true
+
 # 自动化四轴测试（arm→深度保持→下潜→pitch→roll→yaw，逐项 PASS/FAIL，非零退出码=失败）
 rosrun nami underwater_flight_test.py
 ```
