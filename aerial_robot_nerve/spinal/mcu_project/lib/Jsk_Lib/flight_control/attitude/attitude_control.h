@@ -53,6 +53,7 @@
 #define FORCE_LANDING_INTEGRAL 0.0025f // 500Hz * 0.0025 = 1.25 N / sec
 
 #define MAX_MOTOR_NUMBER 10
+#define MASKED_MOTOR_THRUST 1.0e-6f // PC-side inactive-group sentinel (Nami/Flamingo mixed propulsion)
 
 /* bi-directional pwm for pwm_htim2_ (motor index 4~7, e.g. underwater thruster with 3D mode ESC).
    target_pwm in [0, 1] maps linearly to [PWM2_MIN_PULSE_US, PWM2_MAX_PULSE_US]:
@@ -285,6 +286,14 @@ private:
     if (sim_bidirectional_motor_start_ >= 0) return true;
 #endif
     return BIDIRECTIONAL_PWM2;
+  }
+
+  bool isMaskedMotor(int i) const
+  {
+    /* Do not classify an active aerial motor merely because its command is near
+       zero. Only the explicit PC-side sentinel denotes an inactive motor group. */
+    return hasBidirectionalRotors() &&
+      fabs(base_thrust_term_[rotor_coef_ * i] - MASKED_MOTOR_THRUST) < 1.0e-8f;
   }
 
   /* normalized [0,1] target pwm -> pulse width [PWM2_MIN_PULSE_US, PWM2_MAX_PULSE_US] (0.5 -> 1.5ms neutral) */

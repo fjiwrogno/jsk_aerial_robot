@@ -1148,7 +1148,7 @@ void AttitudeController::pwmConversion()
       /* in the mixed aerial/aquatic configuration the inactive motor group is masked
          with a negligible base thrust; it takes no allocation, so it must not drive
          the saturation logic either */
-      if(hasBidirectionalRotors() && fabs(base_thrust_term_[rotor_coef_ * i]) < 1e-5f) continue;
+      if(isMaskedMotor(i)) continue;
       float thrust;
       switch(gimbal_dof_)
         {
@@ -1194,7 +1194,7 @@ void AttitudeController::pwmConversion()
                   if(isBidirectionalRotor(i)) continue;
                   /* exclude the masked (inactive) motor group of the mixed
                      aerial/aquatic configuration for the same reason */
-                  if(hasBidirectionalRotors() && fabs(base_thrust_term_[rotor_coef_ * i]) < 1e-5f) continue;
+                  if(isMaskedMotor(i)) continue;
                   float thrust;
                   switch(gimbal_dof_)
                     {
@@ -1312,14 +1312,14 @@ void AttitudeController::pwmConversion()
             }
 
 #if BIDIRECTIONAL_PWM2
-          if(hasBidirectionalRotors() && !isBidirectionalRotor(i) &&
-             fabs(base_thrust_term_[rotor_coef_ * i]) < 1e-5f)
+          if(!isBidirectionalRotor(i) && isMaskedMotor(i))
             {
               /* masked (inactive) uni-directional motor of the mixed aerial/aquatic
                  configuration (underwater mode masks the air motors with 1e-6 N):
                  force the armed-stop output (1ms zero throttle) instead of clamping
                  to min_duty_, which would idle-spin the air props underwater.
-                 an active uni motor never has |base thrust| below 1e-5 N in flight. */
+                 Exact sentinel matching preserves the original low-throttle behavior
+                 of an active aerial motor. */
               target_pwm_[i] = IDLE_DUTY;
             }
           else if(isBidirectionalRotor(i))
