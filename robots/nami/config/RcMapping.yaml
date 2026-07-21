@@ -1,0 +1,78 @@
+# RC hand-flight mapping (Futaba T10J -> R3008SB -> SBUS2USB -> rc/raw).
+# Raw channel values are 0-2047; re-calibrate min/center/max/reverse from
+# `rostopic echo rc/raw` (or `rosrun aerial_robot_rc rc_monitor.py`) before flying.
+controller:
+  rc:
+    enable: true
+    timeout: 0.2                # [s] on rc/raw header stamp; driver failsafe bool also applies
+
+    channels:                   # channel is 1-indexed
+      yaw_rate:                 # CH1: right stick horizontal
+        channel: 1
+        type: centered
+        min: 368.0
+        center: 1024.0
+        max: 1680.0
+        reverse: false
+        deadband: 0.04
+        max_value: 1.0          # [rad/s]
+      pitch:                    # CH2: left stick vertical
+        channel: 2
+        type: centered
+        min: 368.0
+        center: 1009.0
+        max: 1680.0
+        reverse: false
+        deadband: 0.04
+        max_value: 0.35         # [rad]
+      throttle:                 # CH3: right stick vertical (no spring return)
+        channel: 3
+        type: unipolar
+        min: 396.0
+        max: 1680.0
+        reverse: false
+        low_deadband: 0.03
+      roll:                     # CH4: left stick horizontal
+        channel: 4
+        type: centered
+        min: 368.0
+        center: 1024.0
+        max: 1680.0
+        reverse: false
+        deadband: 0.04
+        max_value: 0.35         # [rad]
+      arm:                      # CH6: SwD (assign in the T10J AUX-CH menu)
+        channel: 6
+        type: two_position
+        threshold: 1024.0
+        reverse: false
+      kill:                     # CH7: SwH, latched in software
+        channel: 7
+        type: two_position
+        threshold: 1024.0
+        reverse: false
+      takeoff_enable:           # CH8: SwC, arming interlock
+        channel: 8
+        type: two_position
+        threshold: 1024.0
+        reverse: false
+
+    safety:
+      throttle_low_threshold: 0.05
+      require_takeoff_enable_to_arm: true
+      arming_timeout: 3.0       # [s] START -> TAKEOFF deadline before giving up
+
+    thrust_mapping:             # throttle -> collective force, distributed by the allocation matrix
+      f_min: 0.0                # [N]
+      f_max: 80.0               # [N] expanded to 2x weight at arm time if below 1.2x weight
+      max_slew_rate: 40.0       # [N/s] pilot throttle only; tilt compensation is applied afterwards
+      min_acc_z: 1.0            # [m/s^2] lower bound so the tilt reconstruction stays well-defined
+      hover_throttle: 0.5       # normalized stick position that should command hover
+      hover_force: 0.0          # [N] <= 0 uses mass * hover_acceleration
+      hover_acceleration: 9.8   # [m/s^2], calibrated to Gazebo gravity; tune for the real vehicle
+      f_down: 18.0              # [N] descent authority below hover before hard f_min clamp
+      f_up: 22.0                # [N] climb authority above hover before hard f_max clamp
+      throttle_expo: 0.5        # 0 linear, 1 cubic; keeps finite correction authority near hover
+      hover_deadband: 0.01      # small normalized deadband for RC jitter, not a flat hover zone
+      tilt_compensation: true   # feed-forward boost for Fz loss when roll/pitch sticks tilt the robot
+      max_tilt_compensation: 1.3 # clamp for 1/(cos(roll)*cos(pitch))

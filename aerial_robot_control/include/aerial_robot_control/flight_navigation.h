@@ -397,14 +397,14 @@ namespace aerial_robot_navigation
         }
     }
 
-    void motorArming()
+    void motorArming(const bool require_altitude = true)
     {
       /* z(altitude) */
       /* check whether there is the fusion for the altitude */
-      if(!estimator_->getStateStatus(State::Z_BASE, estimate_mode_))
+      if(require_altitude && !estimator_->getStateStatus(State::Z_BASE, estimate_mode_))
         {
           ROS_ERROR("Flight Navigation: No correct sensor fusion for z(altitude), can not fly");
-          // return;
+          return;
         }
 
       for(const auto& handler: estimator_->getGpsHandlers())

@@ -1,5 +1,9 @@
 #include <nami/control/nami_controller.h>
 
+#include <algorithm>
+#include <angles/angles.h>
+#include <cmath>
+
 using namespace std;
 
 namespace aerial_robot_control
@@ -33,6 +37,67 @@ void NamiController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   torque_allocation_matrix_inv_pub_ =
       nh_.advertise<spinal::TorqueAllocationMatrixInv>("torque_allocation_matrix_inv", 1);
   gimbal_dof_pub_ = nh_.advertise<std_msgs::UInt8>("gimbal_dof", 1);
+
+  /* RC hand flight */
+  ros::NodeHandle rc_nh(nh_, "controller/rc");
+  getParam<bool>(rc_nh, "enable", rc_enable_, false);
+  if (rc_enable_)
+  {
+    nami_navigator_ = boost::dynamic_pointer_cast<aerial_robot_navigation::NamiNavigator>(navigator);
+    if (!nami_navigator_)
+    {
+      ROS_ERROR("RC hand flight requires NamiNavigator, disable RC mode");
+      rc_enable_ = false;
+    }
+  }
+  if (rc_enable_)
+  {
+    rc_mapper_ = std::make_unique<RcMapper>();
+    if (!rc_mapper_->initialize(rc_nh))
+    {
+      ROS_ERROR("RC hand flight disabled because RcMapping.yaml is invalid");
+      rc_mapper_.reset();
+      rc_enable_ = false;
+      return;
+    }
+
+    ros::NodeHandle safety_nh(rc_nh, "safety");
+    getParam<bool>(safety_nh, "require_takeoff_enable_to_arm", rc_require_takeoff_enable_, true);
+    getParam<double>(safety_nh, "arming_timeout", rc_arming_timeout_, 3.0);
+
+    ros::NodeHandle thrust_nh(rc_nh, "thrust_mapping");
+    RcThrustMapper::Config& thrust_config = rc_thrust_mapper_.config();
+    getParam<double>(thrust_nh, "f_min", thrust_config.min_force, 0.0);
+    getParam<double>(thrust_nh, "f_max", thrust_config.max_force, 0.0);
+    getParam<double>(thrust_nh, "max_slew_rate", rc_force_slew_rate_, 40.0);
+    getParam<double>(thrust_nh, "min_acc_z", rc_min_acc_z_, 1.0);
+    getParam<double>(thrust_nh, "hover_throttle", thrust_config.hover_throttle, 0.5);
+    getParam<double>(thrust_nh, "hover_force", thrust_config.hover_force, 0.0);
+    getParam<double>(thrust_nh, "hover_acceleration", thrust_config.hover_acceleration,
+                     aerial_robot_estimation::G);
+    getParam<double>(thrust_nh, "f_down", thrust_config.down_authority, 0.0);
+    getParam<double>(thrust_nh, "f_up", thrust_config.up_authority, 0.0);
+    getParam<double>(thrust_nh, "throttle_expo", thrust_config.expo, 0.5);
+    getParam<double>(thrust_nh, "hover_deadband", thrust_config.hover_deadband, 0.01);
+    getParam<bool>(thrust_nh, "tilt_compensation", thrust_config.tilt_compensation, true);
+    getParam<double>(thrust_nh, "max_tilt_compensation", thrust_config.max_tilt_compensation, 1.3);
+
+    if (thrust_config.max_force <= thrust_config.min_force)
+      ROS_WARN("RC thrust f_max %.1f N is not greater than f_min %.1f N; using a 1 N range",
+               thrust_config.max_force, thrust_config.min_force);
+    rc_thrust_mapper_.sanitize();
+    if (rc_force_slew_rate_ <= 0.0)
+    {
+      ROS_WARN("RC thrust max_slew_rate must be positive; use 40 N/s");
+      rc_force_slew_rate_ = 40.0;
+    }
+    rc_min_acc_z_ = std::max(rc_min_acc_z_, 0.0);
+
+    rc_raw_sub_ = nh_.subscribe("rc/raw", 1, &NamiController::rcRawCallback, this);
+    rc_debug_pub_ = nh_.advertise<std_msgs::Float32MultiArray>("rc/manual_command", 1);
+    ROS_INFO("RC hand flight enabled: f_max %.1f N, hover stick %.2f, expo %.2f", thrust_config.max_force,
+             thrust_config.hover_throttle, thrust_config.expo);
+  }
 }
 
 void NamiController::reset()
@@ -49,10 +114,16 @@ void NamiController::rosParamInit()
   getParam<bool>(control_nh, "gimbal_calc_in_fc", gimbal_calc_in_fc_, true);
   getParam<bool>(control_nh, "hovering_approximate", hovering_approximate_, false);
   getParam<bool>(control_nh, "underactuate", underactuate_, false);
+  // keep below the spinal failsafe threshold MAX_TILT_ANGLE (1.0 rad)
+  getParam<double>(control_nh, "max_tilt_angle", max_tilt_angle_, 0.8);
+  max_tilt_angle_ = std::clamp(max_tilt_angle_, 0.0, 0.99);
 }
 
 bool NamiController::update()
 {
+  if (rc_enable_)
+    rcStateMachine();
+
   sendGimbalCommand();
   if (gimbal_calc_in_fc_)
   {
@@ -66,10 +137,22 @@ bool NamiController::update()
 
 void NamiController::controlCore()
 {
+  const bool rc_manual_active = rcManualActive();
+  if (rc_manual_active)
+    rcManualSetpointUpdate();
+
   PoseLinearController::controlCore();
+  if (rc_manual_active)
+  {
+    pid_controllers_.at(X).reset();
+    pid_controllers_.at(Y).reset();
+    pid_controllers_.at(Z).reset();
+  }
   tf::Matrix3x3 uav_rot = estimator_->getOrientation(Frame::COG, estimate_mode_);
   tf::Vector3 target_acc_w(pid_controllers_.at(X).result(), pid_controllers_.at(Y).result(),
                            pid_controllers_.at(Z).result());
+  if (rc_manual_active)
+    target_acc_w = tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z())) * rc_manual_acc_dash_;
   tf::Vector3 target_acc_dash = (tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z()))).inverse() * target_acc_w;
   tf::Vector3 target_acc_cog = uav_rot.inverse() * target_acc_w;
   Eigen::VectorXd target_wrench_acc_cog = Eigen::VectorXd::Zero(6);
@@ -199,17 +282,21 @@ void NamiController::controlCore()
     {
       target_roll_ = -target_acc_dash.y() / aerial_robot_estimation::G;
       target_pitch_ = target_acc_dash.x() / aerial_robot_estimation::G;
-      navigator_->setTargetRoll(target_roll_);
-      navigator_->setTargetPitch(target_pitch_);
     }
     else
     {
-      target_roll_ = atan2(-target_acc_dash.y(),
-                           sqrt(target_acc_dash.x() * target_acc_dash.x() + target_acc_dash.z() * target_acc_dash.z()));
-      target_pitch_ = atan2(target_acc_dash.x(), target_acc_dash.z());
-      navigator_->setTargetRoll(target_roll_);
-      navigator_->setTargetPitch(target_pitch_);
+      /* clamp the vertical component so the reconstruction stays well-defined even when
+         the z acceleration command is not positive (e.g. force landing on the ground),
+         which otherwise flips atan2 to +-pi and trips the spinal tilt failsafe */
+      double acc_dash_z = std::max(target_acc_dash.z(), 1e-2);
+      target_roll_ =
+          atan2(-target_acc_dash.y(), sqrt(target_acc_dash.x() * target_acc_dash.x() + acc_dash_z * acc_dash_z));
+      target_pitch_ = atan2(target_acc_dash.x(), acc_dash_z);
     }
+    target_roll_ = std::clamp(target_roll_, -max_tilt_angle_, max_tilt_angle_);
+    target_pitch_ = std::clamp(target_pitch_, -max_tilt_angle_, max_tilt_angle_);
+    navigator_->setTargetRoll(target_roll_);
+    navigator_->setTargetPitch(target_pitch_);
   }
 
   /*  calculate target base thrust (considering only translational components)*/
@@ -307,6 +394,17 @@ void NamiController::sendFourAxisCommand()
 {
   spinal::FourAxisCommand flight_command_data;
 
+  if (rcOutputInhibited())
+  {
+    flight_command_data.angles[0] = 0;
+    flight_command_data.angles[1] = 0;
+    flight_command_data.angles[2] = 0;
+    const size_t thrust_size = gimbal_calc_in_fc_ ? target_base_thrust_.size() : target_full_thrust_.size();
+    flight_command_data.base_thrust.assign(thrust_size, 0.0f);
+    flight_cmd_pub_.publish(flight_command_data);
+    return;
+  }
+
   flight_command_data.angles[0] = target_roll_;
   flight_command_data.angles[1] = target_pitch_;
 
@@ -362,6 +460,218 @@ void NamiController::sendTorqueAllocationMatrixInv()
     torque_allocation_matrix_inv_msg.rows.at(i).z = torque_allocation_matrix_inv(i, 2) * 1000;
   }
   torque_allocation_matrix_inv_pub_.publish(torque_allocation_matrix_inv_msg);
+}
+
+void NamiController::rcRawCallback(const aerial_robot_msgs::RcRawConstPtr& msg)
+{
+  rc_mapper_->feed(*msg);
+}
+
+bool NamiController::rcManualActive() const
+{
+  return rc_enable_ && rc_flight_state_ == RcFlightState::FLYING && rc_mapper_->linkValid() &&
+         !rc_mapper_->killLatched() && !navigator_->getForceLandingFlag();
+}
+
+bool NamiController::rcOutputInhibited() const
+{
+  return rc_enable_ &&
+         (!rc_mapper_ || !rc_mapper_->linkValid() || rc_mapper_->killLatched() || !rc_mapper_->armSwitch());
+}
+
+/* safety priority (mapping spec sec.12): link loss > kill latch > disarm > normal output */
+void NamiController::rcStateMachine()
+{
+  ros::Time now = ros::Time::now();
+  rc_mapper_->update(now);
+  int navi_state = navigator_->getNaviState();
+
+  if (!rc_mapper_->linkValid())
+  {
+    if (navi_state != aerial_robot_navigation::ARM_OFF_STATE && navi_state != aerial_robot_navigation::STOP_STATE)
+    {
+      ROS_ERROR("RC link lost: latch kill, disarm, and stop motor output");
+      navigator_->setNaviState(aerial_robot_navigation::STOP_STATE);
+    }
+    rc_flight_state_ = RcFlightState::IDLE;
+    rc_throttle_force_ = 0;
+    rc_output_force_ = 0;
+
+    rcPublishDebug();
+    return;
+  }
+
+  if (rc_mapper_->killLatched())
+  {
+    if (navi_state != aerial_robot_navigation::ARM_OFF_STATE && navi_state != aerial_robot_navigation::STOP_STATE)
+    {
+      ROS_ERROR("RC kill switch: stop motors immediately");
+      navigator_->setNaviState(aerial_robot_navigation::STOP_STATE);
+    }
+    rc_flight_state_ = RcFlightState::IDLE;
+    rc_throttle_force_ = 0;
+    rc_output_force_ = 0;
+
+    rcPublishDebug();
+    return;
+  }
+
+  switch (rc_flight_state_)
+  {
+    case RcFlightState::IDLE:
+    {
+      /* note: a stale force_landing_flag may survive a crash landing (sensor unhealth sets it
+         even when disarmed) and is only cleared by the START_STATE branch on the next arming,
+         so do not gate arming on it here; navi_state == ARM_OFF already blocks in-air rearm */
+      if (rc_mapper_->armRisingEdge() && navi_state == aerial_robot_navigation::ARM_OFF_STATE)
+      {
+        if (!rc_mapper_->throttleLow())
+        {
+          ROS_WARN("RC arm refused: throttle is not low");
+          break;
+        }
+        if (rc_require_takeoff_enable_ && !rc_mapper_->takeoffEnable())
+        {
+          ROS_WARN("RC arm refused: takeoff enable switch is off");
+          break;
+        }
+        /* the robot model mass is only valid at runtime, so check the thrust range here */
+        const double mass = nami_robot_model_->getMass();
+        if (mass <= 0.0)
+        {
+          ROS_ERROR("RC arm refused: robot mass must be positive");
+          break;
+        }
+        RcThrustMapper::Config& thrust_config = rc_thrust_mapper_.config();
+        const double nominal_hover_force =
+            thrust_config.hover_force > 0.0 ? thrust_config.hover_force : mass * thrust_config.hover_acceleration;
+        if (thrust_config.max_force < nominal_hover_force * 1.2)
+        {
+          ROS_WARN("RC thrust f_max %.1f N gives less than 20%% margin over hover force %.1f N, expand to %.1f N",
+                   thrust_config.max_force, nominal_hover_force, nominal_hover_force * 2);
+          thrust_config.max_force = nominal_hover_force * 2;
+        }
+        const double hover_force = rc_thrust_mapper_.hoverForce(mass);
+
+        rc_target_yaw_ = estimator_->getEuler(Frame::COG, estimate_mode_).z();
+        rc_throttle_force_ = 0;
+        rc_output_force_ = 0;
+        rc_takeoff_sent_ = false;
+        rc_arming_start_time_ = now.toSec();
+        ROS_INFO("RC arm: start motor arming (hover force %.2f N at stick %.2f)", hover_force,
+                 thrust_config.hover_throttle);
+        nami_navigator_->rcArm();
+        rc_flight_state_ = RcFlightState::ARMING;
+      }
+      break;
+    }
+    case RcFlightState::ARMING:
+    {
+      if (!rc_mapper_->armSwitch())
+      {
+        ROS_WARN("RC disarm during arming sequence");
+        navigator_->setNaviState(aerial_robot_navigation::STOP_STATE);
+        rc_flight_state_ = RcFlightState::IDLE;
+        rc_throttle_force_ = 0;
+        rc_output_force_ = 0;
+        break;
+      }
+      if (navi_state == aerial_robot_navigation::ARM_ON_STATE && !rc_takeoff_sent_)
+      {
+        nami_navigator_->rcTakeoff();
+        rc_takeoff_sent_ = true;
+      }
+      if (navi_state == aerial_robot_navigation::TAKEOFF_STATE || navi_state == aerial_robot_navigation::HOVER_STATE)
+      {
+        const double mass = nami_robot_model_->getMass();
+        const RcMapper::Sticks& sticks = rc_mapper_->sticks();
+        const double target_force = rc_thrust_mapper_.throttleToForce(sticks.throttle, mass);
+        ROS_INFO("RC manual flight engaged (ramping collective toward %.1f N from throttle %.2f)", target_force,
+                 sticks.throttle);
+        rc_flight_state_ = RcFlightState::FLYING;
+      }
+      else if (!rc_takeoff_sent_ && now.toSec() - rc_arming_start_time_ > rc_arming_timeout_)
+      {
+        ROS_ERROR("RC arming timeout: back to idle");
+        navigator_->setNaviState(aerial_robot_navigation::STOP_STATE);
+        rc_flight_state_ = RcFlightState::IDLE;
+        rc_throttle_force_ = 0;
+        rc_output_force_ = 0;
+      }
+      break;
+    }
+    case RcFlightState::FLYING:
+    {
+      if (!rc_mapper_->armSwitch())
+      {
+        ROS_WARN("RC disarm: stop motors");
+        navigator_->setNaviState(aerial_robot_navigation::STOP_STATE);
+        rc_flight_state_ = RcFlightState::IDLE;
+        rc_throttle_force_ = 0;
+        rc_output_force_ = 0;
+        break;
+      }
+      if (navi_state == aerial_robot_navigation::ARM_OFF_STATE || navi_state == aerial_robot_navigation::STOP_STATE)
+        rc_flight_state_ = RcFlightState::IDLE;
+      break;
+    }
+  }
+
+  rcPublishDebug();
+}
+
+double NamiController::rcDesiredForce(const RcMapper::Sticks& sticks) const
+{
+  const double roll = std::clamp(sticks.roll, -max_tilt_angle_, max_tilt_angle_);
+  const double pitch = std::clamp(sticks.pitch, -max_tilt_angle_, max_tilt_angle_);
+  return rc_thrust_mapper_.compensateTilt(rc_throttle_force_, roll, pitch);
+}
+
+void NamiController::rcManualSetpointUpdate()
+{
+  const RcMapper::Sticks& sticks = rc_mapper_->sticks();
+
+  /* yaw: integrate the rate command into the yaw target consumed by the yaw PID */
+  rc_target_yaw_ = angles::normalize_angle(rc_target_yaw_ + sticks.yaw_rate * ctrl_loop_du_);
+  navigator_->setTargetYaw(rc_target_yaw_);
+  navigator_->setTargetOmegaZ(sticks.yaw_rate);
+
+  /* throttle -> collective force (slew limited) -> z acceleration in the dash frame,
+     distributed over the rotors by the allocation around the real CoG */
+  const double mass = nami_robot_model_->getMass();
+  const double roll = std::clamp(sticks.roll, -max_tilt_angle_, max_tilt_angle_);
+  const double pitch = std::clamp(sticks.pitch, -max_tilt_angle_, max_tilt_angle_);
+  const double target_throttle_force = rc_thrust_mapper_.throttleToForce(sticks.throttle, mass);
+  const double max_force_step = rc_force_slew_rate_ * ctrl_loop_du_;
+  rc_throttle_force_ +=
+      std::clamp(target_throttle_force - rc_throttle_force_, -max_force_step, max_force_step);
+
+  // Match ArduPilot's ordering: angle boost follows pilot-throttle filtering so it reacts immediately to tilt.
+  rc_output_force_ = rcDesiredForce(sticks);
+  const double acc_z = std::max(rc_min_acc_z_, rc_output_force_ / mass);
+
+  /* stick angles -> lateral acceleration. Tilt compensation is feed-forward only:
+     it preserves vertical thrust near hover without altitude or position feedback. */
+  rc_manual_acc_dash_.setValue(std::tan(pitch) * acc_z, -std::tan(roll) * acc_z / std::max(std::cos(pitch), 1e-3),
+                               acc_z);
+}
+
+void NamiController::rcPublishDebug()
+{
+  std_msgs::Float32MultiArray msg;
+  const RcMapper::Sticks& sticks = rc_mapper_->sticks();
+  msg.data = { static_cast<float>(sticks.roll),
+               static_cast<float>(sticks.pitch),
+               static_cast<float>(sticks.yaw_rate),
+               static_cast<float>(sticks.throttle),
+               static_cast<float>(rc_output_force_),
+               static_cast<float>(rc_mapper_->armSwitch()),
+               static_cast<float>(rc_mapper_->killLatched()),
+               static_cast<float>(rc_mapper_->takeoffEnable()),
+               static_cast<float>(rc_mapper_->linkValid()),
+               static_cast<float>(rc_flight_state_),
+               static_cast<float>(rc_throttle_force_) };
+  rc_debug_pub_.publish(msg);
 }
 
 void NamiController::setAttitudeGains()

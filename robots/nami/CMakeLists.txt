@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   aerial_robot_estimation
   aerial_robot_model
   aerial_robot_msgs
+  angles
   spinal
   pluginlib
   roscpp
@@ -16,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(Eigen3 REQUIRED)
 
 catkin_package(
-  CATKIN_DEPENDS aerial_robot_control aerial_robot_estimation aerial_robot_model aerial_robot_msgs pluginlib roscpp spinal
+  CATKIN_DEPENDS aerial_robot_control aerial_robot_estimation aerial_robot_model aerial_robot_msgs angles pluginlib roscpp spinal
 )
 
 include_directories(
@@ -24,8 +25,12 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   )
 
-add_library(nami_controller src/control/nami_controller.cpp)
-target_link_libraries(nami_controller ${catkin_LIBRARIES})
+add_library(nami_controller
+  src/control/nami_controller.cpp
+  src/control/rc_mapper.cpp
+  src/control/rc_thrust_mapper.cpp
+  )
+target_link_libraries(nami_controller nami_navigation ${catkin_LIBRARIES})
 
 add_library(nami_robot_model src/model/nami_robot_model.cpp)
 target_link_libraries(nami_robot_model ${catkin_LIBRARIES})

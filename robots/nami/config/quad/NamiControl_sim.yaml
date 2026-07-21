@@ -8,7 +8,7 @@ controller:
   underactuate: true    # 4 fixed vertical rotors cannot produce lateral force; tilt the body
 
   xy:
-    p_gain: 2.0
+    p_gain: 6.0
     i_gain: 0.05
     d_gain: 1.7
     limit_sum: 4.0
@@ -28,7 +28,7 @@ controller:
     force_landing_descending_rate: -0.5
 
   roll_pitch:
-    p_gain: 15.0
+    p_gain: 30.0
     i_gain: 1.0
     d_gain: 5.0
     limit_sum: 20.0

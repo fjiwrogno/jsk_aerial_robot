@@ -9,6 +9,9 @@
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/UInt32.h>
 #include <nami/model/nami_robot_model.h>
+#include <nami/nami_navigation.h>
+#include <nami/control/rc_mapper.h>
+#include <nami/control/rc_thrust_mapper.h>
 
 namespace aerial_robot_control
 {
@@ -47,6 +50,7 @@ private:
   int rotor_coef_;
   bool gimbal_calc_in_fc_;
   bool underactuate_;
+  double max_tilt_angle_;
   double target_roll_ = 0.0, target_pitch_ = 0.0;
 
   void rosParamInit();
@@ -58,5 +62,39 @@ private:
   void sendGimbalCommand();
   void sendTorqueAllocationMatrixInv();
   void setAttitudeGains();
+
+  /* RC hand flight (manual mode from rc/raw, see config/RcMapping.yaml) */
+  enum class RcFlightState
+  {
+    IDLE,
+    ARMING,
+    FLYING
+  };
+
+  ros::Subscriber rc_raw_sub_;
+  ros::Publisher rc_debug_pub_;
+  std::unique_ptr<RcMapper> rc_mapper_;
+  boost::shared_ptr<aerial_robot_navigation::NamiNavigator> nami_navigator_;
+  bool rc_enable_ = false;
+  RcFlightState rc_flight_state_ = RcFlightState::IDLE;
+  double rc_arming_start_time_ = 0;
+  bool rc_takeoff_sent_ = false;
+  double rc_target_yaw_ = 0;
+  double rc_throttle_force_ = 0;   // slew-limited pilot command before angle boost [N]
+  double rc_output_force_ = 0;     // force sent to allocation after angle boost [N]
+  tf::Vector3 rc_manual_acc_dash_;  // yaw-free (dash) frame acceleration command
+  bool rc_require_takeoff_enable_ = true;
+  double rc_arming_timeout_ = 3.0;
+  double rc_force_slew_rate_ = 40.0;
+  double rc_min_acc_z_ = 1.0;
+  RcThrustMapper rc_thrust_mapper_;
+
+  void rcRawCallback(const aerial_robot_msgs::RcRawConstPtr& msg);
+  void rcStateMachine();
+  void rcManualSetpointUpdate();
+  bool rcManualActive() const;
+  bool rcOutputInhibited() const;
+  double rcDesiredForce(const RcMapper::Sticks& sticks) const;
+  void rcPublishDebug();
 };
 };  // namespace aerial_robot_control

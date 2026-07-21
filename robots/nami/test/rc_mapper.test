@@ -1,0 +1,7 @@
+<launch>
+  <group ns="rc_mapper_test">
+    <rosparam file="$(find nami)/config/RcMapping.yaml" command="load" />
+  </group>
+
+  <test test-name="test_rc_mapper" pkg="nami" type="test_rc_mapper" time-limit="30" />
+</launch>

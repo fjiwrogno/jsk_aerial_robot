@@ -23,6 +23,19 @@ public:
 
   void update() override;
 
+  /* public wrappers of the protected base machinery, for the RC hand-flight
+     path in NamiController (base classes must stay untouched) */
+  void rcArm()
+  {
+    /* Manual collective-thrust flight does not consume altitude feedback.
+       Keep the base navigator's altitude gate enabled for every other path. */
+    motorArming(false);
+  }
+  void rcTakeoff()
+  {
+    startTakeoff();
+  }
+
 private:
   ros::Publisher target_baselink_rpy_pub_;
   ros::Subscriber final_target_baselink_rot_sub_, final_target_baselink_rpy_sub_;

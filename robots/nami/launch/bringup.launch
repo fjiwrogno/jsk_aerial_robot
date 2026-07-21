@@ -21,6 +21,9 @@
   <arg name="robot_id" default="" />
   <arg name="robot_ns" value="nami$(arg robot_id)" />
   <arg name="airframe" default="quad" />
+  <arg name="rc" default="False" />
+  <arg name="rc_driver" default="$(arg real_machine)" />
+  <arg name="rc_port" default="/dev/ttyUSB0" />
 
   ###########  Parameters  ###########
   <group ns="$(arg robot_ns)">
@@ -56,7 +59,17 @@
    <param name="flight_navigation_plugin_name" value="aerial_robot_navigation/nami_navigation" />
    <rosparam file="$(arg config_dir)/NavigationConfig.yaml" command="load" />
 
+   ###########  RC Hand Flight  ###########
+   <rosparam file="$(arg config_dir)/RcMapping.yaml" command="load" if="$(arg rc)" />
+
   </group>
+
+  ###########  RC Driver (SBUS2USB)  ###########
+  <include file="$(find aerial_robot_rc)/launch/sbus2usb_rc.launch"
+           if="$(eval arg('rc') and arg('rc_driver'))" >
+    <arg name="robot_name" value="$(arg robot_ns)" />
+    <arg name="port" value="$(arg rc_port)" />
+  </include>
 
   ###########  Base Platform  ###########
   <node pkg="aerial_robot_base" type="aerial_robot_base_node" name="aerial_robot_base_node" ns="$(arg robot_ns)" output="screen" >
