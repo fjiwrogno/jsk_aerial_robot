@@ -84,7 +84,7 @@
 // 0.5 of target_pwm means the neutral 1.5ms pulse (zero thrust). see attitude_control.h for details.
 // default 0: keeps the original duty-based pwm_htim2_ for all H7_v2 robots. set to 1 in the
 // underwater vehicle's firmware build (e.g. nami) to enable bi-directional thrusters.
-#define BIDIRECTIONAL_PWM2 0
+#define BIDIRECTIONAL_PWM2 1
 //* Do not change following code!!!
 ///////////////////////////////////
 #if !ATTITUDE_ESTIMATE_FLAG
