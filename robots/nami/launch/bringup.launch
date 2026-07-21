@@ -10,6 +10,7 @@
   <arg name="sim_estimate_mode"  default= "2" />
   <arg name="headless" default="True" />
   <arg name="underwater" default="False" />
+  <arg name="joystick" default="False" />
   <arg name="worldtype" default="$(find aerial_robot_simulation)/gazebo_model/world/empty.world" unless="$(arg underwater)" />
   <arg name="worldtype" default="$(find uuv_gazebo_worlds)/worlds/ocean_waves.world" if="$(arg underwater)" />
   <arg name="launch_gazebo" default="True" />
@@ -97,6 +98,13 @@
     <arg name="robot_ns" value="$(arg robot_ns)" />
     <arg name="underwater" value="$(arg underwater)" />
   </include >
+
+  <!-- Optional underwater joystick input. Keyboard teleop remains a separate,
+       always-available publisher on the same command interface. -->
+  <include file="$(find aerial_robot_base)/launch/external_module/joy_stick.launch"
+           if="$(eval arg('underwater') and arg('joystick'))">
+    <arg name="robot_name" value="$(arg robot_ns)" />
+  </include>
 
   ########## Simulation in Gazebo #########
   <!-- ocean_waves.world references model://ocean, model://ned_frame, model://sand_heightmap

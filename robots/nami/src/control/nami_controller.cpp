@@ -28,6 +28,7 @@ void NamiController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
     if (!nami_navigator_)
       ROS_ERROR("[nami] underwater mode needs NamiNavigator (depth / target depth interface)");
     loadUnderwaterGains();
+    last_surge_allocation_ = surgeAllocation();
     ROS_INFO("[nami] controller starts in UNDERWATER mode: motor 0~%d masked, motor %d~%d active",
              aerial_motor_num_ - 1, aerial_motor_num_, motor_num_ - 1);
     if (surgeAllocation())
@@ -80,7 +81,6 @@ void NamiController::rosParamInit()
   }
 
   ros::NodeHandle uw_nh(nh_, "underwater");
-  getParam<bool>(uw_nh, "surge_allocation", surge_allocation_, false);
   getParam<double>(uw_nh, "surge_acc_limit", surge_acc_limit_, 1.0);
   getParam<double>(uw_nh, "depth_p_gain", depth_p_gain_, 20.0);
   getParam<double>(uw_nh, "depth_i_gain", depth_i_gain_, 0.0);
@@ -153,6 +153,15 @@ double NamiController::depthControlLoop()
 
 bool NamiController::update()
 {
+  if (current_mode_ == UNDERWATER && surgeAllocation() != last_surge_allocation_)
+  {
+    last_surge_allocation_ = surgeAllocation();
+    pid_controllers_.at(ROLL).reset();
+    pid_controllers_.at(PITCH).reset();
+    setAttitudeGains();
+    ROS_WARN("[nami] applied %s allocation and refreshed spinal attitude gains",
+             last_surge_allocation_ ? "FORWARD" : "ATTITUDE+DEPTH");
+  }
   sendGimbalCommand();
   if (gimbal_calc_in_fc_)
   {

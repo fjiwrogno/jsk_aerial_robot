@@ -3,6 +3,9 @@
 #include <nami/nami_navigation.h>
 
 #include <algorithm>
+#include <cmath>
+
+#include <aerial_robot_control/util/joy_parser.h>
 
 using namespace aerial_robot_model;
 using namespace aerial_robot_navigation;
@@ -14,6 +17,7 @@ NamiNavigator::NamiNavigator()
     target_depth_(0),
     current_depth_(0),
     depth_sensor_ready_(false),
+    depth_sensor_stamp_(0),
     underwater_flight_setup_done_(false),
     underwater_cmd_stamp_(0)
 {
@@ -39,11 +43,22 @@ void NamiNavigator::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   if (underwater_mode_)
   {
     underwater_cmd_sub_ = nh_.subscribe("underwater/cmd_vel", 1, &NamiNavigator::underwaterCmdCallback, this);
+    joy_sub_ = nh_.subscribe("joy", 1, &NamiNavigator::joyCallback, this, ros::TransportHints().tcpNoDelay());
+    surge_allocation_sub_ =
+        nh_.subscribe("underwater/surge_allocation", 1, &NamiNavigator::surgeAllocationCallback, this);
     pressure_sub_ = nh_.subscribe("pressure", 1, &NamiNavigator::pressureCallback, this);
     depth_sub_ = nh_.subscribe("depth_sensor_node/depth", 1, &NamiNavigator::depthCallback, this);
     target_depth_pub_ = nh_.advertise<std_msgs::Float64>("underwater/target_depth", 1);
-    ROS_INFO("[nami] UNDERWATER mode: teleop on underwater/cmd_vel, depth from pressure / depth_sensor_node/depth");
+    ROS_INFO("[nami] UNDERWATER mode: keyboard cmd_vel and Flamingo-mapped joystick enabled; depth from pressure / depth_sensor_node/depth");
   }
+}
+
+bool NamiNavigator::getDepthSensorReady() const
+{
+  if (!depth_sensor_ready_ || depth_sensor_stamp_ <= 0)
+    return false;
+  const double now = ros::Time::now().toSec();
+  return now >= depth_sensor_stamp_ && now - depth_sensor_stamp_ <= depth_timeout_;
 }
 
 void NamiNavigator::update()
@@ -60,6 +75,10 @@ void NamiNavigator::underwaterStateProcess()
   const uint8_t state = getNaviState();
   const double now = ros::Time::now().toSec();
   const bool underwater_flight = state == TAKEOFF_STATE || state == HOVER_STATE;
+
+  if (depth_sensor_ready_ && !getDepthSensorReady())
+    ROS_ERROR_THROTTLE(1.0, "[nami] depth feedback stale for more than %.3f s; depth thrust set to neutral",
+                       depth_timeout_);
 
   /* x/y is open-loop underwater, so a lost teleop publisher must not leave its
      last non-zero acceleration latched. Outside flight, clear it immediately;
@@ -97,7 +116,7 @@ void NamiNavigator::underwaterStateProcess()
       getFlightConfigPublisher().publish(cmd);
 
       /* hold the current depth as the initial target */
-      if (depth_sensor_ready_)
+      if (getDepthSensorReady())
         target_depth_ = current_depth_;
 
       underwater_flight_setup_done_ = true;
@@ -170,18 +189,104 @@ void NamiNavigator::underwaterCmdCallback(const geometry_msgs::TwistConstPtr& ms
     addTargetYaw(msg->angular.z * teleop_yaw_rate_gain_ * dt);
 }
 
+void NamiNavigator::joyCallback(const sensor_msgs::JoyConstPtr& msg)
+{
+  if (!underwater_mode_)
+    return;
+
+  const sensor_msgs::Joy joy_cmd = joyParse(*msg);
+  if (joy_cmd.axes.size() < JOY_AXIS_SIZE || joy_cmd.buttons.size() < JOY_BUTTON_SIZE)
+  {
+    ROS_WARN_THROTTLE(1.0, "[nami] unsupported joystick layout: axes=%zu buttons=%zu", msg->axes.size(),
+                      msg->buttons.size());
+    return;
+  }
+
+  if (joy_cmd.buttons[JOY_BUTTON_STOP])
+  {
+    setTargetAccX(0);
+    setTargetAccY(0);
+    setNaviState(STOP_STATE);
+  }
+
+  /* Keep the aquatic Flamingo stick mapping:
+       left vertical/horizontal = forward/lateral,
+       right vertical/horizontal = surface/dive and yaw. */
+  auto deadband = [this](double value) { return std::abs(value) > joy_deadzone_ ? value : 0.0; };
+  geometry_msgs::TwistPtr cmd(new geometry_msgs::Twist);
+  cmd->linear.x = deadband(joy_cmd.axes[JOY_AXIS_STICK_LEFT_UPWARDS]);
+  cmd->linear.y = deadband(joy_cmd.axes[JOY_AXIS_STICK_LEFT_LEFTWARDS]);
+  cmd->linear.z = deadband(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_UPWARDS]);
+  cmd->angular.z = deadband(joy_cmd.axes[JOY_AXIS_STICK_RIGHT_LEFTWARDS]);
+  underwaterCmdCallback(cmd);
+
+  /* Flamingo uses D-pad left for its stabilize-mode toggle. Reuse that physical
+     control for Nami's legacy attitude/depth <-> forward (surge) allocation. */
+  if (joy_cmd.buttons[JOY_BUTTON_CROSS_LEFT] && !surge_toggle_pressed_)
+  {
+    surge_allocation_ = !surge_allocation_;
+    surge_toggle_pressed_ = true;
+    setTargetAccX(0);
+    setTargetAccY(0);
+    ROS_WARN("[nami] underwater control mode -> %s",
+             surge_allocation_ ? "FORWARD (surge/depth/roll/yaw)" : "ATTITUDE+DEPTH (legacy)");
+  }
+  else if (!joy_cmd.buttons[JOY_BUTTON_CROSS_LEFT])
+  {
+    surge_toggle_pressed_ = false;
+  }
+}
+
+void NamiNavigator::surgeAllocationCallback(const std_msgs::BoolConstPtr& msg)
+{
+  if (!underwater_mode_ || surge_allocation_ == msg->data)
+    return;
+  surge_allocation_ = msg->data;
+  setTargetAccX(0);
+  setTargetAccY(0);
+  ROS_WARN("[nami] underwater control mode -> %s",
+           surge_allocation_ ? "FORWARD (surge/depth/roll/yaw)" : "ATTITUDE+DEPTH (legacy)");
+}
+
 void NamiNavigator::pressureCallback(const sensor_msgs::FluidPressureConstPtr& msg)
 {
   /* uuv SubseaPressure publishes [kPa]; recover signed z (z<0 underwater) */
-  current_depth_ = -(msg->fluid_pressure - standard_pressure_kpa_) / kpa_per_meter_;
+  const double now = ros::Time::now().toSec();
+  const double source_stamp = msg->header.stamp.toSec();
+  if (source_stamp > 0 && (now < source_stamp || now - source_stamp > depth_timeout_))
+  {
+    ROS_ERROR_THROTTLE(1.0, "[nami] rejected stale pressure message (age %.3f s)", now - source_stamp);
+    return;
+  }
+  const double depth = -(msg->fluid_pressure - standard_pressure_kpa_) / kpa_per_meter_;
+  if (!std::isfinite(depth))
+  {
+    ROS_ERROR_THROTTLE(1.0, "[nami] rejected non-finite pressure measurement");
+    return;
+  }
+  current_depth_ = depth;
   depth_sensor_ready_ = true;
+  depth_sensor_stamp_ = now;
 }
 
 void NamiNavigator::depthCallback(const geometry_msgs::PointStampedConstPtr& msg)
 {
   /* ms5837 node publishes point.z as signed z (upward positive) */
+  const double now = ros::Time::now().toSec();
+  const double source_stamp = msg->header.stamp.toSec();
+  if (source_stamp > 0 && (now < source_stamp || now - source_stamp > depth_timeout_))
+  {
+    ROS_ERROR_THROTTLE(1.0, "[nami] rejected stale depth message (age %.3f s)", now - source_stamp);
+    return;
+  }
+  if (!std::isfinite(msg->point.z))
+  {
+    ROS_ERROR_THROTTLE(1.0, "[nami] rejected non-finite depth measurement");
+    return;
+  }
   current_depth_ = msg->point.z;
   depth_sensor_ready_ = true;
+  depth_sensor_stamp_ = now;
 }
 
 void NamiNavigator::reset()
@@ -193,7 +298,7 @@ void NamiNavigator::reset()
   underwater_cmd_stamp_ = 0;
   setTargetAccX(0);
   setTargetAccY(0);
-  target_depth_ = depth_sensor_ready_ ? current_depth_ : 0;
+  target_depth_ = getDepthSensorReady() ? current_depth_ : 0;
 
   // reset SO3
   eq_cog_world_ = false;
@@ -290,6 +395,15 @@ void NamiNavigator::rosParamInit()
     ROS_WARN("[nami] underwater/cmd_timeout must be positive; using 0.5 s");
     underwater_cmd_timeout_ = 0.5;
   }
+  getParam<double>(uw_nh, "depth_timeout", depth_timeout_, 0.25);
+  if (depth_timeout_ <= 0)
+  {
+    ROS_WARN("[nami] underwater/depth_timeout must be positive; using 0.25 s");
+    depth_timeout_ = 0.25;
+  }
+  getParam<double>(uw_nh, "joy_deadzone", joy_deadzone_, 0.2);
+  joy_deadzone_ = std::max(0.0, std::min(0.9, joy_deadzone_));
+  getParam<bool>(uw_nh, "surge_allocation", surge_allocation_, false);
   getParam<double>(uw_nh, "max_dive_rate", max_dive_rate_, 0.3);
   getParam<double>(uw_nh, "max_depth", max_depth_, 5.0);
   getParam<double>(uw_nh, "standard_pressure_kpa", standard_pressure_kpa_, 101.325);

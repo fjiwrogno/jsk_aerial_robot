@@ -70,6 +70,8 @@ underwater:
   teleop_acc_gain: 1.5       # [m/s^2 per unit stick] forward/lateral acc feedforward (~0.15 rad tilt)
   teleop_yaw_rate_gain: 0.5  # [rad/s per unit stick]
   cmd_timeout: 0.5           # [s] clear latched xy acceleration if the command stream stops
+  depth_timeout: 0.25        # [s] neutralize depth thrust if I2C/ROS depth updates stop
+  joy_deadzone: 0.2          # normalized stick deadzone; mapping follows aquatic Flamingo
   max_dive_rate: 0.3         # [m/s] target depth increment rate
   max_depth: 5.0             # [m] target depth clamp (positive value)
 

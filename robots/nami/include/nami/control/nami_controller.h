@@ -71,11 +71,11 @@ private:
      tau_y becomes the dependent quantity (pitch is left to the passive buoyancy
      righting moment) and the body-x force leak that caused the constant forward
      drift is actively regulated to the commanded surge acceleration (0 = hold). */
-  bool surge_allocation_ = false;
+  bool last_surge_allocation_ = false;
   double surge_acc_limit_;  // [m/s^2] clamp on the surge acc feedforward
   bool surgeAllocation() const
   {
-    return current_mode_ == UNDERWATER && surge_allocation_ && underactuate_;
+    return current_mode_ == UNDERWATER && nami_navigator_ && nami_navigator_->getSurgeAllocation() && underactuate_;
   }
 
   /* depth control (hand-written PID, direct feedback from the depth sensor via navigator;

@@ -15,6 +15,7 @@ Keys:
   a / d : left / right
   r / f : surface (up) / dive (down)
   q / e : yaw left / yaw right
+  m     : toggle attitude+depth / forward(surge) allocation mode
   1     : start  (arm motors)
   2     : takeoff (enter underwater hover: depth hold at current depth)
   l     : land
@@ -31,6 +32,7 @@ import tty
 import rospy
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Empty
+from std_msgs.msg import Bool
 
 PUB_RATE = 20.0        # [Hz]
 HOLD_TIMEOUT = 0.4     # [s] stick decays to zero if the key is not repeated
@@ -55,6 +57,8 @@ class UnderwaterTeleop(object):
         self.takeoff_pub = rospy.Publisher(robot_ns + '/teleop_command/takeoff', Empty, queue_size=1)
         self.land_pub = rospy.Publisher(robot_ns + '/teleop_command/land', Empty, queue_size=1)
         self.halt_pub = rospy.Publisher(robot_ns + '/teleop_command/halt', Empty, queue_size=1)
+        self.mode_pub = rospy.Publisher(robot_ns + '/underwater/surge_allocation', Bool, queue_size=1)
+        self.surge_allocation = rospy.get_param('/' + robot_ns.strip('/') + '/underwater/surge_allocation', False)
 
         # axis -> (value, last key stamp)
         self.axes = {axis: [0.0, 0.0] for axis, _ in AXIS_KEYS.values()}
@@ -79,6 +83,12 @@ class UnderwaterTeleop(object):
         elif key == '0':
             self.halt_pub.publish(Empty())
             rospy.logwarn('halt!')
+        elif key == 'm':
+            self.surge_allocation = not self.surge_allocation
+            self.mode_pub.publish(Bool(self.surge_allocation))
+            rospy.logwarn('control mode -> %s',
+                          'FORWARD (surge/depth/roll/yaw)' if self.surge_allocation
+                          else 'ATTITUDE+DEPTH (legacy)')
 
     def spin(self):
         rate = rospy.Rate(PUB_RATE)
