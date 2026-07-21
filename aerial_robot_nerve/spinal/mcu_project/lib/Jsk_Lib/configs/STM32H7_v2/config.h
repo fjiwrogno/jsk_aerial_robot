@@ -79,7 +79,7 @@
 
 //2.3 Flight Control
 #define FLIGHT_CONTROL_FLAG 1
-#define DSHOT 0
+#define DSHOT 1
 // bi-directional (3D mode ESC) pwm on pwm_htim2_ (motor index 4~7), e.g. underwater thruster.
 // 0.5 of target_pwm means the neutral 1.5ms pulse (zero thrust). see attitude_control.h for details.
 // default 0: keeps the original duty-based pwm_htim2_ for all H7_v2 robots. set to 1 in the
