@@ -1,0 +1,12 @@
+<launch>
+  <group ns="nami">
+    <param name="robot_description"
+           command="$(find xacro)/xacro --inorder $(find nami)/robots/quad/nami.urdf.xacro"/>
+    <rosparam file="$(find nami)/config/RobotModel.yaml" command="load"/>
+
+    <test test-name="transformation_stability"
+          pkg="nami"
+          type="nami_transformation_stability_test"
+          time-limit="30"/>
+  </group>
+</launch>

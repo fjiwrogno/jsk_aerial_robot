@@ -2,4 +2,7 @@
   <class name="aerial_robot_control/nami_controller" type="aerial_robot_control::NamiController" base_class_type="aerial_robot_control::ControlBase">
     <description>plugin for nami control </description>
   </class>
+  <class name="aerial_robot_control/nami_lqi_controller" type="aerial_robot_control::NamiLQIController" base_class_type="aerial_robot_control::ControlBase">
+    <description>Nami under-actuated z/roll/pitch/yaw LQI controller</description>
+  </class>
 </library>

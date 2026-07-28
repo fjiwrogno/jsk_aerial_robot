@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="use_lqi" default="False"/>
+  <arg name="controller_label" default="pid"/>
+  <arg name="headless" default="False"/>
+  <arg name="gazebo_gui" default="$(eval not arg('headless'))"/>
+  <arg name="rviz" default="False"/>
+  <arg name="record" default="True"/>
+  <arg name="target_angle_deg" default="30.0"/>
+  <arg name="transform_duration" default="8.0"/>
+  <arg name="preflight_duration" default="2.0"/>
+  <arg name="hold_duration" default="10.0"/>
+  <arg name="return_to_zero" default="True"/>
+  <arg name="bag_prefix" default="/tmp/nami_$(arg controller_label)_transformation"/>
+  <arg name="csv_path" default="/tmp/nami_$(arg controller_label)_transformation.csv"/>
+
+  <include file="$(find nami)/launch/bringup.launch">
+    <arg name="real_machine" value="False"/>
+    <arg name="simulation" value="True"/>
+    <arg name="headless" value="$(arg headless)"/>
+    <arg name="gazebo_gui" value="$(arg gazebo_gui)"/>
+    <arg name="rviz" value="$(arg rviz)"/>
+    <arg name="use_lqi" value="$(arg use_lqi)"/>
+  </include>
+
+  <node pkg="rosbag" type="record" name="transformation_recorder"
+        args="-o $(arg bag_prefix) /nami/uav/cog/odom /nami/joint_states /nami/joints_ctrl /nami/model/stability /nami/four_axes/command /nami/debug/pose/pid /nami/debug/four_axes/gain /nami/motor_info"
+        if="$(arg record)"/>
+
+  <node pkg="nami" type="transformation_demo.py" name="transformation_demo"
+        output="screen" required="True">
+    <param name="robot_ns" value="/nami"/>
+    <param name="controller_label" value="$(arg controller_label)"/>
+    <param name="target_angle_deg" value="$(arg target_angle_deg)"/>
+    <param name="certified_min_angle_deg" value="0.0"/>
+    <param name="certified_max_angle_deg" value="30.0"/>
+    <param name="transform_duration" value="$(arg transform_duration)"/>
+    <param name="preflight_duration" value="$(arg preflight_duration)"/>
+    <param name="hold_duration" value="$(arg hold_duration)"/>
+    <param name="return_to_zero" value="$(arg return_to_zero)"/>
+    <param name="csv_path" value="$(arg csv_path)"/>
+  </node>
+</launch>

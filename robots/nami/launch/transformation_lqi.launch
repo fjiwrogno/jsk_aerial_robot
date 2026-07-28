@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="headless" default="False"/>
+  <arg name="gazebo_gui" default="$(eval not arg('headless'))"/>
+  <arg name="rviz" default="False"/>
+  <arg name="record" default="True"/>
+
+  <include file="$(find nami)/launch/transformation_demo.launch">
+    <arg name="use_lqi" value="True"/>
+    <arg name="controller_label" value="lqi"/>
+    <arg name="headless" value="$(arg headless)"/>
+    <arg name="gazebo_gui" value="$(arg gazebo_gui)"/>
+    <arg name="rviz" value="$(arg rviz)"/>
+    <arg name="record" value="$(arg record)"/>
+  </include>
+</launch>

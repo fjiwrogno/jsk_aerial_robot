@@ -3,3 +3,9 @@ robot_model_plugin_name: nami_robot_model # multirotor_robot_model
 
 wrench_mat_det_thre: 0
 
+# Nami controls z/roll/pitch/yaw with four fixed vertical rotors. The
+# allocation matrix is row-normalized before the singular-value check.
+stability:
+  allocation_rank_relative_threshold: 1.0e-6
+  allocation_min_scaled_singular_value: 0.05
+  minimum_static_thrust_reserve: 1.0 # N, available in both thrust directions

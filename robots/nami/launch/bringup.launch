@@ -6,9 +6,12 @@
   <arg name="real_machine" default="$(arg rm)" />
   <arg name="simulation" default="$(arg sim)" />
   <arg name="control_mode" default="0" />
+  <arg name="use_lqi" default="False" />
   <arg name="estimate_mode"  default= "1" />
   <arg name="sim_estimate_mode"  default= "2" />
   <arg name="headless" default="True" />
+  <arg name="rviz" default="$(eval not arg('headless'))" />
+  <arg name="gazebo_gui" default="$(eval not arg('headless'))" />
   <arg name="worldtype" default="$(find aerial_robot_simulation)/gazebo_model/world/empty.world" />
   <arg name="launch_gazebo" default="True" />
   <arg name="direct_model" default="False" />
@@ -45,8 +48,14 @@
    <rosparam file="$(arg config_dir)/$(arg airframe)/Servo.yaml" command="load" />
 
    ###########  Control  ###########
-   <rosparam file="$(arg config_dir)/$(arg airframe)/NamiControl.yaml" command="load" unless="$(arg simulation)"/>
-   <rosparam file="$(arg config_dir)/$(arg airframe)/NamiControl_sim.yaml" command="load" if="$(arg simulation)"/>
+   <rosparam file="$(arg config_dir)/$(arg airframe)/NamiControl.yaml" command="load"
+             if="$(eval not arg('simulation') and not arg('use_lqi'))"/>
+   <rosparam file="$(arg config_dir)/$(arg airframe)/NamiControl_sim.yaml" command="load"
+             if="$(eval arg('simulation') and not arg('use_lqi'))"/>
+   <rosparam file="$(arg config_dir)/$(arg airframe)/NamiLQIControl.yaml" command="load"
+             if="$(eval not arg('simulation') and arg('use_lqi'))"/>
+   <rosparam file="$(arg config_dir)/$(arg airframe)/NamiLQIControl_sim.yaml" command="load"
+             if="$(eval arg('simulation') and arg('use_lqi'))"/>
 
    ###########  Sensor Fusion  ###########
    <rosparam file="$(arg config_dir)/StateEstimation.yaml" command="load" />
@@ -69,7 +78,7 @@
   <arg name="description_mode" value="urdf" unless="$(arg simulation)" />
   <arg name="description_mode" value="gazebo" if="$(arg simulation)" />
   <include file="$(find aerial_robot_model)/launch/aerial_robot_model.launch" >
-    <arg name="headless" value="$(arg headless)" />
+    <arg name="headless" value="$(eval not arg('rviz'))" />
     <arg name="robot_model" value="$(find nami)/robots/$(arg airframe)/nami.$(arg description_mode).xacro"/>
     <arg name="robot_ns" value="$(arg robot_ns)" />
     <arg name="rviz_config" value="$(arg config_dir)/rviz_config" />
@@ -95,8 +104,8 @@
   ########## Simulation in Gazebo #########
   <include file="$(find aerial_robot_simulation)/launch/gazebo.launch" if = "$(eval arg('simulation') and not arg('real_machine'))" >
     <arg name="robot_ns" default="$(arg robot_ns)" />
-    <arg name="gui" default="false" if="$(arg headless)"/>
-    <arg name="headless" default="$(arg headless)" />
+    <arg name="gui" value="$(arg gazebo_gui)" />
+    <arg name="headless" value="$(eval not arg('gazebo_gui'))" />
     <arg name="launch_gazebo" default="$(arg launch_gazebo)" />
     <arg name="worldtype" value="$(arg worldtype)" />
     <arg name="spawn_x" value="$(arg spawn_x)" />

@@ -33,6 +33,7 @@ void NamiController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   torque_allocation_matrix_inv_pub_ =
       nh_.advertise<spinal::TorqueAllocationMatrixInv>("torque_allocation_matrix_inv", 1);
   gimbal_dof_pub_ = nh_.advertise<std_msgs::UInt8>("gimbal_dof", 1);
+  stability_pub_ = nh_.advertise<std_msgs::Bool>("model/stability", 1, true);
 }
 
 void NamiController::reset()
@@ -53,6 +54,12 @@ void NamiController::rosParamInit()
 
 bool NamiController::update()
 {
+  std_msgs::Bool stability_msg;
+  stability_msg.data = nami_robot_model_ && nami_robot_model_->stabilityCheck(false);
+  stability_pub_.publish(stability_msg);
+  if (!stability_msg.data)
+    ROS_ERROR_THROTTLE(1.0, "Nami PID controller detected an invalid configuration");
+
   sendGimbalCommand();
   if (gimbal_calc_in_fc_)
   {
