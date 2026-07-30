@@ -21,7 +21,7 @@
       <!-- the relative pos of cog compared to the origin of this link  -->
       <!-- because right now the origin of base_link has been configured to  the base_link of solidworks-->
         <origin xyz="0.186933 -0.000016 -0.042086" rpy="0 0 0"/>
-        <mass value="0.940089"/>
+        <mass value="0.520089"/>
         <inertia
             ixx="0.001164" iyy="0.006858" izz="0.006443"
             ixy="-0.000002" ixz="-0.000515" iyz="0.000001"/>
@@ -138,7 +138,7 @@
     <joint name="fc_joint" type="fixed">
       <parent link="base_link_tail"/>
       <child link="fc"/>
-      <origin xyz="0.0183193 0.0284366 0.1300359" rpy="0 0 0"/>
+      <origin xyz="0.0183193 0.0284366 0.1300359" rpy="0 0 ${pi}"/>
       <axis xyz="0 0 1"/>
     </joint>
 

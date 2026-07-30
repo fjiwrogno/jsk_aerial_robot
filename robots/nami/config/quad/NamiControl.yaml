@@ -19,7 +19,7 @@ controller:
   z:
     p_gain: 5.0
     i_gain: 1.0
-    d_gain: 2.5
+    d_gain: 3.5
     limit_err_p: 1.0
     limit_sum: 25.0 # N for clamping thrust force
     limit_p: 25.0
@@ -30,7 +30,7 @@ controller:
   roll_pitch:
     p_gain: 10.0
     i_gain: 1.0
-    d_gain: 4.0
+    d_gain: 8.0
     limit_sum: 20.0
     limit_p: 20.0
     limit_i: 20.0
@@ -39,9 +39,9 @@ controller:
     start_rp_integration_height: 0.01
 
   yaw:
-    p_gain: 1.0
+    p_gain: 4.0
     i_gain: 1.0
-    d_gain: 4.0
+    d_gain: 2.0
     limit_err_p: 0.4
     limit_sum: 20.0
     limit_p: 20.0
@@ -58,22 +58,22 @@ underwater:
   surge_acc_limit: 1.0       # [m/s^2] clamp on the surge acc feedforward
 
   # depth control (hand-written PID in NamiController, direct depth sensor feedback)
-  depth_p_gain: 20.0
-  depth_i_gain: 0.0
-  depth_d_gain: 5.0
+  depth_p_gain: 100.0
+  depth_i_gain: 10.0
+  depth_d_gain: 40.0
   depth_i_limit: 2.0
   depth_hover_thrust: -0.4   # [N] buoyancy trim: negative pushes down (nami is slightly positive buoyant)
-  depth_thrust_limit: 10.0   # [N] symmetric clamp (bi-directional rotors)
-  depth_d_lpf_rate: 0.6
+  depth_thrust_limit: 20.0   # [N] symmetric clamp (bi-directional rotors)
+  depth_d_lpf_rate: 0.4
 
   # teleop command mapping (NamiNavigator, topic: underwater/cmd_vel)
-  teleop_acc_gain: 1.5       # [m/s^2 per unit stick] forward/lateral acc feedforward (~0.15 rad tilt)
-  teleop_yaw_rate_gain: 0.5  # [rad/s per unit stick]
+  teleop_acc_gain: 3.0       # [m/s^2 per unit stick] forward/lateral acc feedforward (~0.15 rad tilt)
+  teleop_yaw_rate_gain: 1.0  # [rad/s per unit stick]
   cmd_timeout: 0.5           # [s] clear latched xy acceleration if the command stream stops
   depth_timeout: 0.25        # [s] neutralize depth thrust if I2C/ROS depth updates stop
   joy_deadzone: 0.2          # normalized stick deadzone; mapping follows aquatic Flamingo
-  max_dive_rate: 0.3         # [m/s] target depth increment rate
-  max_depth: 5.0             # [m] target depth clamp (positive value)
+  max_dive_rate: 0.6         # [m/s] target depth increment rate
+  max_depth: 1.0             # [m] target depth clamp (positive value)
 
   # depth from pressure: z = -(P - standard_pressure_kpa) / kpa_per_meter
   standard_pressure_kpa: 101.325
@@ -92,10 +92,10 @@ underwater:
       # disturbance the attitude loop must overpower to hold a tilt; the
       # steady-state gap is closed by the integral term.
       # HARD LIMIT: gain*1000 must fit int16 on the rosserial link -> gain < 32.7
-      p_gain: 25.0
+      p_gain: 30.0
       i_gain: 12.0
-      d_gain: 6.0
+      d_gain: 12.0
     yaw:
-      p_gain: 1.0
-      i_gain: 1.0
-      d_gain: 4.0
+      p_gain: 0.0
+      i_gain: 0.0
+      d_gain: 0.0
