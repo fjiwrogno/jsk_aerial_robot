@@ -20,11 +20,11 @@
       <inertial>
       <!-- the relative pos of cog compared to the origin of this link  -->
       <!-- because right now the origin of base_link has been configured to  the base_link of solidworks-->
-        <origin xyz="0.186933 -0.000016 -0.042086" rpy="0 0 0"/>
-        <mass value="0.520089"/>
+        <origin xyz="0.221545 -0.000011 -0.042583" rpy="0 0 0"/>
+        <mass value="0.940089"/>
         <inertia
-            ixx="0.001164" iyy="0.006858" izz="0.006443"
-            ixy="-0.000002" ixz="-0.000515" iyz="0.000001"/>
+            ixx="0.001302" iyy="0.009489" izz="0.00899"
+            ixy="-0.000002" ixz="-0.000632" iyz="0.000001"/>
       </inertial>
       <visual>
         <origin xyz="0.032 -0.01550 0.01850" rpy="0 0 0"/>
@@ -32,8 +32,8 @@
           <mesh filename="package://nami/urdf/quad/mesh/base_link_head.dae" scale="1 1 1"/>
         </geometry>
       </visual>
-      <collision>`
-        <origin xyz="0.186933 -0.000016 -0.042086" rpy="0 0 0"/>
+      <collision>
+        <origin xyz="0.221545 -0.000011 -0.042583" rpy="0 0 0"/>
         <geometry>
           <box size="0.4045 0.1325 0.2"/>
         </geometry>
@@ -54,14 +54,14 @@
     <!-- base link tail (with spinal on top of it) -->
     <link name="base_link_tail">
       <inertial>
-        <origin xyz="-0.0169110 0.0200899 0.0630640" rpy="0 0 0"/>
+        <origin xyz="-0.0647393 0.0516416 0.0854933" rpy="0 0 0"/>
         <mass value="1.073"/>
         <inertia
-            ixx="0.0040010" iyy="0.0098791" izz="0.0076315"
-            ixy="0.0000156" ixz="0.0004014" iyz="-0.0000250"/>
+            ixx="0.0043312" iyy="0.0132108" izz="0.0110638"
+            ixy="0.0000063" ixz="0.001385" iyz="-0.0000162"/>
       </inertial>
       <visual>
-        <origin xyz="0.07523 0.02053 0.04926" rpy="0 0 0"/>
+        <origin xyz="-0.0647393 0.0516416 0.0854933" rpy="0 0 0"/>
         <geometry>
           <mesh filename="package://nami/urdf/quad/mesh/base_link_tail.dae" scale="1 1 1"/>
         </geometry>
@@ -138,7 +138,7 @@
     <joint name="fc_joint" type="fixed">
       <parent link="base_link_tail"/>
       <child link="fc"/>
-      <origin xyz="0.0183193 0.0284366 0.1300359" rpy="0 0 ${pi}"/>
+      <origin xyz="0.01895 0.0599 0.13886" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -146,7 +146,7 @@
     <joint name="virtual_yaw_joint" type="fixed">
       <parent link="base_link_tail"/>
       <child link="virtual_base_link_tail"/>
-      <origin xyz="0.07523 0.02054 0.02027" rpy="0 0 0"/>
+      <origin xyz="0.03797 0.052 0.02909" rpy="0 0 0"/>
     </joint>
 
     <!-- yaw joint of baselink -->
@@ -165,28 +165,28 @@
     <joint name="rotor_coord_joint${child1}" type="fixed">
       <parent link="base_link_head" />
       <child link="rotor_arm${child1}"/>
-      <origin xyz="0.2105 0.1945 0.007" rpy="0 0 0"/>
+      <origin xyz="0.2285 0.2025 0.0045" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="rotor_coord_joint${child2}" type="fixed">
       <parent link="base_link_head"/>
       <child link="rotor_arm${child2}"/>
-      <origin xyz="0.2105 -0.2025 0.007" rpy="0 0 0"/>
+      <origin xyz="0.2285 -0.2025 0.0045" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="rotor_coord_joint${child3}" type="fixed">
       <parent link="base_link_tail"/>
       <child link="rotor_arm${child3}"/>
-      <origin xyz="-0.20427 -0.18336 0.02777" rpy="0 0 0"/>
+      <origin xyz="-0.20353 -0.1505 0.03359" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
   
     <joint name="rotor_coord_joint${child4}" type="fixed">
       <parent link="base_link_tail"/>
       <child link="rotor_arm${child4}"/>
-      <origin xyz="-0.20427 0.22304 0.02777" rpy="0 0 0"/>
+      <origin xyz="-0.20353 0.2545 0.03359" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
