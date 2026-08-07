@@ -28,6 +28,9 @@ controller:
     force_landing_descending_rate: -0.5
 
   roll_pitch:
+    start_rp_integration_height: 0.01
+
+  roll:
     p_gain: 10.0
     i_gain: 1.0
     d_gain: 8.0
@@ -36,7 +39,14 @@ controller:
     limit_i: 20.0
     limit_d: 20.0
 
-    start_rp_integration_height: 0.01
+  pitch:
+    p_gain: 10.0
+    i_gain: 1.0
+    d_gain: 8.0
+    limit_sum: 20.0
+    limit_p: 20.0
+    limit_i: 20.0
+    limit_d: 20.0
 
   yaw:
     p_gain: 4.0
@@ -86,12 +96,16 @@ underwater:
       p_gain: 1.5
       i_gain: 0.05
       d_gain: 1.0
-    roll_pitch:
-      # raised vs aerial: the buoyancy restoring torque (CoB above CoG,
-      # ~4.5 N*m/rad with the baked added-mass volumes) acts as a constant
-      # disturbance the attitude loop must overpower to hold a tilt; the
-      # steady-state gap is closed by the integral term.
-      # HARD LIMIT: gain*1000 must fit int16 on the rosserial link -> gain < 32.7
+    # Raised vs aerial: the buoyancy restoring torque (CoB above CoG,
+    # ~4.5 N*m/rad with the baked added-mass volumes) acts as a constant
+    # disturbance the attitude loop must overpower to hold a tilt.  Keep the
+    # initial values equal while allowing roll and pitch to be tuned separately.
+    # HARD LIMIT: gain*1000 must fit int16 on the rosserial link -> gain < 32.7
+    roll:
+      p_gain: 30.0
+      i_gain: 12.0
+      d_gain: 12.0
+    pitch:
       p_gain: 30.0
       i_gain: 12.0
       d_gain: 12.0

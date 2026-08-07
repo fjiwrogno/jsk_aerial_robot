@@ -110,7 +110,11 @@ void NamiController::loadUnderwaterGains()
   };
   loadGains("xy", {X, Y});
   loadGains("z", {Z});
+  /* Keep roll_pitch as the backward-compatible common default, then allow
+     either axis to override it for asymmetric underwater dynamics/tuning. */
   loadGains("roll_pitch", {ROLL, PITCH});
+  loadGains("roll", {ROLL});
+  loadGains("pitch", {PITCH});
   loadGains("yaw", {YAW});
   /* the new attitude gains reach spinal via setAttitudeGains() inside reset() on activation */
 }
