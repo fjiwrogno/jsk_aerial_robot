@@ -195,7 +195,7 @@
       <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
       <parent link="rotor_arm${child1}"/>
       <child link="gimbal_link_forward${child1}"/>
-      <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
+      <origin xyz="0 0 0" rpy="${radians(10)} 0 ${pi/2}"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -203,7 +203,7 @@
       <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
       <parent link="rotor_arm${child2}"/>
       <child link="gimbal_link_backward${child2}"/>
-      <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
+      <origin xyz="0 0 0" rpy="${radians(-10)} 0 ${-pi/2}"/>
       <axis xyz="0 0 1"/>
     </joint>
   
@@ -211,7 +211,7 @@
       <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
       <parent link="rotor_arm${child3}"/>
       <child link="gimbal_link_forward${child3}"/>
-      <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
+      <origin xyz="0 0 0" rpy="${radians(10)} 0 ${-pi/2}"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -219,7 +219,7 @@
       <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
       <parent link="rotor_arm${child4}"/>
       <child link="gimbal_link_backward${child4}"/>
-      <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
+      <origin xyz="0 0 0" rpy="${radians(-10)} 0 ${pi/2}"/>
       <axis xyz="0 0 1"/>
     </joint>
 
