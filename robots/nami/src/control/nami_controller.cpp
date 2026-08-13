@@ -326,6 +326,13 @@ void NamiController::controlCore()
   }
   integrated_map = full_q_mat * integrated_rot;
 
+  /* keep the translational rows before the controlled-axis extraction drops them:
+     the aerial rotors are tilted +-10 deg, so a thrust set solved for (Fz, tau) alone
+     still produces a body-x acceleration.  It is not a disturbance we have to measure,
+     it is computable from the very thrusts we are about to command - see the
+     underactuated attitude target below. */
+  const Eigen::MatrixXd trans_acc_map = integrated_map.topRows(3);
+
   /* extract controlled axis  */
   if (underactuate_)
   {
@@ -384,6 +391,24 @@ void NamiController::controlCore()
   /* under actuated axis  */
   if (underactuate_)
   {
+    /* The aerial rotors are tilted +-10 deg, so the allocated thrust set does not push
+       along the body z axis - it leans forward.  Fx is not one of the four rows the
+       underactuated allocation solves for, so that lean is never commanded away: at
+       hover it is ~0.24 m/s^2 of forward acceleration, and the xy loop can only fight
+       it by asking for a tilt that keeps growing.
+       It is not an unknown disturbance though - it follows from the very thrusts we
+       are about to send.  Take the direction the rotors actually push in and offset
+       the attitude target by its tilt, so the body attitude is only asked to supply
+       what the rotors do not already deliver.  (surge mode is excluded: it allocates
+       Fx explicitly and holds both attitude targets level.) */
+    double rp_offset_roll = 0, rp_offset_pitch = 0;
+    if (current_mode_ == AERIAL)
+    {
+      const Eigen::Vector3d thrust_acc_cog = trans_acc_map * target_vectoring_f_trans_;
+      rp_offset_roll = -atan2(thrust_acc_cog.y(), thrust_acc_cog.z());
+      rp_offset_pitch = atan2(thrust_acc_cog.x(), thrust_acc_cog.z());
+    }
+
     if (surgeAllocation())
     {
       /* surge mode: forward motion comes from the Fx allocation row, not from a
@@ -399,16 +424,18 @@ void NamiController::controlCore()
        diverges to +-90 deg when target_acc_dash.z ~ 0 (neutral buoyancy) */
     else if (hovering_approximate_ || current_mode_ == UNDERWATER)
     {
-      target_roll_ = -target_acc_dash.y() / aerial_robot_estimation::G;
-      target_pitch_ = target_acc_dash.x() / aerial_robot_estimation::G;
+      target_roll_ = -target_acc_dash.y() / aerial_robot_estimation::G - rp_offset_roll;
+      target_pitch_ = target_acc_dash.x() / aerial_robot_estimation::G - rp_offset_pitch;
       navigator_->setTargetRoll(target_roll_);
       navigator_->setTargetPitch(target_pitch_);
     }
     else
     {
       target_roll_ = atan2(-target_acc_dash.y(),
-                           sqrt(target_acc_dash.x() * target_acc_dash.x() + target_acc_dash.z() * target_acc_dash.z()));
-      target_pitch_ = atan2(target_acc_dash.x(), target_acc_dash.z());
+                           sqrt(target_acc_dash.x() * target_acc_dash.x() +
+                                target_acc_dash.z() * target_acc_dash.z())) -
+                     rp_offset_roll;
+      target_pitch_ = atan2(target_acc_dash.x(), target_acc_dash.z()) - rp_offset_pitch;
       navigator_->setTargetRoll(target_roll_);
       navigator_->setTargetPitch(target_pitch_);
     }

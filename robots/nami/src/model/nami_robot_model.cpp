@@ -21,18 +21,23 @@ void NamiRobotModel::updateRobotModelImpl(const KDL::JntArray& joint_positions)
   transformable::RobotModel::updateRobotModelImpl(joint_positions);
   const auto seg_tf_map = getSegmentsTf();
 
-  /* get local coords of thrust links:
-     motor 0~3 = aerial rotors (frame: rotor_arm1..4, thrust along +z),
-     motor 4~7 = aquatic rotors (frame: aquatic_rotor1..4, thrust along their tilted z) */
+  /* get local coords of thrust links.
+
+     Read them from the "thrustN" links themselves: those are the very links the base
+     RobotModel derives rotors_origin_from_cog_ from, so the position and the thrust
+     direction of a rotor can never come from two different frames.
+
+     The aerial rotors used to be read from "rotor_armN", which sits *above* the fixed
+     gimbalN joint carrying their +-10 deg tilt, so the allocation modelled them as
+     perfectly vertical.  That dropped two real effects: the tilt generates ~6x more
+     yaw torque than the blade drag alone (yaw commands were executed 6x too strong),
+     and it produces a body-x force the map reported as identically zero (~0.24 m/s^2
+     of unmodelled forward acceleration at hover).
+     aquatic_rotorN and thrust(N+4) are the same frame, so motors 4~7 are unchanged. */
   for (int i = 0; i < getRotorNum(); ++i)
   {
-    std::string thrust_frame;
-    if (i < 4)
-      thrust_frame = "rotor_arm" + std::to_string(i + 1);
-    else
-      thrust_frame = "aquatic_rotor" + std::to_string(i - 3);
     KDL::Frame f;
-    fk_solver.JntToCart(joint_positions, f, thrust_frame);
+    fk_solver.JntToCart(joint_positions, f, "thrust" + std::to_string(i + 1));
     thrust_coords_rot_[i] = cog_frame.Inverse() * f.M;
   }
 }
