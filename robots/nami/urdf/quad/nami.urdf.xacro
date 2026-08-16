@@ -20,22 +20,22 @@
       <inertial>
       <!-- the relative pos of cog compared to the origin of this link  -->
       <!-- because right now the origin of base_link has been configured to  the base_link of solidworks-->
-        <origin xyz="0.221545 -0.000011 -0.042583" rpy="0 0 0"/>
-        <mass value="0.940089"/>
+        <origin xyz="0.175258 -0.000028 -0.044508" rpy="0 0 0"/>
+        <mass value="1.044751"/>
         <inertia
-            ixx="0.001302" iyy="0.009489" izz="0.00899"
-            ixy="-0.000002" ixz="-0.000632" iyz="0.000001"/>
+            ixx="0.002486" iyy="0.007151" izz="0.006943"
+            ixy="-0.000003" ixz="-0.000100" iyz="0.000001"/>
       </inertial>
       <visual>
         <origin xyz="0.032 -0.01550 0.01850" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://nami/urdf/quad/mesh/base_link_head.dae" scale="1 1 1"/>
+          <mesh filename="package://nami/urdf/quad/mesh/base_link_head_0815.dae" scale="1 1 1"/>
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0.221545 -0.000011 -0.042583" rpy="0 0 0"/>
+        <origin xyz="0.175258 -0.000028 -0.044508" rpy="0 0 0"/>
         <geometry>
-          <box size="0.4045 0.1325 0.2"/>
+          <box size="0.44154 0.21502 0.24898"/>
         </geometry>
       </collision>
     </link>
@@ -54,22 +54,22 @@
     <!-- base link tail (with spinal on top of it) -->
     <link name="base_link_tail">
       <inertial>
-        <origin xyz="-0.0647393 0.0516416 0.0854933" rpy="0 0 0"/>
-        <mass value="1.073"/>
+        <origin xyz="-0.0662323 0.0515895 0.0785822" rpy="0 0 0"/>
+        <mass value="1.0763413"/>
         <inertia
-            ixx="0.0043312" iyy="0.0132108" izz="0.0110638"
-            ixy="0.0000063" ixz="0.001385" iyz="-0.0000162"/>
+            ixx="0.0062498" iyy="0.0128023" izz="0.0102791"
+            ixy="0.0000131" ixz="0.0017566" iyz="-0.0000204"/>
       </inertial>
       <visual>
-        <origin xyz="-0.0647393 0.0516416 0.0854933" rpy="0 0 0"/>
+        <origin xyz="0.037965 0.052 0.058093" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://nami/urdf/quad/mesh/base_link_tail.dae" scale="1 1 1"/>
+          <mesh filename="package://nami/urdf/quad/mesh/base_link_tail_0815.dae" scale="1 1 1"/>
         </geometry>
       </visual>
       <collision>
-        <origin xyz="-0.0169110 0.0200899 0.0630640"  rpy="0 0 0"/>
+        <origin xyz="-0.0662323 0.0515895 0.0785822" rpy="0 0 0"/>
         <geometry>
-          <box size="0.3935 0.1985 0.2"/>
+          <box size="0.445 0.24 0.4368"/>
         </geometry>
       </collision>
     </link>
@@ -138,7 +138,7 @@
     <joint name="fc_joint" type="fixed">
       <parent link="base_link_tail"/>
       <child link="fc"/>
-      <origin xyz="0.01895 0.0599 0.13886" rpy="0 0 ${pi}"/>
+      <origin xyz="0.021965 0.027001 0.138863" rpy="0 0 ${pi}"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -165,28 +165,28 @@
     <joint name="rotor_coord_joint${child1}" type="fixed">
       <parent link="base_link_head" />
       <child link="rotor_arm${child1}"/>
-      <origin xyz="0.2285 0.2025 0.0045" rpy="0 0 0"/>
+      <origin xyz="0.23475 0.203 0.06195" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="rotor_coord_joint${child2}" type="fixed">
       <parent link="base_link_head"/>
       <child link="rotor_arm${child2}"/>
-      <origin xyz="0.2285 -0.2025 0.0045" rpy="0 0 0"/>
+      <origin xyz="0.23475 -0.203 0.06195" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
     <joint name="rotor_coord_joint${child3}" type="fixed">
       <parent link="base_link_tail"/>
       <child link="rotor_arm${child3}"/>
-      <origin xyz="-0.20353 -0.1505 0.03359" rpy="0 0 0"/>
+      <origin xyz="-0.21585 -0.151 0.09105" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
   
     <joint name="rotor_coord_joint${child4}" type="fixed">
       <parent link="base_link_tail"/>
       <child link="rotor_arm${child4}"/>
-      <origin xyz="-0.20353 0.2545 0.03359" rpy="0 0 0"/>
+      <origin xyz="-0.20979 0.255 0.09105" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -195,7 +195,7 @@
       <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
       <parent link="rotor_arm${child1}"/>
       <child link="gimbal_link_forward${child1}"/>
-      <origin xyz="0 0 0" rpy="${radians(10)} 0 ${pi/2}"/>
+      <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -203,7 +203,7 @@
       <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
       <parent link="rotor_arm${child2}"/>
       <child link="gimbal_link_backward${child2}"/>
-      <origin xyz="0 0 0" rpy="${radians(-10)} 0 ${-pi/2}"/>
+      <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
       <axis xyz="0 0 1"/>
     </joint>
   
@@ -211,7 +211,7 @@
       <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
       <parent link="rotor_arm${child3}"/>
       <child link="gimbal_link_forward${child3}"/>
-      <origin xyz="0 0 0" rpy="${radians(10)} 0 ${-pi/2}"/>
+      <origin xyz="0 0 0" rpy="0 0 ${-pi/2}"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -219,7 +219,7 @@
       <limit effort="6.6" lower="-1.57" upper="1.57" velocity="3.0"/>
       <parent link="rotor_arm${child4}"/>
       <child link="gimbal_link_backward${child4}"/>
-      <origin xyz="0 0 0" rpy="${radians(-10)} 0 ${pi/2}"/>
+      <origin xyz="0 0 0" rpy="0 0 ${pi/2}"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -245,20 +245,20 @@
     <link name="gimbal_link_forward${self}">
     <!-- this link's cordinate is the actual gimbal -->
       <inertial>
-        <origin xyz="-0.011008 0.000169 0.023330" rpy="0 0 0"/>
-        <mass value="0.186457"/>
+        <origin xyz="-0.039557 0.019031 -0.071112" rpy="0 0 0"/>
+        <mass value="0.330057"/>
         <inertia
-            ixx="0.000201" iyy="0.000347" izz="0.000450"
-            ixy="-0.000002" ixz="0.000004" iyz="0.000000"/>
+            ixx="0.001282" iyy="0.001431" izz="0.001177"
+            ixy="0.000312" ixz="0.000451" iyz="0.000507"/>
       </inertial>
       <visual>
-        <origin xyz="0 0 0.058" rpy="0 0 ${-pi/2}"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://nami/urdf/quad/mesh/AerialRotor.dae"/>
+          <mesh filename="package://nami/urdf/quad/mesh/Rotor13.dae"/>
         </geometry>
       </visual>
       <collision>
-        <origin xyz="-0.011008 0.000169 0.023330" rpy="0 0 0"/>
+        <origin xyz="-0.039505 -0.019466 -0.070657" rpy="0 0 0"/>
         <geometry>
           <cylinder radius="0.12662" length="0.1578"/>
         </geometry>
@@ -270,30 +270,18 @@
     <link name="aquatic_rotor${self}">
     <!-- this link's cordinate is the actual gimbal -->
       <inertial>
-        <origin xyz="0.001352 -0.000410 -0.045541" rpy="0 0 0"/>
-        <mass value="0.14360"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.00001"/>
         <inertia
-            ixx="0.000227" iyy="0.000224" izz="0.000037"
-            ixy="0.000000" ixz="-0.000003" iyz="0.000001"/>
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
       </inertial>
-      <visual>
-        <origin xyz="-0.00342 -0.00766 0.005" rpy="0 0 ${-pi/2}"/>
-        <geometry>
-          <mesh filename="package://nami/urdf/quad/mesh/AquaticRotor.dae"/>
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0.001352 -0.000410 -0.045541" rpy="0 0 0"/>
-        <geometry>
-          <cylinder radius="0.12662" length="0.1578"/>
-        </geometry>
-      </collision>
     </link>
 
     <joint name="aquatic_parent_forward${self}" type="fixed">
       <parent link="gimbal_link_forward${self}"/>
       <child link="aquatic_rotor${self}"/>
-      <origin xyz="-0.0755 -0.0396 -0.0176" rpy="${-pi/4} 0 0"/>
+      <origin xyz="-0.0755 -0.02587 -0.08133" rpy="${radians(-35)} 0 0"/>
       <axis xyz="1 0 0"/>
     </joint>
 
@@ -329,7 +317,7 @@
     <joint name="rotor_parent_link_joint${self}" type="fixed">
       <parent link="gimbal_link_forward${self}"/>
       <child link="rotor_parent_forward${self}"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0 0.01007 -0.05712" rpy="${radians(10)} 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
@@ -365,20 +353,20 @@
     <link name="gimbal_link_backward${self}">
     <!-- this link's cordinate is the actual gimbal -->
       <inertial>
-        <origin xyz="-0.011008 0.000169 0.023330" rpy="0 0 0"/>
-        <mass value="0.186457"/>
+        <origin xyz="-0.039557 0.019031 -0.071112" rpy="0 0 0"/>
+        <mass value="0.330057"/>
         <inertia
-            ixx="0.000201" iyy="0.000347" izz="0.000450"
-            ixy="-0.000002" ixz="0.000004" iyz="0.000000"/>
+          ixx="0.001279" iyy="0.001449" izz="0.001158"
+          ixy="-0.000307" ixz="0.000458" iyz="-0.000499"/>
       </inertial>
       <visual>
-        <origin xyz="0 0 0.058" rpy="0 0 ${-pi/2}"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://nami/urdf/quad/mesh/AerialRotor.dae"/>
+          <mesh filename="package://nami/urdf/quad/mesh/Rotor24.dae"/>
         </geometry>
       </visual>
       <collision>
-        <origin xyz="-0.011008 0.000169 0.023330" rpy="0 0 0"/>
+        <origin xyz="-0.039557 0.019031 -0.071112" rpy="0 0 0"/>
         <geometry>
           <cylinder radius="0.12662" length="0.1578"/>
         </geometry>
@@ -390,24 +378,12 @@
     <link name="aquatic_rotor${self}">
     <!-- this link's cordinate is the actual gimbal -->
       <inertial>
-        <origin xyz="0.001352 -0.000410 -0.045541" rpy="0 0 0"/>
-        <mass value="0.14360"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.00001"/>
         <inertia
-            ixx="0.000227" iyy="0.000224" izz="0.000037"
-            ixy="0.000000" ixz="-0.000003" iyz="0.000001"/>
+            ixx="0.000001" iyy="0.000001" izz="0.000001"
+            ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
       </inertial>
-      <visual>
-        <origin xyz="0.00342 0.00766 0.005" rpy="0 0 ${pi/2}"/>
-        <geometry>
-          <mesh filename="package://nami/urdf/quad/mesh/AquaticRotor.dae"/>
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0.001352 -0.000410 -0.045541" rpy="0 0 0"/>
-        <geometry>
-          <cylinder radius="0.12662" length="0.1578"/>
-        </geometry>
-      </collision>
     </link>
 
     <!-- rotor parent link (virtual) -->
@@ -440,7 +416,7 @@
     <joint name="aquatic_parent_backward${self}" type="fixed">
       <parent link="gimbal_link_backward${self}"/>
       <child link="aquatic_rotor${self}"/>
-      <origin xyz="-0.0755 0.0396 -0.0176" rpy="${pi/4} 0 0"/>
+      <origin xyz="-0.0755 0.02587 -0.08133" rpy="${radians(35)} 0 0"/>
       <axis xyz="1 0 0"/>
     </joint>
 
@@ -449,7 +425,7 @@
     <joint name="rotor_parent_link_joint${self}" type="fixed">
       <parent link="gimbal_link_backward${self}"/>
       <child link="rotor_parent_backward${self}"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0 -0.01007 -0.05712" rpy="${radians(-10)} 0 0"/>
       <axis xyz="0 0 1"/>
     </joint>
 
