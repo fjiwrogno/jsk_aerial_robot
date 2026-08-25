@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<!-- Command nami's transformation joint to an angle and hold it there.
+
+     Pure python: nothing here needs a rebuild, the angle is a launch argument.
+
+       roslaunch nami yaw_joint_transform.launch target_angle_deg:=30
+       roslaunch nami yaw_joint_transform.launch target_angle_deg:=0
+       roslaunch nami yaw_joint_transform.launch target_angle_deg:=-30
+
+     Each launch replaces the previous one (same node name), so the ramp always
+     starts from the angle the joint is actually at.  Ctrl-C just stops the
+     commands - the position servo keeps its last target.
+
+     This is deliberately independent of the underwater mode: it only publishes
+     joints_ctrl and never touches the depth-hold target or the surge-allocation
+     flag, so it can be run in either mode and at any point of a dive. -->
+<launch>
+  <arg name="robot_id" default="" />
+  <arg name="robot_ns" default="nami$(arg robot_id)" />
+
+  <arg name="target_angle_deg" default="30.0" />
+  <arg name="duration" default="8.0" />          <!-- [s] ramp time -->
+  <arg name="hold_duration" default="-1.0" />    <!-- [s] <0 = hold until replaced/Ctrl-C -->
+  <arg name="joint_name" default="yaw_joint" />
+  <arg name="rate" default="20.0" />             <!-- [Hz] command rate -->
+  <arg name="max_rate_deg_s" default="15.0" />   <!-- slew limit; stretches duration -->
+  <arg name="min_angle_deg" default="-90.0" />   <!-- URDF limit is +-90 deg -->
+  <arg name="max_angle_deg" default="90.0" />
+  <arg name="tolerance_deg" default="2.0" />     <!-- warn if the servo lags this much -->
+
+  <node pkg="nami" type="yaw_joint_commander.py" name="yaw_joint_commander"
+        ns="$(arg robot_ns)" output="screen">
+    <param name="joint_name"       value="$(arg joint_name)" />
+    <param name="target_angle_deg" value="$(arg target_angle_deg)" />
+    <param name="duration"         value="$(arg duration)" />
+    <param name="hold_duration"    value="$(arg hold_duration)" />
+    <param name="rate"             value="$(arg rate)" />
+    <param name="max_rate_deg_s"   value="$(arg max_rate_deg_s)" />
+    <param name="min_angle_deg"    value="$(arg min_angle_deg)" />
+    <param name="max_angle_deg"    value="$(arg max_angle_deg)" />
+    <param name="tolerance_deg"    value="$(arg tolerance_deg)" />
+  </node>
+</launch>
