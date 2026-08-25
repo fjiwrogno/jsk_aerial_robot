@@ -11,6 +11,7 @@
   <arg name="headless" default="True" />
   <arg name="underwater" default="False" />
   <arg name="joystick" default="False" />
+  <arg name="yaw_joint_init_deg" default="0.0" />
   <!-- uuv_gazebo_worlds is only needed for the underwater SIMULATION; a real
        machine (real_machine=true) must not resolve $(find uuv_gazebo_worlds) so
        it can run without uuv_simulator installed. -->
@@ -94,10 +95,16 @@
   ###########  Servo Bridge  ###########
   <node pkg="aerial_robot_model" type="servo_bridge_node" name="servo_bridge" ns="$(arg robot_ns)" output="screen" />
 
-  ###########  Lock yaw joint servo at zero point  ###########
-  <node pkg="rostopic" type="rostopic" name="yaw_joint_zero_lock" ns="$(arg robot_ns)"
-        args="pub -r 0.2 joints_ctrl sensor_msgs/JointState '{name: [yaw_joint], position: [0.0]}'"
-        if="$(arg real_machine)" />
+  ###########  Hold the transformation joint at its initial angle  ###########
+  <!-- Same node name as yaw_joint_transform.launch on purpose: launching that
+       file replaces this one, so a shape change hands over without a step and
+       nothing keeps yanking the joint back afterwards. -->
+  <node pkg="nami" type="yaw_joint_commander.py" name="yaw_joint_commander"
+        ns="$(arg robot_ns)" output="screen" if="$(arg real_machine)">
+    <param name="target_angle_deg" value="$(arg yaw_joint_init_deg)" />
+    <param name="duration" value="2.0" />
+    <param name="hold_duration" value="-1.0" />
+  </node>
 
   ##########  Sensors  ##########
   <include file="$(find nami)/launch/include/sensors.launch.xml" >
