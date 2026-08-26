@@ -87,6 +87,9 @@ private:
   double depth_d_lpf_rate_;      // low-pass rate for the D term
   double depth_err_i_ = 0, depth_prev_err_ = 0, depth_err_d_filtered_ = 0;
   double depth_prev_stamp_ = 0;
+  /* anti-windup state: was the previous depth output clamped, and which way */
+  bool depth_output_saturated_ = false;
+  double depth_output_sign_ = 0;
 
   bool isMotorActive(int i) const
   {

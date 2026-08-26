@@ -74,13 +74,20 @@ underwater:
   surge_allocation: false
   surge_acc_limit: 1.0       # [m/s^2] clamp on the surge acc feedforward
 
-  # depth control (hand-written PID in NamiController, direct depth sensor feedback)
-  depth_p_gain: 100.0
+  # depth control (hand-written PID in NamiController, direct depth sensor feedback).
+  # Sized for the 0.3 m test pool (floor at z~-0.145, 2026-07-30 measurement):
+  # p=40 with the 6 N clamp keeps the loop linear over a ~15 cm band instead of
+  # railing at 6 cm (p=100/20 N railed 33 s into the floor on 7/30); with the
+  # measured m+ma ~5.5 kg this gives w~0.43 Hz, zeta~0.85.  Retune from the E2
+  # identification once real added mass / damping are known.
+  depth_p_gain: 40.0
   depth_i_gain: 10.0
-  depth_d_gain: 40.0
-  depth_i_limit: 2.0
+  depth_d_gain: 25.0
+  depth_i_limit: 0.5         # [m*s] integral STATE clamp; x i_gain = 5 N authority.
+                             # The integrator's real job (buoyancy trim) needs ~0.4 N;
+                             # the old 2.0 (=20 N) was what pinned it to the floor.
   depth_hover_thrust: -0.4   # [N] buoyancy trim: negative pushes down (nami is slightly positive buoyant)
-  depth_thrust_limit: 20.0   # [N] symmetric clamp (bi-directional rotors)
+  depth_thrust_limit: 6.0    # [N] pool-sized clamp: reaction time margin in 0.3 m of water
   depth_d_lpf_rate: 0.4
 
   # teleop command mapping (NamiNavigator, topic: underwater/cmd_vel)
@@ -89,8 +96,10 @@ underwater:
   cmd_timeout: 0.5           # [s] clear latched xy acceleration if the command stream stops
   depth_timeout: 0.25        # [s] neutralize depth thrust if I2C/ROS depth updates stop
   joy_deadzone: 0.2          # normalized stick deadzone; mapping follows aquatic Flamingo
-  max_dive_rate: 0.6         # [m/s] target depth increment rate
-  max_depth: 1.0             # [m] target depth clamp (positive value)
+  max_dive_rate: 0.05        # [m/s] target ramp; 0.6 was meaningless in a 0.3 m pool
+  max_depth: 0.10            # [m] HARD clamp above the pool floor (-0.145 m): a target
+                             # below the physical floor is unreachable and winds the
+                             # integrator into the ground (7/30 failure mode)
 
   # depth from pressure: z = -(P - standard_pressure_kpa) / kpa_per_meter
   standard_pressure_kpa: 101.325

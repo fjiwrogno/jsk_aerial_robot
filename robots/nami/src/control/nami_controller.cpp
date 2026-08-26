@@ -125,7 +125,16 @@ double NamiController::depthControlLoop()
      returns the desired total vertical force [N] in the world frame (negative = downward).
      depth_hover_thrust_ trims the residual buoyancy (nami is slightly positive buoyant). */
   if (!nami_navigator_ || !nami_navigator_->getDepthSensorReady())
-    return 0;  // no depth feedback yet: neutral output
+  {
+    /* no valid feedback: neutral output, and drop the accumulated trim - it was
+       built against a measurement stream that no longer exists (a stale integral
+       re-applied when the sensor returns is an open-loop kick) */
+    depth_err_i_ = 0;
+    depth_err_d_filtered_ = 0;
+    depth_prev_stamp_ = 0;
+    depth_output_saturated_ = false;
+    return 0;
+  }
 
   const double now = ros::Time::now().toSec();
   double dt = (depth_prev_stamp_ > 0) ? (now - depth_prev_stamp_) : 0;
@@ -135,8 +144,16 @@ double NamiController::depthControlLoop()
 
   if (dt > 0 && dt < 0.2)
   {
-    depth_err_i_ += err * dt;
-    depth_err_i_ = std::max(-depth_i_limit_, std::min(depth_i_limit_, depth_err_i_));
+    /* conditional integration (anti-windup): while the output is clamped, only
+       integrate error that pulls AWAY from the clamped direction.  On 7/30 an
+       unreachable target (below the pool floor) kept the output railed for 33 s
+       while the integrator filled to its clamp; the surface command then had to
+       unwind all of it before the thrust could even change sign. */
+    if (!(depth_output_saturated_ && err * depth_output_sign_ > 0))
+    {
+      depth_err_i_ += err * dt;
+      depth_err_i_ = std::max(-depth_i_limit_, std::min(depth_i_limit_, depth_err_i_));
+    }
     const double err_d = (err - depth_prev_err_) / dt;
     depth_err_d_filtered_ = depth_d_lpf_rate_ * depth_err_d_filtered_ + (1 - depth_d_lpf_rate_) * err_d;
   }
@@ -150,9 +167,11 @@ double NamiController::depthControlLoop()
   total_thrust *= tilt_factor;
 
   /* symmetric clamp: bi-directional aquatic rotors can push both up and down */
-  total_thrust = std::max(-depth_thrust_limit_, std::min(depth_thrust_limit_, total_thrust));
+  const double clamped = std::max(-depth_thrust_limit_, std::min(depth_thrust_limit_, total_thrust));
+  depth_output_saturated_ = (clamped != total_thrust);
+  depth_output_sign_ = (total_thrust > 0) - (total_thrust < 0);
 
-  return total_thrust;
+  return clamped;
 }
 
 bool NamiController::update()
