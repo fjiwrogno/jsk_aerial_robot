@@ -2,7 +2,8 @@
 <robot
     xmlns:xacro="http://www.ros.org/wiki/xacro" name="nami" >
 
-  <xacro:include filename="$(find nami)/urdf/quad/nami.urdf.xacro" />
+  <xacro:include filename="$(find nami)/urdf/quad/nami.urdf_without_battery.xacro" />
+  <!-- <xacro:include filename="$(find nami)/urdf/quad/nami.urdf.xacro" /> -->
   <xacro:include filename="$(find nami)/urdf/quad/common.xacro" />
 
   <xacro:nami_center_link child1="1" child2="2" child3="3" child4="4"/>

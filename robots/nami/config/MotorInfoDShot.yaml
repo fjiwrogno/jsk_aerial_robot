@@ -1,6 +1,6 @@
 motor_info:
         min_pwm: 0.5 # 1000 ~ dshot 0
-        max_pwm: 0.95 # 1800 ~ dshot 1600
+        max_pwm: 0.96 # 1800 ~ dshot 1600
         min_thrust: 0.0 # [N]
         force_landing_thrust: 6.0 # [N]
 

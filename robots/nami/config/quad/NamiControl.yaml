@@ -10,7 +10,7 @@ controller:
   xy:
     p_gain: 2.0
     i_gain: 0.05
-    d_gain: 2.8
+    d_gain: 3.5
     limit_sum: 4.0
     limit_p: 12.0
     limit_i: 12.0
@@ -60,9 +60,9 @@ controller:
     i_gain: 1.0
     d_gain: 2.5
     limit_err_p: 0.4
-    limit_sum: 1.5
-    limit_p: 1.0
-    limit_i: 1.0
+    limit_sum: 2.5
+    limit_p: 1.6
+    limit_i: 2.0
     limit_d: 1.0
 
     need_d_control: true
