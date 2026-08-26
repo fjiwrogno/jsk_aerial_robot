@@ -47,6 +47,7 @@ private:
   ros::Subscriber surge_allocation_sub_;
   ros::Subscriber pressure_sub_;  // sim: uuv SubseaPressure (sensor_msgs/FluidPressure)
   ros::Subscriber depth_sub_;     // real machine: ms5837 node (geometry_msgs/PointStamped)
+  ros::Subscriber depth_sub_global_;  // fallback: same node started outside the robot namespace
   ros::Publisher target_depth_pub_;  // debug: current target depth [m, signed z]
 
   void baselinkRotationProcess();

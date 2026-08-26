@@ -60,6 +60,11 @@ void NamiNavigator::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
         nh_.subscribe("underwater/surge_allocation", 1, &NamiNavigator::surgeAllocationCallback, this);
     pressure_sub_ = nh_.subscribe("pressure", 1, &NamiNavigator::pressureCallback, this);
     depth_sub_ = nh_.subscribe("depth_sensor_node/depth", 1, &NamiNavigator::depthCallback, this);
+    /* Fallback for the sensor node started OUTSIDE the robot namespace (e.g. a
+       bare `rosrun ms5837_ros ...` during pool debugging).  2026-08-26: a whole
+       session ran with the depth loop silently dead because the node published
+       /depth_sensor_node/depth while we listened on /nami/... - accept both. */
+    depth_sub_global_ = nh_.subscribe("/depth_sensor_node/depth", 1, &NamiNavigator::depthCallback, this);
     target_depth_pub_ = nh_.advertise<std_msgs::Float64>("underwater/target_depth", 1);
     ROS_INFO("[nami] UNDERWATER mode: keyboard cmd_vel and Flamingo-mapped joystick enabled; depth from pressure / depth_sensor_node/depth");
   }
@@ -75,6 +80,9 @@ bool NamiNavigator::getDepthSensorReady() const
 
 void NamiNavigator::update()
 {
+  if (underwater_mode_ && !getDepthSensorReady())
+    ROS_WARN_THROTTLE(5.0, "[nami] UNDERWATER but no depth data (topic %s or /depth_sensor_node/depth)"
+                      " - depth loop is outputting ZERO", depth_sub_.getTopic().c_str());
   if (underwater_mode_)
     underwaterStateProcess();
 
