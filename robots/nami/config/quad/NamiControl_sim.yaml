@@ -75,12 +75,12 @@ underwater:
   #   true  = surge rows (Fx, Fz, roll, yaw) -> drift actively cancelled, direct
   #           surge thrust; pitch passive on the buoyancy righting moment,
   #           lateral stick ignored (no sway authority)
-  surge_allocation: true
+  surge_allocation: false
   surge_acc_limit: 1.0       # [m/s^2] clamp on the surge acc feedforward
 
   # depth control (hand-written PID in NamiController, direct depth sensor feedback)
   depth_p_gain: 20.0
-  depth_i_gain: 0.0
+  depth_i_gain: 2.0
   depth_d_gain: 5.0
   depth_i_limit: 2.0
   depth_hover_thrust: -0.4   # [N] buoyancy trim: negative pushes down (nami is slightly positive buoyant)
@@ -114,7 +114,7 @@ underwater:
     # HARD LIMIT: gain*1000 must fit int16 on the rosserial link -> gain < 32.7
     roll:
       p_gain: 30.0
-      i_gain: 12.0
+      i_gain: 20.0
       d_gain: 20.0
     pitch:
       p_gain: 30.0

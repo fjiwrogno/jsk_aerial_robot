@@ -34,7 +34,7 @@
     <parent link="root"/>
     <child link="added_mass_ballast_tail"/>
     <!-- at the tail body CoG so the lumped CoG does not move -->
-    <origin xyz="-0.105 0.020 0.023" rpy="0 0 0"/>
+    <origin xyz="-0.1242 0.0518 0.0555" rpy="0 0 0"/>
   </joint>
 
   <!-- head body: trans diag(0.5 0.6 1.0) -> mean ~0.7 kg; rot diag(0.005 0.015 0.015) -->
@@ -48,7 +48,7 @@
   <joint name="added_mass_ballast_head_joint" type="fixed">
     <parent link="base_link_head"/>
     <child link="added_mass_ballast_head"/>
-    <origin xyz="0.194 0.000 -0.022" rpy="0 0 0"/>
+    <origin xyz="0.1993 0.0000 -0.0303" rpy="0 0 0"/>
   </joint>
 
   <!-- Aerial simulation plugin: spinal HW interface, IMU, magnetometer, GPS -->
@@ -88,9 +88,9 @@
        yaw_joint (z axis):
          "root"           = root + base_link_tail + fc + virtual_base_link_tail
                             + rotor_arm3/4 + gimbal_link_*3/4 + aquatic_rotor3/4
-                            -> 2.355 kg
+                            -> 1.777 kg (URDF 2026-08-25)
          "base_link_head" = base_link_head + rotor_arm1/2 + gimbal_link_*1/2
-                            + aquatic_rotor1/2                -> 1.600 kg
+                            + aquatic_rotor1/2                -> 1.745 kg (URDF 2026-08-25)
        (thrust1..4 stay separate via the continuous rotor joints, mass ~0.)
        Each body gets its own <link> entry so buoyancy balances its own weight;
        a single entry on "root" would leave gravity on the head body unopposed
@@ -111,14 +111,14 @@
       <debug>0</debug>
 
       <!-- ================= tail-side body (physics body "root") =================
-           mass 2.355 kg + 1.0 kg baked added-mass ballast = 3.355 kg
-           -> neutral volume 0.003355 m^3 in freshwater; set ~1% above neutral
+           mass 1.777 kg + 1.0 kg baked added-mass ballast = 2.777 kg (URDF 2026-08-25)
+           -> neutral volume 0.002777 m^3 in freshwater; set ~1% above neutral
            for slight positive buoyancy (~0.35 N up).
            WARNING: buoyancy applies only while the link is below z=0, and the
            robot is ejected to the surface if volume is set far above neutral. -->
       <link name="root">
         <neutrally_buoyant>0</neutrally_buoyant>
-        <volume>0.00349</volume>
+        <volume>0.0028044</volume>
 
         <!-- Bounding box used only for debug visualisation; no effect on forces -->
         <box>
@@ -128,10 +128,10 @@
         </box>
 
         <!-- Center of buoyancy in root(=base_link_tail) frame [m].
-             Body CoG (tail + rotor units 3/4) = (-0.105, 0.020, 0.023).
+             Body CoG (tail side, URDF 2026-08-25) = (-0.1242, 0.0518, 0.0555).
              CoB placed ~0.08 m above CoG -> passive roll/pitch restoring torque
              (~1.8 N*m/rad for this body). Raise z to stiffen, lower to soften. -->
-        <center_of_buoyancy>-0.105 0.020 0.10</center_of_buoyancy>
+        <center_of_buoyancy>-0.1242 0.0518 0.1355</center_of_buoyancy>
 
         <hydrodynamic_model>
           <type>fossen</type>
@@ -169,11 +169,11 @@
       </link>
 
       <!-- ================= head-side body ("base_link_head") =================
-           mass 1.600 kg + 0.7 kg baked added-mass ballast = 2.300 kg
-           -> neutral volume 0.002300 m^3; set ~1% above. -->
+           mass 1.745 kg + 0.7 kg baked added-mass ballast = 2.445 kg (URDF 2026-08-25)
+           -> neutral volume 0.002445 m^3; set ~1% above. -->
       <link name="base_link_head">
         <neutrally_buoyant>0</neutrally_buoyant>
-        <volume>0.002329</volume>
+        <volume>0.0024690</volume>
 
         <box>
           <width>0.133</width>
@@ -181,9 +181,9 @@
           <height>0.20</height>
         </box>
 
-        <!-- Body CoG (head + rotor units 1/2) in base_link_head frame:
-             (0.194, 0.000, -0.022); CoB ~0.08 m above it. -->
-        <center_of_buoyancy>0.194 0.000 0.06</center_of_buoyancy>
+        <!-- Body CoG (head side, URDF 2026-08-25) in base_link_head frame:
+             (0.1993, 0.0000, -0.0303); CoB ~0.08 m above it. -->
+        <center_of_buoyancy>0.1993 0.0000 0.0497</center_of_buoyancy>
 
         <hydrodynamic_model>
           <type>fossen</type>

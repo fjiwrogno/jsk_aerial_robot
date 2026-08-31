@@ -273,7 +273,7 @@ void NamiNavigator::pressureCallback(const sensor_msgs::FluidPressureConstPtr& m
   /* uuv SubseaPressure publishes [kPa]; recover signed z (z<0 underwater) */
   const double now = ros::Time::now().toSec();
   const double source_stamp = msg->header.stamp.toSec();
-  if (source_stamp > 0 && (now < source_stamp || now - source_stamp > depth_timeout_))
+  if (source_stamp > 0 && (now + 0.05 < source_stamp || now - source_stamp > depth_timeout_))
   {
     ROS_ERROR_THROTTLE(1.0, "[nami] rejected stale pressure message (age %.3f s)", now - source_stamp);
     return;
@@ -294,7 +294,7 @@ void NamiNavigator::depthCallback(const geometry_msgs::PointStampedConstPtr& msg
   /* ms5837 node publishes point.z as signed z (upward positive) */
   const double now = ros::Time::now().toSec();
   const double source_stamp = msg->header.stamp.toSec();
-  if (source_stamp > 0 && (now < source_stamp || now - source_stamp > depth_timeout_))
+  if (source_stamp > 0 && (now + 0.05 < source_stamp || now - source_stamp > depth_timeout_))
   {
     ROS_ERROR_THROTTLE(1.0, "[nami] rejected stale depth message (age %.3f s)", now - source_stamp);
     return;
