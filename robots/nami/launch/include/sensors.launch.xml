@@ -16,16 +16,6 @@
           <arg name="serial_baud" value="921600" />
         </include>
 
-        <!-- depth sensor (ms5837): publishes depth_sensor_node/depth (PointStamped,
-             point.z signed, negative underwater), consumed by NamiNavigator -->
-        <node pkg="ms5837_ros" type="ms5837_node.py" name="depth_sensor_node"
-              output="screen" if="$(arg underwater)">
-          <!-- Nami control runs at 40 Hz. 50 Hz / OSR1024 gives fresh samples
-               with conversion-time margin without chasing a non-real-time 100 Hz loop. -->
-          <param name="rate" value="50.0" />
-          <param name="oversampling" value="1024" />
-          <param name="fluid_density" value="997.0" />
-        </node>
       </group>
 
       <!-- mocap: aerial only. underwater there is no mocap coverage, and a mocap

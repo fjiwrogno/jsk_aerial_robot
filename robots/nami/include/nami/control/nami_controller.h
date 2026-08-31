@@ -90,6 +90,11 @@ private:
   /* anti-windup state: was the previous depth output clamped, and which way */
   bool depth_output_saturated_ = false;
   double depth_output_sign_ = 0;
+  /* last cycle's loop components [N], exported into pid_msg_.z so the depth
+     loop is recorded on debug/pose/pid exactly like every other axis */
+  double depth_out_err_ = 0, depth_out_p_ = 0, depth_out_i_ = 0, depth_out_d_ = 0,
+         depth_out_total_ = 0;
+  ros::Publisher depth_pid_pub_;  // debug: [err, p, i, d, unclamped, clamped]
 
   bool isMotorActive(int i) const
   {

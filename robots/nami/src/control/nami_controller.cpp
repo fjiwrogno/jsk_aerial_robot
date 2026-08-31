@@ -50,6 +50,7 @@ void NamiController::initialize(ros::NodeHandle nh, ros::NodeHandle nhp,
   torque_allocation_matrix_inv_pub_ =
       nh_.advertise<spinal::TorqueAllocationMatrixInv>("torque_allocation_matrix_inv", 1);
   gimbal_dof_pub_ = nh_.advertise<std_msgs::UInt8>("gimbal_dof", 1);
+  depth_pid_pub_ = nh_.advertise<std_msgs::Float32MultiArray>("debug/depth/pid", 1);
 }
 
 void NamiController::reset()
@@ -171,6 +172,21 @@ double NamiController::depthControlLoop()
   depth_output_saturated_ = (clamped != total_thrust);
   depth_output_sign_ = (total_thrust > 0) - (total_thrust < 0);
 
+  /* the 2026-08-26 pool session took three bag round-trips to diagnose because
+     this loop published nothing - keep its internals visible */
+  std_msgs::Float32MultiArray dbg;
+  dbg.data = {static_cast<float>(err), static_cast<float>(depth_p_gain_ * err),
+              static_cast<float>(depth_i_gain_ * depth_err_i_),
+              static_cast<float>(depth_d_gain_ * depth_err_d_filtered_),
+              static_cast<float>(total_thrust), static_cast<float>(clamped)};
+  depth_pid_pub_.publish(dbg);
+
+  depth_out_err_ = err;
+  depth_out_p_ = depth_p_gain_ * err;
+  depth_out_i_ = depth_i_gain_ * depth_err_i_;
+  depth_out_d_ = depth_d_gain_ * depth_err_d_filtered_;
+  depth_out_total_ = clamped;
+
   return clamped;
 }
 
@@ -232,6 +248,21 @@ void NamiController::controlCore()
        sensor feedback underwater); x/y results are the pure teleop acc feedforward
        since the navigator pins ACC_CONTROL_MODE */
     target_acc_w.setZ(depthControlLoop() / nami_robot_model_->getMass());
+
+    /* export the depth loop into the z slot of debug/pose/pid: in this mode the
+       pose-z PID that the base class just wrote there is bypassed and its values
+       are meaningless, while the depth loop - the controller actually flying the
+       axis - was invisible to rosbag.  Same message, same recording scripts,
+       same plotting tools as every other axis.  Units are N (like the aerial
+       z loop); hover feedforward is part of total but has no term of its own. */
+    pid_msg_.z.total.at(0) = depth_out_total_;
+    pid_msg_.z.p_term.at(0) = depth_out_p_;
+    pid_msg_.z.i_term.at(0) = depth_out_i_;
+    pid_msg_.z.d_term.at(0) = depth_out_d_;
+    pid_msg_.z.target_p = nami_navigator_ ? nami_navigator_->getTargetDepth() : 0;
+    pid_msg_.z.err_p = depth_out_err_;
+    pid_msg_.z.target_d = 0;
+    pid_msg_.z.err_d = depth_err_d_filtered_;
   }
   tf::Vector3 target_acc_dash = (tf::Matrix3x3(tf::createQuaternionFromYaw(rpy_.z()))).inverse() * target_acc_w;
   tf::Vector3 target_acc_cog = uav_rot.inverse() * target_acc_w;
